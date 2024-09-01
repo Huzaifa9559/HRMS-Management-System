@@ -1,45 +1,42 @@
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import connection from './config/db.js';
+import CreateUserTable from './models/User.js';
+import userRoutes from './routes/Userroutes.js';
+import dotenv from 'dotenv';
+dotenv.config({
+  path: `.env.${process.env.NODE_ENV}`
+});
 const app = express();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const { OAuth2Client } = require('google-auth-library');
 
-// Middleware
+
+
+// Important Middlewares
 app.use(cors({
   origin: 'http://localhost:3000' // Frontend address
 }));
+//app.use(bodyParser.json());
 app.use(express.json());
-const users = []; // In-memory user storage (replace with database in production)
-const JWT_SECRET = 'your_jwt_secret';
 
-const GOOGLE_CLIENT_ID = '375475746648-ftjp4e7hq9r31hu54bq29rt7diun3uua.apps.googleusercontent.com';
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-// Example route
-app.get('/api/hello2', (req, res) => {
-  res.json({ message: "Hello from the backend!" });
+// Connection with the database
+connection.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL:', err);
+        return;
+    }
+  console.log('Connected to MySQL!');
+  CreateUserTable();
 });
 
-//custom signup
-app.post('/api/signup', async (req, res) => {
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    users.push({ email, password: hashedPassword });
-    res.status(201).json({ message: 'User created' });
-});
+//Setting up the database
 
-// Google Sign-In
-app.post('/api/google-signin', async (req, res) => {
-    const { token } = req.body;
-    const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: GOOGLE_CLIENT_ID,
-    });
-    const { email } = ticket.getPayload();
-    const jwtToken = jwt.sign({ email }, JWT_SECRET);
-    res.json({ token: jwtToken });
-});
+
+
+// Routes
+app.use('/api', userRoutes);
+
 
 
 // Start the server

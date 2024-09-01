@@ -24,9 +24,9 @@ function Register() {
     try {
       const response = await axios.post('/api/signup', {
         email,
-        password,
+        password
       });
-      console.log(response.data);
+      console.log(response);
     } catch (error) {
       console.error('Error during signup:', error);
     }
