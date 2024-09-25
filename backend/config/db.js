@@ -6,11 +6,20 @@ dotenv.config({
   path: `.env.${process.env.NODE_ENV}`
 });
 
-const connection = mysql.createConnection({
-    host: process.env.DB_host,
-    user: process.env.DB_user,
-    password: process.env.DB_password,
-    database: process.env.DB_name
+const db = mysql.createConnection({
+  host: process.env.DB_host,
+  user: process.env.DB_user,
+  password: process.env.DB_password,
+  database: process.env.DB_name
 });
 
-export default connection;
+// Connection with the database
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL!');
+});
+
+export default db;

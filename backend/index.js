@@ -1,9 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser';
-import connection from './config/db.js';
-import CreateUserTable from './models/User.js';
-import userRoutes from './routes/Userroutes.js';
+import cookieParser from 'cookie-parser';
+import employeeRoutes from './routes/employee.js';
 import dotenv from 'dotenv';
 dotenv.config({
   path: `.env.${process.env.NODE_ENV}`
@@ -14,28 +12,19 @@ const app = express();
 
 // Important Middlewares
 app.use(cors({
-  origin: 'http://localhost:3000' // Frontend address
+  origin: 'http://localhost:3000', // Frontend address
+  credentials: true // Allow credentials (cookies) to be sent
 }));
 //app.use(bodyParser.json());
 app.use(express.json());
+app.use(cookieParser()); // Use cookie-parser middleware
 
 
-// Connection with the database
-connection.connect((err) => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
-    }
-  console.log('Connected to MySQL!');
-  CreateUserTable();
-});
-
-//Setting up the database
 
 
 
 // Routes
-app.use('/api', userRoutes);
+app.use('/api', employeeRoutes);
 
 
 
