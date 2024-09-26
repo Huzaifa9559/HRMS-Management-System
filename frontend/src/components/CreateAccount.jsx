@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const countryCodes = [
     { code: '+1', country: 'USA' },
@@ -6,6 +7,7 @@ const countryCodes = [
     { code: '+91', country: 'India' },
     { code: '+81', country: 'Japan' },
     { code: '+86', country: 'China' },
+    { code: '+92', country: 'Pakistan' }
 ];
 
 const designations = ['Product Designer', 'Software Engineer', 'Project Manager', 'HR Manager', 'Marketing Specialist'];
@@ -28,6 +30,8 @@ export default function CreateAccount() {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
+
+    const navigate = useNavigate(); // Initialize useNavigate
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -84,6 +88,9 @@ export default function CreateAccount() {
             if (response.ok) {
                 setSubmitMessage('Account created successfully!');
                 // Reset form or redirect user
+                setTimeout(() => {
+                    navigate('/login'); // Redirect to login page after 1 second
+                }, 1000);
             } else {
                 setSubmitMessage(data.message || 'An error occurred. Please try again.');
             }
