@@ -1,5 +1,5 @@
-import jwt from "jsonwebtoken";
-import dotenv from 'dotenv';
+const jwt = require("jsonwebtoken");
+const dotenv = require('dotenv');
 dotenv.config();
 const secreteKey = process.env.JWT_SECRET;
 
@@ -23,5 +23,5 @@ function getUser(token) {
     return null;
   }
 }
-
-export { setUser, getUser };
+// Export functions using CommonJS syntax
+module.exports = { setUser, getUser };

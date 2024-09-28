@@ -1,11 +1,11 @@
-import express from 'express';
-const router = express.Router();
+const express = require('express'); // Import express
+const router = express.Router(); // Create a router instance
 
-//import that specific controllers
-import { createAccount } from '../controllers/employeeController.js';
+// Import the specific controller
+const { createAccount } = require('../controllers/employeeController'); // Adjusted for CommonJS
 
-
-//creating routes
+// Creating routes
 router.post('/create-account', createAccount);
 
-export default router;
+// Export the router
+module.exports = router; // Export the router

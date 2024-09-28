@@ -6,12 +6,11 @@
     "start": "cross-env NODE_ENV=development nodemon index.js",
     "dev": "cross-env NODE_ENV=development nodemon index.js",
     "test": "cross-env NODE_ENV=test mocha",
-    "prod": "cross-env NODE_ENV=production node index.js",
-    "migrate": "cross-env NODE_ENV=development node migrate.js"
+    "prod": "cross-env NODE_ENV=production node index.js"
   },
   "keywords": [],
   "author": "",
-  "type": "module",
+  "type": "commonjs",
   "license": "ISC",
   "description": "",
   "dependencies": {
@@ -24,11 +23,13 @@
     "google-auth-library": "^9.14.0",
     "jsonwebtoken": "^9.0.2",
     "mysql": "^2.18.1",
-    "mysql2": "^3.11.0",
-    "oracledb": "^6.6.0"
+    "mysql2": "^3.11.3",
+    "oracledb": "^6.6.0",
+    "sequelize": "^6.37.3"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "sequelize-cli": "^6.6.2"
   }
 }
