@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'; // Import bcrypt for password hashing
+import bcrypt from 'bcrypt'; // Import bcrypt for password hashing 
 import dotenv from 'dotenv';
 import Employee from '../models/employee.js'; // Import the Employee model
 import { setUser, getUser } from '../service/auth.js';
