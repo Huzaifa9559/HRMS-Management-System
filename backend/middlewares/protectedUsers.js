@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken'); // Import jsonwebtoken
 
-export const authenticateToken = (req, res, next) => {
+const authenticateToken = (req, res, next) => {
     const token = req.cookies.token; // Get token from cookies
 
     if (!token) return res.sendStatus(401); // Unauthorized
@@ -11,3 +11,5 @@ export const authenticateToken = (req, res, next) => {
         next(); // Proceed to the next middleware or route handler
     });
 };
+
+module.exports = { authenticateToken }; // Export the authenticateToken function
