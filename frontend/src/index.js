@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import CreateAccount from './components/CreateAccount.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import ForgotPassword from './components/ForgotPassword.jsx';
-import ResetPasswordSent from './components/ResetPasswordSent.jsx'; // Updated to match the correct component
+import ResetPasswordSent from './components/ResetPasswordSent.jsx'; 
+import SetNewPassword from './components/SetNewPassword.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -16,7 +17,8 @@ root.render(
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/check-your-email" element={<ResetPasswordSent />} /> {/* Update to match the correct component */}
+        <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
+        <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="*" element={<Navigate to="/forgot-password" replace />} />
       </Routes>
     </Router>

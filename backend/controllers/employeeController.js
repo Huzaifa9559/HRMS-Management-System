@@ -1,13 +1,6 @@
-<<<<<<< HEAD
-import bcrypt from 'bcrypt'; // Import bcrypt for password hashing 
-import dotenv from 'dotenv';
-import Employee from '../models/employee.js'; // Import the Employee model
-import { setUser, getUser } from '../service/auth.js';
-=======
 const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
 const Employee = require('../models/employee'); // Import the Employee model
 const { setUser } = require('../service/auth'); // Import setUser function
->>>>>>> 60e9d2c656d02e46f1450bfc6a8bf787f1132931
 
 exports.createAccount = async (req, res) => {
     const { employeeName, phoneNumber, address, password, designation, department } = req.body;

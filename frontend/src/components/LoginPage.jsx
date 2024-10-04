@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function Login() {
@@ -7,51 +6,54 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
-
-  // Typewriter effect for heading and paragraph
-  const [typedTextHeading, setTypedTextHeading] = useState('');
-  const [typedTextParagraph, setTypedTextParagraph] = useState('');
-  const headingText = 'W elcome to HRMS!';
-  const paragraphText = `A  new era of HR management, where efficiency meets simplicity. Empowering you to effortlessly manage everything from employee details and attendance to documents and salary slips—all in one place. With a focus on driving productivity and fostering growth, we handle the administrative work so you can focus on what truly matters: building a thriving and dynamic workforce.`;
-
-  // Typing for Heading
-  useEffect(() => {
-      let headingIndex = 0;
-      const typeHeading = () => {
-          if (headingIndex <= headingText.length) {
-              setTypedTextHeading((prev) => prev + headingText.charAt(headingIndex));
-              headingIndex++;
-          } else {
-              clearInterval(headingInterval);
-              typeParagraph();  // Start paragraph typing after heading finishes
-          }
-      };
-
-      const headingInterval = setInterval(typeHeading, 170); // Slower typing speed for heading
-
-      let paragraphIndex = 0;
-      const typeParagraph = () => {
-          const paragraphInterval = setInterval(() => {
-              if (paragraphIndex <= paragraphText.length) {
-                  setTypedTextParagraph((prev) => prev + paragraphText.charAt(paragraphIndex));
-                  paragraphIndex++;
-              } else {
-                  clearInterval(paragraphInterval);
-              }
-          }, 10);  // Faster typing speed for paragraph
-      };
-
-      return () => {
-          clearInterval(headingInterval);
-      };
-  }, []);
+  const [passwordAlert, setPasswordAlert] = useState('');
+  const [emailAlert, setEmailAlert] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setPasswordAlert('');
+    setEmailAlert('');
+    setError('');
+
+    // Email validation check
+    if (!email.endsWith('@nu.edu.pk')) {
+      setEmailAlert('Email must be in the format of @nu.edu.pk');
+      return;
+    }
+
+    // Password validation checks
+    if (password.length < 8) {
+      setPasswordAlert('Password must be at least 8 characters long');
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setPasswordAlert('Password must contain at least one capital letter');
+      return;
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password)) {
+      setPasswordAlert('Password must contain at least one symbol');
+      return;
+    }
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/.test(password)) {
+      setPasswordAlert('Password must be alphanumeric and contain at least one lowercase letter, one uppercase letter, one number, and one symbol');
+      return;
+    }
+
     try {
-      const response = await axios.post('/api/login', { email, password });
-      if (response.data.success) {
-        // Handle successful login (e.g., store token, redirect)
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
         console.log('Login successful');
       } else {
         setError('Invalid credentials');
@@ -63,13 +65,14 @@ export default function Login() {
 
   return (
     <div className="container-fluid vh-100">
-      <div className="row h-100">
+      <div className="row h-100 align-items-center">
         {/* Left side */}
-        <div className="col-lg-6 d-flex flex-column justify-content-center align-items-start text-white p-4 p-lg-5" 
+        <div className="col-lg-6 d-flex justify-content-center align-items-center text-white p-4 p-lg-5" 
             style={{
                 backgroundColor: '#0066ff',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                height: '100%',
             }}>
             
             {/* Top-left logo */}
@@ -88,17 +91,32 @@ export default function Login() {
                 <span className="ms-2 fs-4 fw-bold">HRMS</span>
             </div>
       
-            <div className="text-start text-lg-start">
-                {/* Display the typing effect text */}
-                <h1 className="display-5 fw-bold mb-4">{typedTextHeading}</h1> 
-                <p className="lead" style={{ fontSize: '0.9rem' }}>
-                  {typedTextParagraph}
-                </p>
+            {/* Login concept SVG with hover animation */}
+            <div className="text-center login-container">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="200"
+                height="200"
+                viewBox="0 0 200 200"
+                fill="none"
+                stroke="white"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="login-svg"
+              >
+                <rect x="40" y="40" width="120" height="120" rx="10" className="door" />
+                <path d="M100 80 L100 120" className="door-line" />
+                <circle cx="90" cy="100" r="20" className="user-head" />
+                <path d="M90 120 Q90 140 110 140 L130 140" className="user-body" />
+                <path d="M70 100 L50 100" className="arm-left" />
+                <path d="M110 100 L130 100" className="arm-right" />
+              </svg>
             </div>
         </div>
 
         {/* Right side */}
-        <div className="col-md-6 d-flex align-items-center">
+        <div className="col-lg-6 d-flex justify-content-center align-items-center">
           <div className="w-100 p-5">
             <h2 className="mb-4 text-center">Login to HRMS</h2>
             <form onSubmit={handleLogin}>
@@ -113,6 +131,12 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
+                {emailAlert && (
+                  <div className="custom-alert">
+                    <span className="exclamation">❗</span>
+                    <span className="alert-text">{emailAlert}</span>
+                  </div>
+                )}
               </div>
               <div className="mb-3">
                 <label htmlFor="password" className="form-label">Password</label>
@@ -125,6 +149,12 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                {passwordAlert && (
+                  <div className="custom-alert">
+                    <span className="exclamation">❗</span>
+                    <span className="alert-text">{passwordAlert}</span>
+                  </div>
+                )}
               </div>
               <div className="mb-3 form-check">
                 <input
@@ -136,18 +166,69 @@ export default function Login() {
                 />
                 <label className="form-check-label" htmlFor="rememberMe">Remember me</label>
               </div>
-              {error && <div className="alert alert-danger">{error}</div>}
+              {error && (
+                <div className="custom-alert">
+                  <span className="exclamation">❗</span>
+                  <span className="alert-text">{error}</span>
+                </div>
+              )}
 
-              <br />
               <button type="submit" className="btn btn-primary w-100">Log In</button>
             </form>
             
             <div className="mt-3 d-flex justify-content-end">
-                <a href="#" className="text-decoration-none">Forgot Password?</a>
+                <a href="/forgot-password" className="text-decoration-none">Forgot Password?</a>
             </div>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .login-container {
+          transition: transform 0.3s ease;
+        }
+
+        .login-svg:hover .user-body {
+          transform: translateX(20px);
+        }
+
+        .login-svg:hover .arm-right {
+          transform: rotate(-30deg);
+          transform-origin: 110px 100px;
+        }
+
+        .user-body, .arm-right {
+          transition: transform 0.3s ease;
+        }
+
+        .door, .door-line {
+          stroke-dasharray: 300;
+          stroke-dashoffset: 300;
+          animation: draw 2s linear forwards;
+        }
+
+        @keyframes draw {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        .custom-alert {
+          display: flex;
+          align-items: center;
+          color: red;
+          margin-top: 5px;
+        }
+
+        .exclamation {
+          font-size: 1.2rem;
+          margin-right: 5px;
+        }
+
+        .alert-text {
+          font-size: 0.9rem;
+        }
+      `}</style>
     </div>
   );
 }

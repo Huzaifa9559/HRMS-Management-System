@@ -40,9 +40,8 @@ export default function CreateAccount() {
     const [typedTextHeading, setTypedTextHeading] = useState('');
     const [typedTextParagraph, setTypedTextParagraph] = useState('');
     const headingText = 'W elcome to HRMS!';
-    const paragraphText = `A  new era of HR management, where efficiency meets simplicity. Empowering you to effortlessly manage everything from employee details and attendance to documents and salary slips—all in one place. With a focus on driving productivity and fostering growth, we handle the administrative work so you can focus on what truly matters: building a thriving and dynamic workforce.`;
+    const paragraphText = `A  new era of HR management, where efficiency meets simplicity. Empowering you to effortlessly manage everything from employee details and attendance to documents and salary slips—all in one place.`;
 
-    // Typing for Heading
     useEffect(() => {
         let headingIndex = 0;
         const typeHeading = () => {
@@ -55,7 +54,7 @@ export default function CreateAccount() {
             }
         };
 
-        const headingInterval = setInterval(typeHeading, 170); // Slower typing speed for heading
+        const headingInterval = setInterval(typeHeading, 170);
 
         let paragraphIndex = 0;
         const typeParagraph = () => {
@@ -66,13 +65,15 @@ export default function CreateAccount() {
                 } else {
                     clearInterval(paragraphInterval);
                 }
-            }, 10);  // Faster typing speed for paragraph
+            }, 10);
         };
 
         return () => {
             clearInterval(headingInterval);
         };
     }, []);
+
+    const [passwordAlert, setPasswordAlert] = useState('');
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -94,14 +95,45 @@ export default function CreateAccount() {
         if (!formData.designation) newErrors.designation = 'Designation is required';
         if (!formData.department) newErrors.department = 'Department is required';
         if (!formData.agreeTerms) newErrors.agreeTerms = 'You must agree to the terms and conditions';
+
         return newErrors;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         const formErrors = validateForm();
+        setErrors(formErrors);
+        setPasswordAlert('');
+
+        // Password validation checks
+        if (formData.password !== formData.confirmPassword) {
+            setPasswordAlert('Passwords do not match');
+            return;
+        }
+
+        if (formData.password.length < 8) {
+            setPasswordAlert('Password must be at least 8 characters long');
+            return;
+        }
+
+        if (!/[A-Z]/.test(formData.password)) {
+            setPasswordAlert('Password must contain at least one capital letter');
+            return;
+        }
+
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(formData.password)) {
+            setPasswordAlert('Password must contain at least one symbol');
+            return;
+        }
+
+        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/.test(formData.password)) {
+            setPasswordAlert('Password must be alphanumeric and contain at least one lowercase letter, one uppercase letter, one number, and one symbol');
+            return;
+        }
+
+        setPasswordAlert(''); // Clear password alert if all checks pass
+
         if (Object.keys(formErrors).length > 0) {
-            setErrors(formErrors);
             return;
         }
 
@@ -146,145 +178,143 @@ export default function CreateAccount() {
         <div className="container-fluid vh-100">
             <div className="row h-100">
                 {/* Left side */}
-                <div className="col-lg-6 d-flex flex-column justify-content-center align-items-start text-white p-4 p-lg-5" 
-                    style={{
-                        backgroundColor: '#0066ff',
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }}>
+                <div className="col-lg-6 d-flex flex-column justify-content-center align-items-start text-white p-3 p-lg-4"
+                    style={{ backgroundColor: '#0066ff', position: 'relative', overflow: 'hidden' }}>
                     
                     {/* Top-left logo */}
-                    <div style={{
-                        position: 'absolute',
-                        top: '20px',
-                        left: '20px',
-                        display: 'flex',
-                        alignItems: 'center'
-                    }}>
-                        <svg className="bi" width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', alignItems: 'center' }}>
+                        <svg className="bi" width="40" height="40" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                             <rect x="5" y="5" width="15" height="15" rx="4" ry="4" fill="white" transform="rotate(20 12 12)" />
                             <rect x="25" y="10" width="10" height="10" rx="3" ry="3" fill="lightgreen" transform="rotate(10 25 15)" />
                             <rect x="15" y="30" width="15" height="15" rx="4" ry="4" fill="red" transform="rotate(-10 20 36)" />
                         </svg>
-                        <span className="ms-2 fs-4 fw-bold">HRMS</span>
+                        <span className="ms-2 fs-5 fw-bold">HRMS</span>
                     </div>
     
                     {/* Text content with typewriter effect */}
                     <div className="text-start">
-                        <h1 className="display-5 fw-bold mb-4">{typedTextHeading}</h1>
-                        <p className="lead" style={{ fontSize: '0.9rem' }}>{typedTextParagraph}</p>
+                        <h1 className="display-6 fw-bold mb-2">{typedTextHeading}</h1>
+                        <p className="lead" style={{ fontSize: '0.8rem' }}>{typedTextParagraph}</p>
                     </div>
                 </div>
+
                 {/* Right side */}
-                <div className="col-lg-6 d-flex justify-content-center align-items-center bg-light p-4 p-lg-5">
-                    <div className="w-100" style={{ maxWidth: '500px' }}> {/* Limit the form's width */}
-                        <h2 className="mb-4 text-center">Create an Account</h2>
-                        <p className="text-muted mb-4 text-center">Please create your profile</p>
+                <div className="col-lg-6 d-flex justify-content-center align-items-center bg-light p-3 p-lg-4">
+                    <div className="w-100" style={{ maxWidth: '450px' }}>
+                        <h3 className="mb-3 text-center">Create an Account</h3>
+                        <p className="text-muted mb-3 text-center">Please create your profile</p>
+                        
+                        {/* Custom password alert */}
+                        {passwordAlert && (
+                            <div className="custom-alert">
+                                <span className="exclamation">❗</span>
+                                <span className="alert-text">{passwordAlert}</span>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit}>
-                            <div className="mb-3">
+                            <div className="mb-2">
                                 <label htmlFor="employeeName" className="form-label">Employee Name</label>
                                 <input
                                     type="text"
-                                    className={`form-control ${errors.employeeName ? 'is-invalid' : ''}`}
+                                    className="form-control form-control-sm"
                                     id="employeeName"
                                     name="employeeName"
                                     value={formData.employeeName}
                                     onChange={handleChange}
-                                    placeholder="Enter your full name"
+                                    placeholder="Full Name"
                                     required
                                 />
-                                {errors.employeeName && <div className="invalid-feedback">{errors.employeeName}</div>}
                             </div>
 
-                            <div className="mb-3">
+                            <div className="mb-2">
                                 <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
                                 <div className="input-group">
                                     <select
-                                        className="form-select"
-                                        style={{ maxWidth: '120px' }}
+                                        className="form-select form-select-sm"
+                                        style={{ maxWidth: '100px' }}
                                         name="countryCode"
                                         value={formData.countryCode}
                                         onChange={handleChange}
                                     >
                                         {countryCodes.map((country) => (
                                             <option key={country.code} value={country.code}>
-                                                {country.code} ({country.country})
+                                                {country.code}
                                             </option>
                                         ))}
                                     </select>
                                     <input
                                         type="tel"
-                                        className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                                        className="form-control form-control-sm"
                                         id="phoneNumber"
                                         name="phoneNumber"
                                         value={formData.phoneNumber}
                                         onChange={handleChange}
-                                        pattern="\d{10}"
-                                        placeholder="1234567890"
+                                        placeholder="Phone Number"
                                         required
                                     />
                                 </div>
-                                {errors.phoneNumber && <div className="invalid-feedback d-block">{errors.phoneNumber}</div>}
                             </div>
 
-                            <div className="mb-3">
+                            <div className="mb-2">
                                 <label htmlFor="address" className="form-label">Address</label>
                                 <textarea
-                                    className={`form-control ${errors.address ? 'is-invalid' : ''}`}
+                                    className="form-control form-control-sm"
                                     id="address"
                                     name="address"
                                     value={formData.address}
                                     onChange={handleChange}
-                                    rows="3"
-                                    placeholder="Enter your full address"
-                                    required
-                                ></textarea>
-                                {errors.address && <div className="invalid-feedback">{errors.address}</div>}
-                            </div>
-
-                            <div className="mb-3">
-                                <label htmlFor="password" className="form-label">Password</label>
-                                <div className="input-group">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                                        id="password"
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        placeholder="Create a strong password"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-secondary"
-                                        onClick={togglePasswordVisibility}
-                                    >
-                                        {showPassword ? '🔓' : '🔐'}
-                                    </button>
-                                </div>
-                                {errors.password && <div className="invalid-feedback d-block">{errors.password}</div>}
-                            </div>
-
-                            <div className="mb-3">
-                                <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    placeholder="Re-enter your password"
+                                    placeholder="Full Address"
+                                    rows="2"
                                     required
                                 />
-                                {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
                             </div>
 
-                            <div className="mb-3">
+                            <div className="row mb-2">
+                                <div className="col-md-6">
+                                    <label htmlFor="password" className="form-label">Password</label>
+                                    <div className="input-group">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            className={`form-control form-control-sm ${errors.password ? 'is-invalid' : ''}`}
+                                            id="password"
+                                            name="password"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            placeholder="Password"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary btn-sm"
+                                            onClick={togglePasswordVisibility}
+                                        >
+                                            {showPassword ? '🔓' : '🔐'}
+                                        </button>
+                                    </div>
+                                    {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+                                </div>
+
+                                <div className="col-md-6">
+                                    <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className={`form-control form-control-sm ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        value={formData.confirmPassword}
+                                        onChange={handleChange}
+                                        placeholder="Confirm Password"
+                                        required
+                                    />
+                                    {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
+                                </div>
+                            </div>
+
+                            <div className="mb-2">
                                 <label htmlFor="designation" className="form-label">Designation</label>
                                 <select
-                                    className={`form-select ${errors.designation ? 'is-invalid' : ''}`}
+                                    className="form-select form-select-sm"
                                     id="designation"
                                     name="designation"
                                     value={formData.designation}
@@ -298,13 +328,12 @@ export default function CreateAccount() {
                                         </option>
                                     ))}
                                 </select>
-                                {errors.designation && <div className="invalid-feedback">{errors.designation}</div>}
                             </div>
 
-                            <div className="mb-3">
+                            <div className="mb-2">
                                 <label htmlFor="department" className="form-label">Department</label>
                                 <select
-                                    className={`form-select ${errors.department ? 'is-invalid' : ''}`}
+                                    className="form-select form-select-sm"
                                     id="department"
                                     name="department"
                                     value={formData.department}
@@ -318,42 +347,59 @@ export default function CreateAccount() {
                                         </option>
                                     ))}
                                 </select>
-                                {errors.department && <div className="invalid-feedback">{errors.department}</div>}
                             </div>
 
-                            <div className="mb-3 form-check">
+                            <div className="mb-2 form-check">
                                 <input
                                     type="checkbox"
-                                    className={`form-check-input ${errors.agreeTerms ? 'is-invalid' : ''}`}
+                                    className="form-check-input"
                                     id="agreeTerms"
                                     name="agreeTerms"
                                     checked={formData.agreeTerms}
                                     onChange={handleChange}
                                     required
                                 />
-                                <label className="form-check-label" htmlFor="agreeTerms">
-                                    I agree to terms and conditions
-                                </label>
-                                {errors.agreeTerms && <div className="invalid-feedback">{errors.agreeTerms}</div>}
                             </div>
                             <br />
                             <button
                                 type="submit"
-                                className="btn btn-primary w-100"
+                                className="btn btn-primary btn-sm w-100"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? 'Creating Account...' : 'Create Account'}
                             </button>
 
+                            {/* Custom submit message alert */}
                             {submitMessage && (
-                                <div className={`mt-3 text-center ${submitMessage.includes('successfully') ? 'text-success' : 'text-danger'}`}>
-                                    {submitMessage}
+                                <div className="custom-alert mt-3">
+                                    <span className={`alert-text ${submitMessage.includes('successfully') ? 'text-success' : 'text-danger'}`}>
+                                        {submitMessage.includes('successfully') ? '✔️ ' : '❗ '}{submitMessage}
+                                    </span>
                                 </div>
                             )}
                         </form>
                     </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                .custom-alert {
+                    display: flex;
+                    align-items: center;
+                    margin-top: 5px;
+                }
+
+                .exclamation {
+                    font-size: 1.2rem;
+                    margin-right: 5px;
+                    color: red;
+                }
+
+                .alert-text {
+                    font-size: 0.9rem;
+                    color: red;
+                }
+            `}</style>
         </div>
     );
 }

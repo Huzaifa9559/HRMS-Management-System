@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import 'boxicons';
 
 export default function ResetPasswordSent() {
   const navigate = useNavigate();
@@ -9,49 +8,11 @@ export default function ResetPasswordSent() {
     navigate('/login');
   };
 
-  // Typewriter effect for heading and paragraph
-  const [typedTextHeading, setTypedTextHeading] = useState('');
-  const [typedTextParagraph, setTypedTextParagraph] = useState('');
-  const headingText = 'W elcome to HRMS!';
-  const paragraphText = `A  new era of HR management, where efficiency meets simplicity. Empowering you to effortlessly manage everything from employee details and attendance to documents and salary slips—all in one place. With a focus on driving productivity and fostering growth, we handle the administrative work so you can focus on what truly matters: building a thriving and dynamic workforce.`;
-
-  // Typing for Heading
-  useEffect(() => {
-    let headingIndex = 0;
-    const typeHeading = () => {
-      if (headingIndex < headingText.length) {
-        setTypedTextHeading((prev) => prev + headingText.charAt(headingIndex));
-        headingIndex++;
-      } else {
-        clearInterval(headingInterval);
-        typeParagraph(); // Start paragraph typing after heading finishes
-      }
-    };
-
-    const headingInterval = setInterval(typeHeading, 170); // Slower typing speed for heading
-
-    let paragraphIndex = 0;
-    const typeParagraph = () => {
-      const paragraphInterval = setInterval(() => {
-        if (paragraphIndex < paragraphText.length) {
-          setTypedTextParagraph((prev) => prev + paragraphText.charAt(paragraphIndex));
-          paragraphIndex++;
-        } else {
-          clearInterval(paragraphInterval);
-        }
-      }, 10); // Faster typing speed for paragraph
-    };
-
-    return () => {
-      clearInterval(headingInterval);
-    };
-  }, []);
-
   return (
     <div className="container-fluid vh-100">
       <div className="row h-100">
         {/* Left side */}
-        <div className="col-lg-6 d-flex flex-column justify-content-center align-items-start text-white p-4 p-lg-5" 
+        <div className="col-lg-6 d-flex flex-column justify-content-center align-items-center text-white p-4 p-lg-5" 
             style={{
                 backgroundColor: '#0066ff',
                 position: 'relative',
@@ -73,28 +34,53 @@ export default function ResetPasswordSent() {
                 <span className="ms-2 fs-4 fw-bold">HRMS</span>
             </div>
 
-            {/* Text content with typewriter effect */}
-            <div className="text-start text-lg-start">
-                <h1 className="display-5 fw-bold mb-4">{typedTextHeading}</h1> 
-                <p className="lead" style={{ fontSize: '0.9rem' }}>
-                  {typedTextParagraph}
-                </p>
+            {/* Envelope SVG centered with subtle animation */}
+            <div className="envelope-svg" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', animation: 'pulse 4s ease-in-out infinite' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+                <path d="M22 6L12 13 2 6" />
+              </svg>
             </div>
         </div>
 
         {/* Right column */}
         <div className="col-lg-6 d-flex justify-content-center align-items-center p-5">
           <div className="w-100 text-center">
-          <box-icon name='envelope' color='#0066ff' size='2rem'></box-icon>
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0066ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
             <h2 className="text-3xl font-bold mb-2">Please check your email!</h2>
             <p className="text-muted mb-4 text-center">
               An email has been sent to <span><b>xyz@abc.com.</b></span> Please click on the included link to reset your password.
             </p>
             <br /><br />
-            <button type="submit" className="btn btn-primary w-80" onClick={handleReturnToLogin} >Return to Login</button>
+            <button type="button" className="btn btn-primary w-80" onClick={handleReturnToLogin}>Return to Login</button>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0% {
+            transform: translate(-50%, -50%) scale(1);
+          }
+          50% {
+            transform: translate(-50%, -50%) scale(1.05) rotate(1deg);
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+
+        .envelope-svg svg {
+          transition: transform 0.3s ease-in-out;
+        }
+
+        .envelope-svg svg:hover {
+          transform: rotate(3deg);
+        }
+      `}</style>
     </div>
   );
 }

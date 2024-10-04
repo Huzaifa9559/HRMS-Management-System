@@ -1,52 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [emailError, setEmailError] = useState('');
 
-  // Typewriter effect for heading and paragraph
-  const [typedTextHeading, setTypedTextHeading] = useState('');
-  const [typedTextParagraph, setTypedTextParagraph] = useState('');
-  const headingText = 'W elcome to HRMS!';
-  const paragraphText = `A  new era of HR management, where efficiency meets simplicity. Empowering you to effortlessly manage everything from employee details and attendance to documents and salary slips—all in one place. With a focus on driving productivity and fostering growth, we handle the administrative work so you can focus on what truly matters: building a thriving and dynamic workforce.`;
-
-  // Typing for Heading
-  useEffect(() => {
-      let headingIndex = 0;
-      const typeHeading = () => {
-          if (headingIndex <= headingText.length) {
-              setTypedTextHeading((prev) => prev + headingText.charAt(headingIndex));
-              headingIndex++;
-          } else {
-              clearInterval(headingInterval);
-              typeParagraph();  // Start paragraph typing after heading finishes
-          }
-      };
-
-      const headingInterval = setInterval(typeHeading, 170); // Slower typing speed for heading
-
-      let paragraphIndex = 0;
-      const typeParagraph = () => {
-          const paragraphInterval = setInterval(() => {
-              if (paragraphIndex <= paragraphText.length) {
-                  setTypedTextParagraph((prev) => prev + paragraphText.charAt(paragraphIndex));
-                  paragraphIndex++;
-              } else {
-                  clearInterval(paragraphInterval);
-              }
-          }, 10);  // Faster typing speed for paragraph
-      };
-
-      return () => {
-          clearInterval(headingInterval);
-      };
-  }, []);
+  const validateEmail = () => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.match(emailPattern)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+    if (!email.endsWith('@nu.edu.pk')) {
+      setEmailError('Email must be in the format of @nu.edu.pk');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateEmail()) {
+      return; // If email is not valid, stop the form submission
+    }
+
     setIsSubmitting(true);
     setMessage('');
 
@@ -77,7 +57,7 @@ export default function ForgotPassword() {
     <div className="container-fluid vh-100">
       <div className="row h-100">
         {/* Left side */}
-        <div className="col-lg-6 d-flex flex-column justify-content-center align-items-start text-white p-4 p-lg-5" 
+        <div className="col-lg-6 d-flex flex-column justify-content-center align-items-center text-white p-4 p-lg-5" 
             style={{
                 backgroundColor: '#0066ff',
                 position: 'relative',
@@ -99,13 +79,28 @@ export default function ForgotPassword() {
                 </svg>
                 <span className="ms-2 fs-4 fw-bold">HRMS</span>
             </div>
-      
-            <div className="text-start text-lg-start">
-                {/* Display the typing effect text */}
-                <h1 className="display-5 fw-bold mb-4">{typedTextHeading}</h1> 
-                <p className="lead" style={{ fontSize: '0.9rem' }}>
-                  {typedTextParagraph}
-                </p>
+
+            {/* Forgot Password SVG centered */}
+            <div className="forgot-password-svg">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="200"
+                height="200"
+                viewBox="0 0 200 200"
+                fill="none"
+                stroke="white"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="40" y="80" width="120" height="80" rx="10" className="lock-body" />
+                <circle cx="100" cy="120" r="15" className="keyhole" />
+                <path d="M85 80 V60 Q85 40 100 40 Q115 40 115 60 V80" className="lock-shackle" />
+                <path d="M60 40 L140 160" className="forget-line" />
+                <path d="M140 40 L60 160" className="forget-line" />
+                <circle cx="45" cy="45" r="5" fill="white" className="sparkle" />
+                <circle cx="155" cy="155" r="5" fill="white" className="sparkle" />
+              </svg>
             </div>
         </div>
 
@@ -131,6 +126,12 @@ export default function ForgotPassword() {
                   required
                   disabled={isSubmitting}
                 />
+                {emailError && (
+                  <div className="custom-alert d-flex align-items-center text-danger mt-1">
+                    <span className="exclamation me-2">❗</span>
+                    <span className="alert-text">{emailError}</span>
+                  </div>
+                )}
               </div>
               <button
                 type="submit"
@@ -140,10 +141,84 @@ export default function ForgotPassword() {
                 {isSubmitting ? 'Sending...' : 'Send reset link'}
               </button>
             </form>
-            {message && <div className="mt-3 alert alert-info">{message}</div>}
+
+            {message && (
+              <div className={`mt-3 ${message.includes('Password reset email') ? 'text-success' : 'text-danger'}`}>
+                {message}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .forgot-password-svg {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation: float 3s ease-in-out infinite;
+        }
+
+        .custom-alert {
+          display: flex;
+          align-items: center;
+        }
+
+        .exclamation {
+          font-size: 1.2rem;
+          color: red;
+        }
+
+        .alert-text {
+          font-size: 0.9rem;
+          color: red;
+        }
+
+        @keyframes float {
+          0% {
+            transform: translate(-50%, -50%) translateY(0px);
+          }
+          50% {
+            transform: translate(-50%, -50%) translateY(-10px);
+          }
+          100% {
+            transform: translate(-50%, -50%) translateY(0px);
+          }
+        }
+
+        .lock-body, .lock-shackle, .keyhole, .forget-line {
+          stroke-dasharray: 300;
+          stroke-dashoffset: 300;
+          animation: draw 2s linear forwards;
+        }
+
+        .sparkle {
+          opacity: 0;
+          animation: sparkle 2s linear forwards 1.5s;
+        }
+
+        @keyframes draw {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes sparkle {
+          0% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.5);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
