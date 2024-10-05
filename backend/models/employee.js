@@ -1,13 +1,18 @@
-const { Sequelize, DataTypes } = require('sequelize'); // Import Sequelize and DataTypes
-const db = require('../db'); // Import the database connection
+const { Sequelize, DataTypes } = require('sequelize');
 const dotenv = require('dotenv');
-dotenv.config();
+dotenv.config({
+    path: `.env.${process.env.NODE_ENV}`
+});
 
-const sequelize = new Sequelize(process.env.DB_name, process.env.DB_user,
-    process.env.DB_password, {
-    host: process.env.DB_host,
-    dialect: 'mysql', 
-}); 
+const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.USERNAME,
+    process.env.DB_PASSWORD,
+    {
+        host: process.env.DB_HOST,
+        dialect: process.env.DB_DIALECT,
+        port: process.env.DB_PORT || 3306,
+    });
 
 const Employee = sequelize.define('Employee', {
     id: {
@@ -40,17 +45,23 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.STRING(100),
         allowNull: false
     },
+    email: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        unique: true
+    }
 }, {
-    timestamps: true, // Automatically manage createdAt and updatedAt fields
+    timestamps: true,
 });
 
 // Static method to run raw SQL for DML (e.g., inserting an employee)
 Employee.insertEmployee = async function (employeeData) {
     const query = `
-        INSERT INTO employees (employeeName, phoneNumber, address, password, designation, department)
-        VALUES (?, ?, ?, ?, ?, ?)`;
+        INSERT INTO employees (employeeName, phoneNumber, address, password, designation, department,email)
+        VALUES (?, ?, ?, ?, ?, ?,?)`;
     return await sequelize.query(query, {
-        replacements: [employeeData.employeeName, employeeData.phoneNumber, employeeData.address, employeeData.password, employeeData.designation, employeeData.department]
+        replacements: [employeeData.employeeName, employeeData.phoneNumber, employeeData.address,
+        employeeData.password, employeeData.designation, employeeData.department, employeeData.email]
     });
 };
 
@@ -72,5 +83,20 @@ Employee.findByPhoneNumber = async function (phoneNumber) {
     return results[0]; // Return the first result
 };
 
-// Export the Employee model
+Employee.findByEmail = async function (email) {
+    const query = 'SELECT * FROM employees WHERE email = ?';
+    const [results] = await sequelize.query(query, {
+        replacements: [email]
+    });
+    return results[0]; // Return the first result
+};
+
+Employee.updatePassword = async function (id, hashedPassword) {
+    const query = 'UPDATE employees SET password = :password WHERE id = :id';
+    // Update the employee's password using a raw SQL query
+    await sequelize.query(query, {
+        replacements: { password: hashedPassword, id: id },
+    }); // Raw SQL update query
+};
+
 module.exports = Employee;

@@ -141,7 +141,7 @@ export default function CreateAccount() {
         setSubmitMessage('');
 
         try {
-            const response = await fetch('/api/create-account', {
+            const response = await fetch('/api/employees/create-account', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -160,6 +160,9 @@ export default function CreateAccount() {
 
             if (response.ok) {
                 setSubmitMessage('Account created successfully!');
+                //a request for review will be sent to admin
+                //once admin approves, an email will be sent to employee to login to his account, with
+                //the email and password
             } else {
                 setSubmitMessage(data.message || 'An error occurred. Please try again.');
             }
@@ -180,7 +183,7 @@ export default function CreateAccount() {
                 {/* Left side */}
                 <div className="col-lg-6 d-flex flex-column justify-content-center align-items-start text-white p-3 p-lg-4"
                     style={{ backgroundColor: '#0066ff', position: 'relative', overflow: 'hidden' }}>
-                    
+
                     {/* Top-left logo */}
                     <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', alignItems: 'center' }}>
                         <svg className="bi" width="40" height="40" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -190,7 +193,7 @@ export default function CreateAccount() {
                         </svg>
                         <span className="ms-2 fs-5 fw-bold">HRMS</span>
                     </div>
-    
+
                     {/* Text content with typewriter effect */}
                     <div className="text-start">
                         <h1 className="display-6 fw-bold mb-2">{typedTextHeading}</h1>
@@ -203,7 +206,7 @@ export default function CreateAccount() {
                     <div className="w-100" style={{ maxWidth: '450px' }}>
                         <h3 className="mb-3 text-center">Create an Account</h3>
                         <p className="text-muted mb-3 text-center">Please create your profile</p>
-                        
+
                         {/* Custom password alert */}
                         {passwordAlert && (
                             <div className="custom-alert">

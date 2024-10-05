@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [passwordAlert, setPasswordAlert] = useState('');
   const [emailAlert, setEmailAlert] = useState('');
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -43,7 +46,7 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('/api/employees/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +56,9 @@ export default function Login() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (data.success) {
+
+        // here that loader will came first and the employee will login to his dashboard
         console.log('Login successful');
       } else {
         setError('Invalid credentials');
@@ -63,56 +68,57 @@ export default function Login() {
     }
   };
 
+
   return (
     <div className="container-fluid vh-100">
       <div className="row h-100 align-items-center">
         {/* Left side */}
-        <div className="col-lg-6 d-flex justify-content-center align-items-center text-white p-4 p-lg-5" 
-            style={{
-                backgroundColor: '#0066ff',
-                position: 'relative',
-                overflow: 'hidden',
-                height: '100%',
-            }}>
-            
-            {/* Top-left logo */}
-            <div style={{
-                position: 'absolute',
-                top: '20px',
-                left: '20px',
-                display: 'flex',
-                alignItems: 'center'
-            }}>
-                <svg className="bi" width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="5" y="5" width="15" height="15" rx="4" ry="4" fill="white" transform="rotate(20 12 12)" />
-                    <rect x="25" y="10" width="10" height="10" rx="3" ry="3" fill="lightgreen" transform="rotate(10 25 15)" />
-                    <rect x="15" y="30" width="15" height="15" rx="4" ry="4" fill="red" transform="rotate(-10 20 36)" />
-                </svg>
-                <span className="ms-2 fs-4 fw-bold">HRMS</span>
-            </div>
-      
-            {/* Login concept SVG with hover animation */}
-            <div className="text-center login-container">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="200"
-                height="200"
-                viewBox="0 0 200 200"
-                fill="none"
-                stroke="white"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="login-svg"
-              >
-                <rect x="40" y="40" width="120" height="120" rx="10" className="door" />
-                <path d="M100 80 L100 120" className="door-line" />
-                <circle cx="90" cy="100" r="20" className="user-head" />
-                <path d="M90 120 Q90 140 110 140 L130 140" className="user-body" />
-                <path d="M70 100 L50 100" className="arm-left" />
-                <path d="M110 100 L130 100" className="arm-right" />
-              </svg>
-            </div>
+        <div className="col-lg-6 d-flex justify-content-center align-items-center text-white p-4 p-lg-5"
+          style={{
+            backgroundColor: '#0066ff',
+            position: 'relative',
+            overflow: 'hidden',
+            height: '100%',
+          }}>
+
+          {/* Top-left logo */}
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <svg className="bi" width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="5" width="15" height="15" rx="4" ry="4" fill="white" transform="rotate(20 12 12)" />
+              <rect x="25" y="10" width="10" height="10" rx="3" ry="3" fill="lightgreen" transform="rotate(10 25 15)" />
+              <rect x="15" y="30" width="15" height="15" rx="4" ry="4" fill="red" transform="rotate(-10 20 36)" />
+            </svg>
+            <span className="ms-2 fs-4 fw-bold">HRMS</span>
+          </div>
+
+          {/* Login concept SVG with hover animation */}
+          <div className="text-center login-container">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="200"
+              height="200"
+              viewBox="0 0 200 200"
+              fill="none"
+              stroke="white"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="login-svg"
+            >
+              <rect x="40" y="40" width="120" height="120" rx="10" className="door" />
+              <path d="M100 80 L100 120" className="door-line" />
+              <circle cx="90" cy="100" r="20" className="user-head" />
+              <path d="M90 120 Q90 140 110 140 L130 140" className="user-body" />
+              <path d="M70 100 L50 100" className="arm-left" />
+              <path d="M110 100 L130 100" className="arm-right" />
+            </svg>
+          </div>
         </div>
 
         {/* Right side */}
@@ -175,9 +181,9 @@ export default function Login() {
 
               <button type="submit" className="btn btn-primary w-100">Log In</button>
             </form>
-            
+
             <div className="mt-3 d-flex justify-content-end">
-                <a href="/forgot-password" className="text-decoration-none">Forgot Password?</a>
+              <a href="/forgot-password" className="text-decoration-none">Forgot Password?</a>
             </div>
           </div>
         </div>

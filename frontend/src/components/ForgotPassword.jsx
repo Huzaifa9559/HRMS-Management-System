@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [emailError, setEmailError] = useState('');
+  const navigate = useNavigate();
 
   const validateEmail = () => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,9 +29,9 @@ export default function ForgotPassword() {
 
     setIsSubmitting(true);
     setMessage('');
-
+    //this backend api sends reset link to that particular user
     try {
-      const response = await fetch('/api/forgot-password', {
+      const response = await fetch('/api/employees/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,10 +40,9 @@ export default function ForgotPassword() {
       });
 
       const data = await response.json();
-
-      if (response.ok) {
-        setMessage(data.message || 'Password reset email sent. Please check your inbox.');
-      } else {
+      if (data.success) {
+        navigate('/reset-password-sent');
+      } else { 
         setMessage(data.message || 'An error occurred. Please try again.');
       }
     } catch (error) {
@@ -57,51 +56,51 @@ export default function ForgotPassword() {
     <div className="container-fluid vh-100">
       <div className="row h-100">
         {/* Left side */}
-        <div className="col-lg-6 d-flex flex-column justify-content-center align-items-center text-white p-4 p-lg-5" 
-            style={{
-                backgroundColor: '#0066ff',
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
-            
-            {/* Top-left logo */}
-            <div style={{
-                position: 'absolute',
-                top: '20px',
-                left: '20px',
-                display: 'flex',
-                alignItems: 'center'
-            }}>
-                <svg className="bi" width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="5" y="5" width="15" height="15" rx="4" ry="4" fill="white" transform="rotate(20 12 12)" />
-                    <rect x="25" y="10" width="10" height="10" rx="3" ry="3" fill="lightgreen" transform="rotate(10 25 15)" />
-                    <rect x="15" y="30" width="15" height="15" rx="4" ry="4" fill="red" transform="rotate(-10 20 36)" />
-                </svg>
-                <span className="ms-2 fs-4 fw-bold">HRMS</span>
-            </div>
+        <div className="col-lg-6 d-flex flex-column justify-content-center align-items-center text-white p-4 p-lg-5"
+          style={{
+            backgroundColor: '#0066ff',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
 
-            {/* Forgot Password SVG centered */}
-            <div className="forgot-password-svg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="200"
-                height="200"
-                viewBox="0 0 200 200"
-                fill="none"
-                stroke="white"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="40" y="80" width="120" height="80" rx="10" className="lock-body" />
-                <circle cx="100" cy="120" r="15" className="keyhole" />
-                <path d="M85 80 V60 Q85 40 100 40 Q115 40 115 60 V80" className="lock-shackle" />
-                <path d="M60 40 L140 160" className="forget-line" />
-                <path d="M140 40 L60 160" className="forget-line" />
-                <circle cx="45" cy="45" r="5" fill="white" className="sparkle" />
-                <circle cx="155" cy="155" r="5" fill="white" className="sparkle" />
-              </svg>
-            </div>
+          {/* Top-left logo */}
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <svg className="bi" width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="5" width="15" height="15" rx="4" ry="4" fill="white" transform="rotate(20 12 12)" />
+              <rect x="25" y="10" width="10" height="10" rx="3" ry="3" fill="lightgreen" transform="rotate(10 25 15)" />
+              <rect x="15" y="30" width="15" height="15" rx="4" ry="4" fill="red" transform="rotate(-10 20 36)" />
+            </svg>
+            <span className="ms-2 fs-4 fw-bold">HRMS</span>
+          </div>
+
+          {/* Forgot Password SVG centered */}
+          <div className="forgot-password-svg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="200"
+              height="200"
+              viewBox="0 0 200 200"
+              fill="none"
+              stroke="white"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="40" y="80" width="120" height="80" rx="10" className="lock-body" />
+              <circle cx="100" cy="120" r="15" className="keyhole" />
+              <path d="M85 80 V60 Q85 40 100 40 Q115 40 115 60 V80" className="lock-shackle" />
+              <path d="M60 40 L140 160" className="forget-line" />
+              <path d="M140 40 L60 160" className="forget-line" />
+              <circle cx="45" cy="45" r="5" fill="white" className="sparkle" />
+              <circle cx="155" cy="155" r="5" fill="white" className="sparkle" />
+            </svg>
+          </div>
         </div>
 
         {/* Right side - Forgot Password Form */}

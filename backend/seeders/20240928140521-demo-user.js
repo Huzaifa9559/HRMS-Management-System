@@ -11,6 +11,7 @@ module.exports = {
       password: 'hashed_password_1', // Use a hashed password in a real application
       designation: 'Software Engineer',
       department: 'Engineering',
+      email: 'john.doe@example.com',
       createdAt: new Date(),
       updatedAt: new Date()
     }, {
@@ -20,6 +21,7 @@ module.exports = {
       password: 'hashed_password_2', // Use a hashed password in a real application
       designation: 'Product Manager',
       department: 'Product',
+      email: 'janesmith@example.com',
       createdAt: new Date(),
       updatedAt: new Date()
     }], {});
