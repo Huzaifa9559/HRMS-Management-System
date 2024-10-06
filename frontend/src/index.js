@@ -7,6 +7,7 @@ import LoginPage from './components/LoginPage.jsx';
 import ForgotPassword from './components/ForgotPassword.jsx';
 import ResetPasswordSent from './components/ResetPasswordSent.jsx';
 import SetNewPassword from './components/SetNewPassword.jsx';
+import dashboard1 from './components/dashboard1.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -21,6 +22,7 @@ root.render(
         <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/dashboard1" element={<dashboard1 />} />
       </Routes>
     </Router>
   </React.StrictMode>

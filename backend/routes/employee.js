@@ -9,6 +9,6 @@ router.post('/create-account', createAccount);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);  //send reset link
 router.post('/set-new-password', resetPassword);  // sets new password
-
+router.post('/dashboard1', dashboard1); 
 // Export the router
 module.exports = router; // Export the router
