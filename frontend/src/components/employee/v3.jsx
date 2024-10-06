@@ -1,45 +1,36 @@
 import React, { useState, useEffect } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import axios from 'axios';
+import { PhoneNumberUtil } from 'google-libphonenumber';
+import 'react-phone-input-2/lib/style.css';
 
-const countryCodes = [
-    { code: '+1', country: 'USA' },
-    { code: '+44', country: 'UK' },
-    { code: '+91', country: 'India' },
-    { code: '+81', country: 'Japan' },
-    { code: '+86', country: 'China' },
-    { code: '+92', country: 'Pakistan' },
-    { code: '+61', country: 'Australia' },
-    { code: '+49', country: 'Germany' },
-    { code: '+33', country: 'France' },
-    { code: '+39', country: 'Italy' },
-    { code: '+7', country: 'Russia' },
-    { code: '+55', country: 'Brazil' },
-];
-
-const designations = ['Product Designer', 'Software Engineer', 'Project Manager', 'HR Manager', 'Marketing Specialist'];
-const departments = ['Design', 'Engineering', 'Project Management', 'Human Resources', 'Marketing'];
+const phoneUtil = PhoneNumberUtil.getInstance();
 
 export default function CreateAccount() {
     const [formData, setFormData] = useState({
         employeeName: '',
-        countryCode: '+1',
         phoneNumber: '',
         address: '',
         password: '',
         confirmPassword: '',
         designation: '',
         department: '',
-        agreeTerms: false
+        agreeTerms: false,
     });
 
-    const [showPassword, setShowPassword] = useState(false);
+    const [countryList, setCountryList] = useState([]);
+    const [phoneCountryCode, setPhoneCountryCode] = useState(''); // Hold the selected country phone code
     const [errors, setErrors] = useState({});
+    const [isValidPhone, setIsValidPhone] = useState(true); // For phone number validation
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
+    const [passwordAlert, setPasswordAlert] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     // Typewriter effect for heading and paragraph
     const [typedTextHeading, setTypedTextHeading] = useState('');
     const [typedTextParagraph, setTypedTextParagraph] = useState('');
-    const headingText = 'W elcome to HRMS!';
+    const headingText = ' Welcome to HRMS!';
     const paragraphText = `A  new era of HR management, where efficiency meets simplicity. Empowering you to effortlessly manage everything from employee details and attendance to documents and salary slips—all in one place.`;
 
     useEffect(() => {
@@ -54,7 +45,7 @@ export default function CreateAccount() {
             }
         };
 
-        const headingInterval = setInterval(typeHeading, 170);
+        const headingInterval = setInterval(typeHeading, 90);
 
         let paragraphIndex = 0;
         const typeParagraph = () => {
@@ -73,8 +64,33 @@ export default function CreateAccount() {
         };
     }, []);
 
-    const [passwordAlert, setPasswordAlert] = useState('');
+    // Fetch country data with flags
+    useEffect(() => {
+        axios.get('https://restcountries.com/v3.1/all')
+            .then((response) => {
+                const countries = response.data.map((country) => ({
+                    name: country.name.common,
+                    code: country.cca2.toLowerCase(), // Use cca2 code for country (ISO 3166-1 alpha-2)
+                    flag: country.flags.png || country.flags.svg, // Fetch flag in png or svg
+                    dialCode: country.idd.root ? `${country.idd.root}${country.idd.suffixes[0]}` : '', // Combine root and suffix
+                }));
+                setCountryList(countries);
+            })
+            .catch((error) => {
+                console.error('Error fetching country data:', error);
+            });
+    }, []);
 
+    // Phone number validation
+    const validatePhoneNumber = (phoneNumber, countryCode) => {
+        try {
+            const parsedNumber = phoneUtil.parseAndKeepRawInput(phoneNumber, countryCode.toUpperCase());
+            const isValid = phoneUtil.isValidNumber(parsedNumber);
+            setIsValidPhone(isValid);
+        } catch (error) {
+            setIsValidPhone(false);
+        }
+    };
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prevState => ({
@@ -200,6 +216,13 @@ export default function CreateAccount() {
                         <p className="lead" style={{ fontSize: '0.8rem' }}>{typedTextParagraph}</p>
                     </div>
                 </div>
+                {/* Custom password alert */}
+                {passwordAlert && (
+                    <div className="custom-alert">
+                        <span className="exclamation">❗</span>
+                        <span className="alert-text">{passwordAlert}</span>
+                    </div>
+                )}
 
                 {/* Right side */}
                 <div className="col-lg-6 d-flex justify-content-center align-items-center bg-light p-3 p-lg-4">
@@ -230,35 +253,27 @@ export default function CreateAccount() {
                                 />
                             </div>
 
+                            {/* Phone Number */}
                             <div className="mb-2">
                                 <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
-                                <div className="input-group">
-                                    <select
-                                        className="form-select form-select-sm"
-                                        style={{ maxWidth: '100px' }}
-                                        name="countryCode"
-                                        value={formData.countryCode}
-                                        onChange={handleChange}
-                                    >
-                                        {countryCodes.map((country) => (
-                                            <option key={country.code} value={country.code}>
-                                                {country.code}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="tel"
-                                        className="form-control form-control-sm"
-                                        id="phoneNumber"
-                                        name="phoneNumber"
-                                        value={formData.phoneNumber}
-                                        onChange={handleChange}
-                                        placeholder="Phone Number"
-                                        required
-                                    />
-                                </div>
+                                <PhoneInput
+                                    country={'us'} // Default country
+                                    value={formData.phoneNumber}
+                                    onChange={(phoneNumber, country) => {
+                                        setFormData((prevData) => ({ ...prevData, phoneNumber }));
+                                        setPhoneCountryCode(country.countryCode); // Set the country code
+                                        validatePhoneNumber(phoneNumber, country.countryCode); // Validate with country code
+                                    }}
+                                    inputClass="form-control form-control-sm"
+                                    disableDropdown={false} // Allow country selection dropdown
+                                    enableSearch={true} // Enable country search in the dropdown
+                                    specialLabel="Phone Number" // Label for phone input
+                                    limitMaxLength={true} // Enforce the length limit based on the country format
+                                />
+                                {!isValidPhone && <div className="text-danger">Invalid phone number</div>}
                             </div>
 
+                            {/* Address */}
                             <div className="mb-2">
                                 <label htmlFor="address" className="form-label">Address</label>
                                 <textarea
@@ -314,6 +329,7 @@ export default function CreateAccount() {
                                 </div>
                             </div>
 
+                            {/* Designation */}
                             <div className="mb-2">
                                 <label htmlFor="designation" className="form-label">Designation</label>
                                 <select
@@ -325,14 +341,13 @@ export default function CreateAccount() {
                                     required
                                 >
                                     <option value="">Select Designation</option>
-                                    {designations.map((designation) => (
-                                        <option key={designation} value={designation}>
-                                            {designation}
-                                        </option>
-                                    ))}
+                                    <option value="Product Designer">Product Designer</option>
+                                    <option value="Software Engineer">Software Engineer</option>
+                                    <option value="Project Manager">Project Manager</option>
                                 </select>
                             </div>
 
+                            {/* Department */}
                             <div className="mb-2">
                                 <label htmlFor="department" className="form-label">Department</label>
                                 <select
@@ -344,14 +359,13 @@ export default function CreateAccount() {
                                     required
                                 >
                                     <option value="">Select Department</option>
-                                    {departments.map((department) => (
-                                        <option key={department} value={department}>
-                                            {department}
-                                        </option>
-                                    ))}
+                                    <option value="Design">Design</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="HR">HR</option>
                                 </select>
                             </div>
 
+                            {/* Agree to Terms */}
                             <div className="mb-2 form-check">
                                 <input
                                     type="checkbox"
@@ -362,17 +376,17 @@ export default function CreateAccount() {
                                     onChange={handleChange}
                                     required
                                 />
+                                <label className="form-check-label" htmlFor="agreeTerms">
+                                    I agree to the terms and conditions
+                                </label>
                             </div>
-                            <br />
-                            <button
-                                type="submit"
-                                className="btn btn-primary btn-sm w-100"
-                                disabled={isSubmitting}
-                            >
+
+                            {/* Submit Button */}
+                            <button type="submit" className="btn btn-primary btn-sm w-100" disabled={isSubmitting}>
                                 {isSubmitting ? 'Creating Account...' : 'Create Account'}
                             </button>
 
-                            {/* Custom submit message alert */}
+                            {/* Submit Message */}
                             {submitMessage && (
                                 <div className="custom-alert mt-3">
                                     <span className={`alert-text ${submitMessage.includes('successfully') ? 'text-success' : 'text-danger'}`}>
@@ -390,12 +404,6 @@ export default function CreateAccount() {
                     display: flex;
                     align-items: center;
                     margin-top: 5px;
-                }
-
-                .exclamation {
-                    font-size: 1.2rem;
-                    margin-right: 5px;
-                    color: red;
                 }
 
                 .alert-text {

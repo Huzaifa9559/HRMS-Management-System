@@ -2,11 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
-import CreateAccount from './components/CreateAccount.jsx';
-import LoginPage from './components/LoginPage.jsx';
-import ForgotPassword from './components/ForgotPassword.jsx';
-import ResetPasswordSent from './components/ResetPasswordSent.jsx';
-import SetNewPassword from './components/SetNewPassword.jsx';
+import CreateAccount from './components/employee/CreateAccount.jsx';
+import LoginPage from './components/employee/LoginPage.jsx';
+import ForgotPassword from './components/employee/ForgotPassword.jsx';
+import ResetPasswordSent from './components/employee/ResetPasswordSent.jsx';
+import SetNewPassword from './components/employee/SetNewPassword.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
