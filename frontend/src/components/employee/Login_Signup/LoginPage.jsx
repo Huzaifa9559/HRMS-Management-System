@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,7 +12,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [passwordAlert, setPasswordAlert] = useState('');
   const [emailAlert, setEmailAlert] = useState('');
-
+  const [showPassword, setShowPassword] = useState(false); // State to manage password visibility
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -57,7 +59,6 @@ export default function Login() {
       const data = await response.json();
 
       if (data.success) {
-
         // here that loader will came first and the employee will login to his dashboard
         console.log('Login successful');
       } else {
@@ -68,6 +69,9 @@ export default function Login() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   return (
     <div className="container-fluid vh-100">
@@ -144,17 +148,28 @@ export default function Login() {
                   </div>
                 )}
               </div>
+
               <div className="mb-3">
                 <label htmlFor="password" className="form-label">Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  className="form-control"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="input-group">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    className="form-control"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={togglePasswordVisibility}
+                    style={{ border: 'none', background: 'transparent' }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </button>
+                </div>
                 {passwordAlert && (
                   <div className="custom-alert">
                     <span className="exclamation">❗</span>
@@ -162,6 +177,7 @@ export default function Login() {
                   </div>
                 )}
               </div>
+
               <div className="mb-3 form-check">
                 <input
                   type="checkbox"
@@ -172,6 +188,7 @@ export default function Login() {
                 />
                 <label className="form-check-label" htmlFor="rememberMe">Remember me</label>
               </div>
+
               {error && (
                 <div className="custom-alert">
                   <span className="exclamation">❗</span>
@@ -233,6 +250,14 @@ export default function Login() {
 
         .alert-text {
           font-size: 0.9rem;
+        }
+
+        .input-group input.form-control {
+          flex: 1; /* Make the input take up all available space */
+        }
+
+        .input-group .btn {
+          margin-left: -40px; /* Keep the button inside the input group */
         }
       `}</style>
     </div>

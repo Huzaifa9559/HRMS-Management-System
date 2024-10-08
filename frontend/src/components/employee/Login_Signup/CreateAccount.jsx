@@ -3,29 +3,37 @@ import PhoneInput from 'react-phone-input-2';
 import axios from 'axios';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import 'react-phone-input-2/lib/style.css';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const phoneUtil = PhoneNumberUtil.getInstance();
+
+
+//fetch designations and departments from DB and admin can add it 
+const designations = ['Product Designer', 'Software Engineer', 'Project Manager', 'HR Manager', 'Marketing Specialist'];
+const departments = ['Design', 'Engineering', 'Project Management', 'Human Resources', 'Marketing'];
 
 export default function CreateAccount() {
     const [formData, setFormData] = useState({
         employeeName: '',
+        countryCode: '+1',
         phoneNumber: '',
         address: '',
         password: '',
         confirmPassword: '',
         designation: '',
         department: '',
-        agreeTerms: false,
+        agreeTerms: false
     });
 
-    const [countryList, setCountryList] = useState([]);
-    const [phoneCountryCode, setPhoneCountryCode] = useState(''); // Hold the selected country phone code
+    const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
-    const [isValidPhone, setIsValidPhone] = useState(true); // For phone number validation
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
-    const [passwordAlert, setPasswordAlert] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+
+    const [isValidPhone, setIsValidPhone] = useState(true);
+    const [countryList, setCountryList] = useState([]);
+    const [phoneCountryCode, setPhoneCountryCode] = useState('');
 
     // Typewriter effect for heading and paragraph
     const [typedTextHeading, setTypedTextHeading] = useState('');
@@ -33,6 +41,32 @@ export default function CreateAccount() {
     const headingText = ' Welcome to HRMS!';
     const paragraphText = `A  new era of HR management, where efficiency meets simplicity. Empowering you to effortlessly manage everything from employee details and attendance to documents and salary slips—all in one place.`;
 
+    // Fetch country data with flags
+    useEffect(() => {
+        axios.get('https://restcountries.com/v3.1/all')
+            .then((response) => {
+                const countries = response.data.map((country) => ({
+                    name: country.name.common,
+                    code: country.cca2.toLowerCase(), // Use cca2 code for country (ISO 3166-1 alpha-2)
+                    flag: country.flags.png || country.flags.svg, // Fetch flag in png or svg
+                    dialCode: country.idd.root ? `${country.idd.root}${country.idd.suffixes[0]}` : '', // Combine root and suffix
+                }));
+                setCountryList(countries);
+            })
+            .catch((error) => {
+                console.error('Error fetching country data:', error);
+            });
+    }, []);
+    // Phone number validation
+    const validatePhoneNumber = (phoneNumber, countryCode) => {
+        try {
+            const parsedNumber = phoneUtil.parseAndKeepRawInput(phoneNumber, countryCode.toUpperCase());
+            const isValid = phoneUtil.isValidNumber(parsedNumber);
+            setIsValidPhone(isValid);
+        } catch (error) {
+            setIsValidPhone(false);
+        }
+    };
     useEffect(() => {
         let headingIndex = 0;
         const typeHeading = () => {
@@ -45,7 +79,7 @@ export default function CreateAccount() {
             }
         };
 
-        const headingInterval = setInterval(typeHeading, 90);
+        const headingInterval = setInterval(typeHeading, 170);
 
         let paragraphIndex = 0;
         const typeParagraph = () => {
@@ -64,33 +98,8 @@ export default function CreateAccount() {
         };
     }, []);
 
-    // Fetch country data with flags
-    useEffect(() => {
-        axios.get('https://restcountries.com/v3.1/all')
-            .then((response) => {
-                const countries = response.data.map((country) => ({
-                    name: country.name.common,
-                    code: country.cca2.toLowerCase(), // Use cca2 code for country (ISO 3166-1 alpha-2)
-                    flag: country.flags.png || country.flags.svg, // Fetch flag in png or svg
-                    dialCode: country.idd.root ? `${country.idd.root}${country.idd.suffixes[0]}` : '', // Combine root and suffix
-                }));
-                setCountryList(countries);
-            })
-            .catch((error) => {
-                console.error('Error fetching country data:', error);
-            });
-    }, []);
+    const [passwordAlert, setPasswordAlert] = useState('');
 
-    // Phone number validation
-    const validatePhoneNumber = (phoneNumber, countryCode) => {
-        try {
-            const parsedNumber = phoneUtil.parseAndKeepRawInput(phoneNumber, countryCode.toUpperCase());
-            const isValid = phoneUtil.isValidNumber(parsedNumber);
-            setIsValidPhone(isValid);
-        } catch (error) {
-            setIsValidPhone(false);
-        }
-    };
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prevState => ({
@@ -216,13 +225,6 @@ export default function CreateAccount() {
                         <p className="lead" style={{ fontSize: '0.8rem' }}>{typedTextParagraph}</p>
                     </div>
                 </div>
-                {/* Custom password alert */}
-                {passwordAlert && (
-                    <div className="custom-alert">
-                        <span className="exclamation">❗</span>
-                        <span className="alert-text">{passwordAlert}</span>
-                    </div>
-                )}
 
                 {/* Right side */}
                 <div className="col-lg-6 d-flex justify-content-center align-items-center bg-light p-3 p-lg-4">
@@ -253,7 +255,6 @@ export default function CreateAccount() {
                                 />
                             </div>
 
-                            {/* Phone Number */}
                             <div className="mb-2">
                                 <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
                                 <PhoneInput
@@ -265,15 +266,15 @@ export default function CreateAccount() {
                                         validatePhoneNumber(phoneNumber, country.countryCode); // Validate with country code
                                     }}
                                     inputClass="form-control form-control-sm"
-                                    disableDropdown={false} // Allow country selection dropdown
-                                    enableSearch={true} // Enable country search in the dropdown
+                                    disableDropdown={false} // Allow the dropdown for country selection
+                                    enableSearch={true} // Allow search in the country dropdown
+                                    disableCountryCode={false} // Make sure the country code is editable
                                     specialLabel="Phone Number" // Label for phone input
                                     limitMaxLength={true} // Enforce the length limit based on the country format
                                 />
                                 {!isValidPhone && <div className="text-danger">Invalid phone number</div>}
                             </div>
 
-                            {/* Address */}
                             <div className="mb-2">
                                 <label htmlFor="address" className="form-label">Address</label>
                                 <textarea
@@ -306,8 +307,9 @@ export default function CreateAccount() {
                                             type="button"
                                             className="btn btn-outline-secondary btn-sm"
                                             onClick={togglePasswordVisibility}
+                                            style={{ border: 'none', background: 'transparent' }}
                                         >
-                                            {showPassword ? '🔓' : '🔐'}
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
                                         </button>
                                     </div>
                                     {errors.password && <div className="invalid-feedback">{errors.password}</div>}
@@ -329,7 +331,6 @@ export default function CreateAccount() {
                                 </div>
                             </div>
 
-                            {/* Designation */}
                             <div className="mb-2">
                                 <label htmlFor="designation" className="form-label">Designation</label>
                                 <select
@@ -341,13 +342,14 @@ export default function CreateAccount() {
                                     required
                                 >
                                     <option value="">Select Designation</option>
-                                    <option value="Product Designer">Product Designer</option>
-                                    <option value="Software Engineer">Software Engineer</option>
-                                    <option value="Project Manager">Project Manager</option>
+                                    {designations.map((designation) => (
+                                        <option key={designation} value={designation}>
+                                            {designation}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
-                            {/* Department */}
                             <div className="mb-2">
                                 <label htmlFor="department" className="form-label">Department</label>
                                 <select
@@ -359,34 +361,24 @@ export default function CreateAccount() {
                                     required
                                 >
                                     <option value="">Select Department</option>
-                                    <option value="Design">Design</option>
-                                    <option value="Engineering">Engineering</option>
-                                    <option value="HR">HR</option>
+                                    {departments.map((department) => (
+                                        <option key={department} value={department}>
+                                            {department}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
-                            {/* Agree to Terms */}
-                            <div className="mb-2 form-check">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="agreeTerms"
-                                    name="agreeTerms"
-                                    checked={formData.agreeTerms}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <label className="form-check-label" htmlFor="agreeTerms">
-                                    I agree to the terms and conditions
-                                </label>
-                            </div>
-
-                            {/* Submit Button */}
-                            <button type="submit" className="btn btn-primary btn-sm w-100" disabled={isSubmitting}>
-                                {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                            <br />
+                            <button
+                                type="submit"
+                                className="btn btn-primary btn-sm w-100"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? 'Submitting for Request...' : 'Submit for Request'}
                             </button>
 
-                            {/* Submit Message */}
+                            {/* Custom submit message alert */}
                             {submitMessage && (
                                 <div className="custom-alert mt-3">
                                     <span className={`alert-text ${submitMessage.includes('successfully') ? 'text-success' : 'text-danger'}`}>
@@ -406,9 +398,28 @@ export default function CreateAccount() {
                     margin-top: 5px;
                 }
 
+                .exclamation {
+                    font-size: 1.2rem;
+                    margin-right: 5px;
+                    color: red;
+                }
+
                 .alert-text {
                     font-size: 0.9rem;
                     color: red;
+                }
+
+                .input-group {
+                    position: relative;
+                    z-index: 1; /* Ensure the input group, including the eye icon, remains under the dropdown */
+                }
+
+                .btn-outline-secondary {
+                    z-index: 0; /* Set lower z-index for the button to avoid overlapping */
+                }
+
+                .react-tel-input .flag-dropdown {
+                    z-index: 10; /* Increase z-index of the flag dropdown to ensure it stays on top */
                 }
             `}</style>
         </div>

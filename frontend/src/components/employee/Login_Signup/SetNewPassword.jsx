@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function SetNewPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,45 +38,39 @@ export default function SetNewPassword() {
       return;
     }
 
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/.test(password)) {
-      setError('Password must be alphanumeric and contain at least one lowercase letter, one uppercase letter, one number, and one symbol');
-      return;
-    }
-
-    // Fetch the `id` from the query parameters
     const queryParams = new URLSearchParams(location.search);
-    const id = queryParams.get('id'); // Make sure this is correctly extracting the `id`
+    const id = queryParams.get('id');
 
     if (!id) {
       setError('Invalid or missing user ID.');
       return;
     }
 
-
     try {
-      // backend api call that sets the new password of that user
       const response = await fetch('/api/employees/set-new-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id, password }), // Send password in the request body
+        body: JSON.stringify({ id, password }),
       });
 
-      // Handle the response
-      const data = await response.json(); // Parse the JSON response
+      const data = await response.json();
 
       if (data.success) {
         setSuccess(true);
-        //a button for returning to login should come here
-        navigate('/login'); // Redirect on success
+        navigate('/login');
       } else {
         setError('Failed to set new password. Please try again.');
       }
     } catch (err) {
-      console.error(err); // Log the actual error for debugging
+      console.error(err);
       setError('An error occurred. Please try again later.');
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -81,11 +78,7 @@ export default function SetNewPassword() {
       <div className="row h-100">
         {/* Left side */}
         <div className="col-lg-6 d-flex flex-column justify-content-center align-items-center text-white p-4 p-lg-5"
-          style={{
-            backgroundColor: '#0066ff', // Set the blue background color
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
+          style={{ backgroundColor: '#0066ff', position: 'relative', overflow: 'hidden' }}>
           {/* Top-left logo */}
           <div style={{
             position: 'absolute',
@@ -127,39 +120,49 @@ export default function SetNewPassword() {
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label htmlFor="password" className="form-label">Password</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="password"
-                  placeholder="Enter your new password"
-                  value={password}
-                  onChange={(e) => {
-                    console.log('Password: ', e.target.value);
-                    setPassword(e.target.value)
-                  }}
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="confirmPassword"
-                  placeholder="Confirm your new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
+                <div className="input-group">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-control"
+                    id="password"
+                    placeholder="Enter your new password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={togglePasswordVisibility}
+                    style={{ border: 'none', background: 'transparent' }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </button>
+                </div>
               </div>
 
-              {/* Custom error alert for password issues */}
+              <div className="mb-3">
+                <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                <div className="input-group">
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="confirmPassword"
+                    placeholder="Confirm your new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
               {error && (
                 <div className="custom-alert">
                   <span className="exclamation">❗</span>
                   <span className="alert-text">{error}</span>
                 </div>
               )}
+
               <br />
               <button type="submit" className="btn btn-primary w-100">Set Password</button>
             </form>
@@ -177,14 +180,25 @@ export default function SetNewPassword() {
         .exclamation {
           font-size: 1.2rem;
           margin-right: 8px;
-          color: red; /* For error messages */
+          color: red;
         }
 
         .alert-text {
           font-size: 0.9rem;
-          color: red; /* For error messages */
+          color: red;
         }
 
+        .input-group input.form-control {
+          flex: 1; /* Ensure both inputs inside input-group take up the same width */
+        }
+
+        .input-group .btn {
+          margin-left: -40px; /* Keep the button inside the input field */
+        }
+
+        .form-control {
+          width: 100%; /* Ensure all inputs take full width */
+        }
       `}</style>
     </div>
   );
