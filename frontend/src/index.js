@@ -8,6 +8,7 @@ import ForgotPassword from './components/employee/Login_Signup/ForgotPassword.js
 import ResetPasswordSent from './components/employee/Login_Signup/ResetPasswordSent.jsx';
 import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.jsx';
 import Dashboard from './components/Admin/MainDashboard/Dashboard.jsx';
+import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -25,7 +26,7 @@ root.render(
         
         {/* Main dashboard route */}
         <Route path="/dashboard/*" element={<Dashboard />} />
-
+        <Route path="/employee_main_dashboard/*" element={<EDashboard />} />
         {/* If no path is matched, redirect to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
