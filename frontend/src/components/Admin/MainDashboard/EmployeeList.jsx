@@ -13,7 +13,7 @@ export default function EmployeeList() {
                 { id: '61234', name: 'Randy Aminoff', department: 'Designing', designation: 'UI UX designer', joiningDate: '05 Sep 2021', status: 'Enable' },
                 { id: '61235', name: 'Jane Doe', department: 'Development', designation: 'Frontend Developer', joiningDate: '10 Oct 2021', status: 'Enable' },
                 { id: '61236', name: 'John Smith', department: 'HR', designation: 'HR Manager', joiningDate: '15 Nov 2021', status: 'Disable' }
-            ];
+            ];//h ka kaam ha
             setEmployees(mockData);
         } catch (error) {
             console.error('Error fetching employees:', error);

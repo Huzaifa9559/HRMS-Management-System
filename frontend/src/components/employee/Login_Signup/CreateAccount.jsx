@@ -19,14 +19,11 @@ export default function CreateAccount() {
         countryCode: '+1',
         phoneNumber: '',
         address: '',
-        password: '',
-        confirmPassword: '',
         designation: '',
         department: '',
         agreeTerms: false
     });
 
-    const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
@@ -98,8 +95,6 @@ export default function CreateAccount() {
         };
     }, []);
 
-    const [passwordAlert, setPasswordAlert] = useState('');
-
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prevState => ({
@@ -115,8 +110,6 @@ export default function CreateAccount() {
         if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
         if (!/^\d{10}$/.test(formData.phoneNumber)) newErrors.phoneNumber = 'Invalid phone number format';
         if (!formData.address) newErrors.address = 'Address is required';
-        if (!formData.password) newErrors.password = 'Password is required';
-        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
         if (!formData.designation) newErrors.designation = 'Designation is required';
         if (!formData.department) newErrors.department = 'Department is required';
         if (!formData.agreeTerms) newErrors.agreeTerms = 'You must agree to the terms and conditions';
@@ -128,35 +121,6 @@ export default function CreateAccount() {
         e.preventDefault();
         const formErrors = validateForm();
         setErrors(formErrors);
-        setPasswordAlert('');
-
-        // Password validation checks
-        if (formData.password !== formData.confirmPassword) {
-            setPasswordAlert('Passwords do not match');
-            return;
-        }
-
-        if (formData.password.length < 8) {
-            setPasswordAlert('Password must be at least 8 characters long');
-            return;
-        }
-
-        if (!/[A-Z]/.test(formData.password)) {
-            setPasswordAlert('Password must contain at least one capital letter');
-            return;
-        }
-
-        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(formData.password)) {
-            setPasswordAlert('Password must contain at least one symbol');
-            return;
-        }
-
-        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/.test(formData.password)) {
-            setPasswordAlert('Password must be alphanumeric and contain at least one lowercase letter, one uppercase letter, one number, and one symbol');
-            return;
-        }
-
-        setPasswordAlert(''); // Clear password alert if all checks pass
 
         if (Object.keys(formErrors).length > 0) {
             return;
@@ -175,7 +139,6 @@ export default function CreateAccount() {
                     employeeName: formData.employeeName,
                     phoneNumber: `${formData.countryCode}${formData.phoneNumber}`,
                     address: formData.address,
-                    password: formData.password,
                     designation: formData.designation,
                     department: formData.department,
                 }),
@@ -187,7 +150,7 @@ export default function CreateAccount() {
                 setSubmitMessage('Account created successfully!');
                 //a request for review will be sent to admin
                 //once admin approves, an email will be sent to employee to login to his account, with
-                //the email and password
+                //the email
             } else {
                 setSubmitMessage(data.message || 'An error occurred. Please try again.');
             }
@@ -196,10 +159,6 @@ export default function CreateAccount() {
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
     };
 
     return (
@@ -231,14 +190,6 @@ export default function CreateAccount() {
                     <div className="w-100" style={{ maxWidth: '450px' }}>
                         <h3 className="mb-3 text-center">Create an Account</h3>
                         <p className="text-muted mb-3 text-center">Please create your profile</p>
-
-                        {/* Custom password alert */}
-                        {passwordAlert && (
-                            <div className="custom-alert">
-                                <span className="exclamation">❗</span>
-                                <span className="alert-text">{passwordAlert}</span>
-                            </div>
-                        )}
 
                         <form onSubmit={handleSubmit}>
                             <div className="mb-2">
@@ -288,49 +239,6 @@ export default function CreateAccount() {
                                     required
                                 />
                             </div>
-
-                            <div className="row mb-2">
-                                <div className="col-md-6">
-                                    <label htmlFor="password" className="form-label">Password</label>
-                                    <div className="input-group">
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            className={`form-control form-control-sm ${errors.password ? 'is-invalid' : ''}`}
-                                            id="password"
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            placeholder="Password"
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary btn-sm"
-                                            onClick={togglePasswordVisibility}
-                                            style={{ border: 'none', background: 'transparent' }}
-                                        >
-                                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                                        </button>
-                                    </div>
-                                    {errors.password && <div className="invalid-feedback">{errors.password}</div>}
-                                </div>
-
-                                <div className="col-md-6">
-                                    <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        className={`form-control form-control-sm ${errors.confirmPassword ? 'is-invalid' : ''}`}
-                                        id="confirmPassword"
-                                        name="confirmPassword"
-                                        value={formData.confirmPassword}
-                                        onChange={handleChange}
-                                        placeholder="Confirm Password"
-                                        required
-                                    />
-                                    {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
-                                </div>
-                            </div>
-
                             <div className="mb-2">
                                 <label htmlFor="designation" className="form-label">Designation</label>
                                 <select

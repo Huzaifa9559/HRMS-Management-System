@@ -7,7 +7,7 @@ import LoginPage from './components/employee/Login_Signup/LoginPage.jsx';
 import ForgotPassword from './components/employee/Login_Signup/ForgotPassword.jsx';
 import ResetPasswordSent from './components/employee/Login_Signup/ResetPasswordSent.jsx';
 import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.jsx';
-import Dashboard from './components/employee/Dashboard.jsx';
+import Dashboard from './components/Admin/MainDashboard/Dashboard.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
