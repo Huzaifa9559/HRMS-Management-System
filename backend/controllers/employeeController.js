@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
-const Employee = require('../../models/employee'); // Import the Employee model
-const { setUser } = require('../../service/auth'); // Import setUser function
-const { sendResetLink } = require('../../service/nodemailer');
+const Employee = require('../models/employee'); // Import the Employee model
+const { setUser } = require('../service/auth'); // Import setUser function
+const { sendResetLink } = require('../service/nodemailer');
 
 exports.createAccount = async (req, res) => {
     console.log(req.body);

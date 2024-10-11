@@ -1,5 +1,5 @@
-const Employee = require('../../models/employee'); // Import the Employee model
-const { sendCreateAccountLink } = require('../../service/nodemailer');
+const Employee = require('../models/employee'); // Import the Employee model
+const { sendCreateAccountLink } = require('../service/nodemailer');
 
 
 // Fetch all employees with pagination
