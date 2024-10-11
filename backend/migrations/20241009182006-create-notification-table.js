@@ -4,12 +4,12 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
     CREATE TABLE Notification (
-    NotificationID INT PRIMARY KEY AUTO_INCREMENT,
-    EmployeeID INT,
-    Title VARCHAR(50),
-    Creation_Date DATE,
-    Description VARCHAR(100),
-    CONSTRAINT NEK FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+    notificationID INT PRIMARY KEY AUTO_INCREMENT,
+    employeeID INT,
+    notification_title VARCHAR(50),
+    notification_creationDate DATE,
+    notification_description VARCHAR(100),
+    CONSTRAINT NEK FOREIGN KEY (employeeID) REFERENCES Employee(employeeID)
     );
 `);
   },

@@ -1,102 +1,77 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const dotenv = require('dotenv');
-dotenv.config({
-    path: `.env.${process.env.NODE_ENV}`
-});
+const { sequelize } = require("../config/sequelizeConfig");
+const Sequelize = require('sequelize');
+//creating our own custom model without the use of sequelize ORM 
+const Employee = {};
+// no need to define attributes in sequelize since using Raw SQL queries for DML operations
 
-const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.USERNAME,
-    process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        dialect: process.env.DB_DIALECT,
-        port: process.env.DB_PORT || 3306,
-    });
-
-const Employee = sequelize.define('Employee', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    employeeName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    phoneNumber: {
-        type: DataTypes.STRING(15),
-        allowNull: false,
-        unique: true
-    },
-    address: {
-        type: DataTypes.TEXT,
-        allowNull: false
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    designation: {
-        type: DataTypes.STRING(100),
-        allowNull: false
-    },
-    department: {
-        type: DataTypes.STRING(100),
-        allowNull: false
-    },
-    email: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-        unique: true
-    }
-}, {
-    timestamps: true,
-});
-
-// Static method to run raw SQL for DML (e.g., inserting an employee)
 Employee.insertEmployee = async function (employeeData) {
     const query = `
-        INSERT INTO employees (employeeName, phoneNumber, address, password, designation, department,email)
-        VALUES (?, ?, ?, ?, ?, ?,?)`;
-    return await sequelize.query(query, {
-        replacements: [employeeData.employeeName, employeeData.phoneNumber, employeeData.address,
-        employeeData.password, employeeData.designation, employeeData.department, employeeData.email]
-    });
+    INSERT INTO employee (employee_name, employee_phoneNumber, employee_address, designationID, departmentID)
+    VALUES (?, ?, ?, 
+        (SELECT designationID FROM designation WHERE designation_name = ?), 
+        (SELECT departmentID FROM department WHERE department_name = ?)
+    )`;
+    try {
+        await sequelize.query(query, {
+            replacements: [employeeData.employeeName, employeeData.phoneNumber, employeeData.address,
+            employeeData.designation, employeeData.department]
+        });
+    } catch (error) {
+        console.error('Error inserting employee:', error);
+        throw error;
+    }
 };
 
-// Static method to find an employee by ID using raw SQL
-Employee.findById = async function (id) {
-    const query = 'SELECT * FROM employees WHERE id = ?';
-    const [results] = await sequelize.query(query, {
-        replacements: [id]
-    });
-    return results[0]; // Return the first result
-};
-
-// Static method to find an employee by phone number using raw SQL
-Employee.findByPhoneNumber = async function (phoneNumber) {
-    const query = 'SELECT * FROM employees WHERE phoneNumber = ?';
-    const [results] = await sequelize.query(query, {
-        replacements: [phoneNumber]
-    });
-    return results[0]; // Return the first result
-};
-
-Employee.findByEmail = async function (email) {
-    const query = 'SELECT * FROM employees WHERE email = ?';
-    const [results] = await sequelize.query(query, {
-        replacements: [email]
-    });
-    return results[0]; // Return the first result
+Employee.findByField = async function (field, value) {
+    const query = `SELECT * FROM employee WHERE ${field} = ?`;
+    try {
+        const [results] = await sequelize.query(query, {
+            replacements: [value]
+        });
+        return results[0] || null; // Return the first result or null if not found
+    } catch (error) {
+        console.error(`Error finding employee by ${field}:`, error);
+        throw error; // Rethrow the error to be handled in the controller
+    }
 };
 
 Employee.updatePassword = async function (id, hashedPassword) {
-    const query = 'UPDATE employees SET password = :password WHERE id = :id';
-    // Update the employee's password using a raw SQL query
-    await sequelize.query(query, {
-        replacements: { password: hashedPassword, id: id },
-    }); // Raw SQL update query
+    const query = 'UPDATE employee SET employee_password = :password WHERE employeeID = :id';
+    try {
+        await sequelize.query(query, {
+            replacements: { password: hashedPassword, id: id },
+        });
+    } catch (error) {
+        console.error('Error updating password:', error);
+        throw error; // Rethrow the error to be handled in the controller
+    }
+};
+
+// Method to get designations
+Employee.getDesignations = async () => {
+    try {
+        const query = 'SELECT designation_name FROM designation';
+        const designations = await sequelize.query(query, {
+            type: Sequelize.QueryTypes.SELECT
+        });
+        return designations;
+    } catch (error) {
+        console.error('Error fetching designations:', error);
+        throw error; // Rethrow the error to be handled in the controller
+    }
+};
+
+// Method to get departments
+Employee.getDepartments = async () => {
+    try {
+        const departments = await sequelize.query("SELECT department_name FROM department", {
+            type: Sequelize.QueryTypes.SELECT
+        });
+        return departments;
+    } catch (error) {
+        console.error('Error fetching departments:', error);
+        throw error; // Rethrow the error to be handled in the controller
+    }
 };
 
 module.exports = Employee;

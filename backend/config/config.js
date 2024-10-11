@@ -1,10 +1,12 @@
-{
+require('dotenv').config({ path: `${process.cwd()}/.env` });
+
+module.exports = {
   "development": {
-    "username": "root",
-    "password": "1234",
-    "database": "dbproject",
-    "host": "localhost",
-    "dialect": "mysql"
+    "username": process.env.DB_USER,
+    "password": process.env.DB_PASSWORD,
+    "database": process.env.DB_NAME,
+    "host": process.env.DB_HOST,
+    "dialect": process.env.DB_DIALECT
   },
   "test": {
     "username": "root",

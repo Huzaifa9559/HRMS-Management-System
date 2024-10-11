@@ -1,41 +1,8 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const dotenv = require('dotenv');
-dotenv.config({
-    path: `.env.${process.env.NODE_ENV}`
-});
-
-const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.USERNAME,
-    process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        dialect: process.env.DB_DIALECT,
-        port: process.env.DB_PORT || 3306,
-    });
+const { Sequelize } = require('sequelize');
+const { sequelize } = require("../config/sequelizeConfig");
 
 // Define the Admin model
-const Admin = sequelize.define('Admin', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    email: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        unique: true, // Ensure that email is unique
-        validate: {
-            isEmail: true // Validate email format
-        }
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false // Password field is required
-    }
-}, {
-    timestamps: true // Automatically adds `createdAt` and `updatedAt` fields
-});
+const Admin = {};
 
 // Static method to insert an admin into the database
 Admin.insertAdmin = async function (adminData) {
@@ -100,5 +67,7 @@ Admin.countEmployees = async () => {
         throw error;
     }
 };
+
+
 
 module.exports = Admin;

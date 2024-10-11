@@ -1,4 +1,6 @@
-const Employee = require('../models/employee'); // Import the Employee model
+const Employee = require('../../models/employee'); // Import the Employee model
+const { sendCreateAccountLink } = require('../../service/nodemailer');
+
 
 // Fetch all employees with pagination
 exports.findAllEmployees = async (req, res) => {
@@ -26,3 +28,20 @@ exports.findAllEmployees = async (req, res) => {
         return res.status(500).json({ message: 'Error fetching employees', error: error.message });
     }
 };
+
+
+exports.inviteEmployee = async (req, res) => {
+    const { email } = req.body;
+    try {
+        // Send the create account link to the user's email and handle the response
+        await sendCreateAccountLink(email);
+        return res.status(200).json({ message: 'Create Account link sent to your email', success: true });
+    } catch (error) {
+        console.error('Error sending Create Account link:', error);
+        return res.status(500).json({ message: 'Failed to send Create Account link', success: false, error: error.message });
+    }
+};
+
+//another functionality will be made in admin that will admin approves the employee created
+//and changes its status (pending,enabled,disabled)
+

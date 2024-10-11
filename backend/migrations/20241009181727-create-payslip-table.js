@@ -4,12 +4,12 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
     CREATE TABLE Payslip(
-    PayslipID INT PRIMARY KEY AUTO_INCREMENT,
-    Month_name VARCHAR(50),
-    EmployeeID INT,
-    Receive_Date DATE,
-    Document_URL VARCHAR(255),
-    CONSTRAINT PEK FOREIGN KEY(EmployeeID) REFERENCES Employee(EmployeeID)
+    payslipID INT PRIMARY KEY AUTO_INCREMENT,
+    payslip_monthName VARCHAR(50),
+    employeeID INT,
+    payslip_receiveDate DATE,
+    payslip_documentURL VARCHAR(255),
+    CONSTRAINT PEK FOREIGN KEY(employeeID) REFERENCES Employee(employeeID)
     );
 `);
   },

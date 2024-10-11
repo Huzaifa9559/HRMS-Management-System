@@ -4,14 +4,14 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
     CREATE TABLE \`Leave\`(
-    LeaveID INT PRIMARY KEY AUTO_INCREMENT,
-    EmployeeID INT,
-    From_Date DATE,
-    To_Date DATE,
-    Reason VARCHAR(255),
-    Type VARCHAR(100),
-    Status TINYINT(1),
-    CONSTRAINT LEK FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+    leaveID INT PRIMARY KEY AUTO_INCREMENT,
+    employeeID INT,
+    leave_fromDate DATE,
+    leave_toDate DATE,
+    leave_reason VARCHAR(255),
+    leave_type VARCHAR(100),
+    leave_status TINYINT(1),
+    CONSTRAINT LEK FOREIGN KEY (employeeID) REFERENCES Employee(employeeID)
 );
 `);
   },

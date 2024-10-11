@@ -7,7 +7,7 @@ import LoginPage from './components/employee/Login_Signup/LoginPage.jsx';
 import ForgotPassword from './components/employee/Login_Signup/ForgotPassword.jsx';
 import ResetPasswordSent from './components/employee/Login_Signup/ResetPasswordSent.jsx';
 import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.jsx';
-import Dashboard from './components/Admin/MainDashboard/Dashboard.jsx';
+import Dashboard from './components/admin/MainDashboard/Dashboard.jsx';
 import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -23,8 +23,12 @@ root.render(
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
-        
+
         {/* Main dashboard route */}
+
+        {/*make these routes for dashboards protected */}
+        {/*separate the employee routes from admin */}
+
         <Route path="/dashboard/*" element={<Dashboard />} />
         <Route path="/employee_main_dashboard/*" element={<EDashboard />} />
         {/* If no path is matched, redirect to login */}

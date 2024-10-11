@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios'; // Import Axios
 
 const InviteEmployee = ({ onClose }) => {
     const [email, setEmail] = useState('');
@@ -7,34 +8,39 @@ const InviteEmployee = ({ onClose }) => {
         setEmail(e.target.value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => { // Make the function async
         e.preventDefault();
-        // Add your form submission logic here
-        console.log('Sending Invitation to:', email);
+        try {
+            const response = await axios.post('/api/admin/invite-new-employee', { email }); // Send the email
+            console.log('Response:', response.data); // Log the response
+        } catch (error) {
+            console.error('Error sending invitation:', error); // Handle errors
+        }
+        console.log('Sending Invitation to:', email); // Existing log
     };
 
     return (
-            <form onSubmit={handleSubmit} style={styles.form}>
-                {/* Email Input */}
-                <div style={styles.formGroup}>
+        <form onSubmit={handleSubmit} style={styles.form}>
+            {/* Email Input */}
+            <div style={styles.formGroup}>
                 <label style={{ fontWeight: 400 }} htmlFor="email">
                     Enter Email <span style={{ color: 'red' }}>*</span>
                 </label>
 
-                    <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={handleEmailChange}
-                        placeholder="Enter employee email"
-                        style={styles.input}
-                        required
-                    />
-                </div>
+                <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    placeholder="Enter employee email"
+                    style={styles.input}
+                    required
+                />
+            </div>
 
-                {/* Submit Button */}
-                <button type="submit" style={styles.submitButton}>Send Invitation</button>
-            </form>
+            {/* Submit Button */}
+            <button type="submit" style={styles.submitButton}>Send Invitation</button>
+        </form>
     );
 };
 
