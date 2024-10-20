@@ -28,3 +28,9 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+//redis on backend
+//localstorage cache
+//redux on frontend
+//cloud native SQL DB

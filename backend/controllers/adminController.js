@@ -1,5 +1,32 @@
 const Employee = require('../models/employee'); // Import the Employee model
 const { sendCreateAccountLink } = require('../service/nodemailer');
+const Admin = require('../models/admin');
+const { setUser } = require('../service/auth');
+
+
+exports.loginAdmin = async (req, res) => {
+    const { email, password } = req.body;
+
+    const adminEmail = 'admin@yahoo.com';
+    const adminPassword = '123';
+    console.log(req.body.email, req.body.password);
+    try {
+        if (email == adminEmail && password == adminPassword) {
+            const admin = {
+                
+            };
+            //const token = setUser(admin);
+            //res.cookie('token', token);
+
+            return res.status(200).json({ message: 'Admin login successful', success: true });
+        } else {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+    } catch (error) {
+        console.error('Error logging in admin:', error);
+        return res.status(500).json({ message: 'Error logging in', error: error.message, success: false });
+    }
+};
 
 
 // Fetch all employees with pagination
@@ -44,4 +71,3 @@ exports.inviteEmployee = async (req, res) => {
 
 //another functionality will be made in admin that will admin approves the employee created
 //and changes its status (pending,enabled,disabled)
-
