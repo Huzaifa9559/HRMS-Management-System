@@ -65,7 +65,7 @@ export default function SideMenu() {
             {/* Navigation Links with Hover Effect */}
             <nav className="nav flex-column">
                 <NavLink
-                    to="/dashboard"
+                    to="/admin_main_dashboard"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}

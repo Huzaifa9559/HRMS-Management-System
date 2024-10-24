@@ -108,12 +108,9 @@ export default function CreateAccount() {
         const newErrors = {};
         if (!formData.employeeName) newErrors.employeeName = 'Employee name is required';
         if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
-        if (!/^\d{10}$/.test(formData.phoneNumber)) newErrors.phoneNumber = 'Invalid phone number format';
         if (!formData.address) newErrors.address = 'Address is required';
         if (!formData.designation) newErrors.designation = 'Designation is required';
         if (!formData.department) newErrors.department = 'Department is required';
-        if (!formData.agreeTerms) newErrors.agreeTerms = 'You must agree to the terms and conditions';
-
         return newErrors;
     };
 

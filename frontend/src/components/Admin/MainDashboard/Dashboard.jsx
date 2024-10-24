@@ -11,6 +11,7 @@ export default function Dashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('');
     const [selectedDesignation, setSelectedDesignation] = useState('');
+    
 
     const handleInviteClick = () => {
         setShowInviteForm(true);
