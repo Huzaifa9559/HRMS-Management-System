@@ -13,6 +13,7 @@ import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.js
 import Dashboard from './components/admin/MainDashboard/Dashboard.jsx';
 import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
 import LeaveManagementD from './components/employee/EmployeeDashboard/LeaveManagementD.jsx';
+import Account from './components/employee/EmployeeDashboard/Account.jsx'
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -36,8 +37,9 @@ root.render(
           <Route path="/employee_main_dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />
           <Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} />
           {/* <Route path="/dashboard/*" element={<Dashboard />} />
-          <Route path="/employee_main_dashboard/*" element={<EDashboard />} />
+          <Route path="/employee_main_dashboard/*" element={<EDashboard />} />s
           <Route path="/admin_main_dashboard/*" element={<Dashboard />} /> */}
+          <Route path="/account" element={<Account />} />
           {/* If no path matches, redirect to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

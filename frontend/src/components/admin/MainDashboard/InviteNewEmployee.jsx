@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import axios from 'axios'; // Import Axios
 
 const InviteEmployee = ({ onClose }) => {
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(''); 
 
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
+
     };
 
     const handleSubmit = async (e) => { // Make the function async
         e.preventDefault();
         try {
+            //password auto generationnnnn huz :"))
             const response = await axios.post('/api/admin/invite-new-employee', { email }); // Send the email
             console.log('Response:', response.data); // Log the response
         } catch (error) {
