@@ -6,6 +6,8 @@ module.exports = {
     CREATE TABLE Employee (
     employeeID INT PRIMARY KEY AUTO_INCREMENT,
     employee_name VARCHAR(100) NOT NULL,
+    employee_email VARCHAR(30) NOT NULL,
+    employee_password VARCHAR(20) NOT NULL,
     employee_DOB DATE,
     employee_phonenumber VARCHAR(20) NOT NULL,
     departmentID INT,
@@ -21,7 +23,8 @@ module.exports = {
     employee_profile_pic_URL VARCHAR(255),
     employee_postal_code INT,
     CONSTRAINT EDeK FOREIGN KEY (departmentID) REFERENCES Department(departmentID),
-    CONSTRAINT EDK FOREIGN KEY (designationID) REFERENCES Designation(designationID)
+    CONSTRAINT EDK FOREIGN KEY (designationID) REFERENCES Designation(designationID),
+    CONSTRAINT uniqueP UNIQUE (employee_email)
     );
   `);
   },

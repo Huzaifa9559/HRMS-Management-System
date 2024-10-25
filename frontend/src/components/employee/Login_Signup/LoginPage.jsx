@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../AuthContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { loginAsEmployee } = useAuth(); // Destructure loginAsEmployee from useAuth
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -59,14 +61,21 @@ export default function Login() {
       const data = await response.json();
 
       if (data.success) {
-        // here that loader will came first and the employee will login to his dashboard
+        // Call loginAsEmployee from AuthContext to update authentication state
+        loginAsEmployee();
+        // Optionally, you could also show a loader and redirect to employee dashboard
         console.log('Login successful');
+        // Redirect to employee dashboard
+        // You can use history.push('/employee_dashboard') if using react-router-dom v5
+        // For react-router-dom v6, useNavigate can be used for navigation.
+        navigate('/employee_main_dashboard');
       } else {
         setError('Invalid credentials');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
     }
+    
   };
 
   const togglePasswordVisibility = () => {
