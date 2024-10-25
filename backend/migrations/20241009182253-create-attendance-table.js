@@ -4,17 +4,17 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
     CREATE TABLE Attendance (
-    AttendanceID INT PRIMARY KEY AUTO_INCREMENT,
-    EmployeeID INT,
-    Date DATE NOT NULL,
-    Status BOOLEAN,
-    Clock_In TIME,
-    Clock_Out TIME,
-    Break_In TIME,
-    Break_Out TIME,
-    Working_Hours TIME,
-    Total_Break TIME,
-    CONSTRAINT AEK FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+    attendanceID INT PRIMARY KEY AUTO_INCREMENT,
+    employeeID INT,
+    attendance_date DATE NOT NULL,
+    attendance_status BOOLEAN,
+    attendance_clockIn TIME,
+    attendance_clockOut TIME,
+    attendance_breakIn TIME,
+    attendance_breakOut TIME,
+    attendance_workingHours TIME,
+    attendance_totalBreak TIME,
+    CONSTRAINT AEK FOREIGN KEY (employeeID) REFERENCES Employee(employeeID)
     );
 `);
   },

@@ -3,20 +3,14 @@ import PhoneInput from 'react-phone-input-2';
 import axios from 'axios';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import 'react-phone-input-2/lib/style.css';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const phoneUtil = PhoneNumberUtil.getInstance();
 
 
-//fetch designations and departments from DB and admin can add it 
-const designations = ['Product Designer', 'Software Engineer', 'Project Manager', 'HR Manager', 'Marketing Specialist'];
-const departments = ['Design', 'Engineering', 'Project Management', 'Human Resources', 'Marketing'];
-
 export default function CreateAccount() {
     const [formData, setFormData] = useState({
         employeeName: '',
-        countryCode: '+1',
+        countryCode: '+',
         phoneNumber: '',
         address: '',
         designation: '',
@@ -27,6 +21,11 @@ export default function CreateAccount() {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
+
+    // Fetch designations and departments from DB and admin can add it 
+
+    const [designations, setDesignations] = useState([]);
+    const [departments, setDepartments] = useState([]);
 
     const [isValidPhone, setIsValidPhone] = useState(true);
     const [countryList, setCountryList] = useState([]);
@@ -54,6 +53,22 @@ export default function CreateAccount() {
                 console.error('Error fetching country data:', error);
             });
     }, []);
+
+    // Fetch designations and departments from the database
+    useEffect(() => {
+        const fetchDesignationsAndDepartments = async () => {
+            try {
+                const response = await axios.get('/api/employees/get-designations-and-departments');
+                setDesignations(response.data.designations);
+                setDepartments(response.data.departments);
+            } catch (error) {
+                console.error('Error fetching designations and departments:', error);
+            }
+        };
+
+        fetchDesignationsAndDepartments();
+    }, []);
+
     // Phone number validation
     const validatePhoneNumber = (phoneNumber, countryCode) => {
         try {
@@ -116,13 +131,13 @@ export default function CreateAccount() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         const formErrors = validateForm();
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length > 0) {
             return;
         }
-
         setIsSubmitting(true);
         setSubmitMessage('');
 
@@ -144,10 +159,7 @@ export default function CreateAccount() {
             const data = await response.json();
 
             if (response.ok) {
-                setSubmitMessage('Account created successfully!');
-                //a request for review will be sent to admin
-                //once admin approves, an email will be sent to employee to login to his account, with
-                //the email
+                setSubmitMessage('Request sent successfully!');
             } else {
                 setSubmitMessage(data.message || 'An error occurred. Please try again.');
             }
@@ -248,8 +260,8 @@ export default function CreateAccount() {
                                 >
                                     <option value="">Select Designation</option>
                                     {designations.map((designation) => (
-                                        <option key={designation} value={designation}>
-                                            {designation}
+                                        <option key={designation.designation_name} value={designation.designation_name}>
+                                            {designation.designation_name}
                                         </option>
                                     ))}
                                 </select>
@@ -267,8 +279,8 @@ export default function CreateAccount() {
                                 >
                                     <option value="">Select Department</option>
                                     {departments.map((department) => (
-                                        <option key={department} value={department}>
-                                            {department}
+                                        <option key={department.department_name} value={department.department_name}>
+                                            {department.department_name}
                                         </option>
                                     ))}
                                 </select>
@@ -296,7 +308,7 @@ export default function CreateAccount() {
                 </div>
             </div>
 
-            <style jsx>{`
+            <style>{`
                 .custom-alert {
                     display: flex;
                     align-items: center;

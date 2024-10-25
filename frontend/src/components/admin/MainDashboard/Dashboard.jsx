@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SideMenu from './SideMenu';
 import EmployeeList from './EmployeeList';
 import InviteNewEmployee from './InviteNewEmployee';
 import Header from './Header';
 import { Modal, Button, InputGroup, FormControl, Dropdown } from 'react-bootstrap';
 import { FaSearch } from 'react-icons/fa';
+import axios from 'axios';
 
 export default function Dashboard() {
     const [showInviteForm, setShowInviteForm] = useState(false);
@@ -12,6 +13,23 @@ export default function Dashboard() {
     const [selectedDepartment, setSelectedDepartment] = useState('');
     const [selectedDesignation, setSelectedDesignation] = useState('');
     
+
+    const [designations, setDesignations] = useState([]);
+    const [departments, setDepartments] = useState([]);
+
+    useEffect(() => {
+        const fetchDesignationsAndDepartments = async () => {
+            try {
+                const response = await axios.get('/api/employees/get-designations-and-departments');
+                setDesignations(response.data.designations);
+                setDepartments(response.data.departments);
+            } catch (error) {
+                console.error('Error fetching designations and departments:', error);
+            }
+        };
+
+        fetchDesignationsAndDepartments();
+    }, []);
 
     const handleInviteClick = () => {
         setShowInviteForm(true);
@@ -56,9 +74,11 @@ export default function Dashboard() {
                                     {selectedDepartment || 'Select by Department'}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => setSelectedDepartment('Designing')}>Designing</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => setSelectedDepartment('Development')}>Development</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => setSelectedDepartment('HR')}>HR</Dropdown.Item>
+                                    {departments.map((department, index) => (
+                                        <Dropdown.Item key={index} onClick={() => setSelectedDepartment(department.department_name)}>
+                                            {department.department_name}
+                                        </Dropdown.Item>
+                                    ))}
                                 </Dropdown.Menu>
                             </Dropdown>
                             <Dropdown className="me-2 mb-2">
@@ -66,9 +86,11 @@ export default function Dashboard() {
                                     {selectedDesignation || 'Select by Designation'}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => setSelectedDesignation('UI UX designer')}>UI UX designer</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => setSelectedDesignation('Frontend Developer')}>Frontend Developer</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => setSelectedDesignation('HR Manager')}>HR Manager</Dropdown.Item>
+                                    {designations.map((designation, index) => (
+                                        <Dropdown.Item key={index} onClick={() => setSelectedDesignation(designation.designation_name)}>
+                                            {designation.designation_name}
+                                        </Dropdown.Item>
+                                    ))}
                                 </Dropdown.Menu>
                             </Dropdown>
                         </div>

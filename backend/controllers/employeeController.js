@@ -4,33 +4,24 @@ const { setUser } = require('../service/auth'); // Import setUser function
 const { sendResetLink } = require('../service/nodemailer');
 
 exports.createAccount = async (req, res) => {
-    const { employeeName, phoneNumber, address, password, designation, department } = req.body;
+    console.log(req.body);
+    const { employeeName, phoneNumber, address, designation, department } = req.body;
     // Basic validation
-    if (!employeeName || !phoneNumber || !address || !password || !designation || !department) {
+    if (!employeeName || !phoneNumber || !address || !designation || !department) {
         return res.status(400).json({ message: 'All fields are required' });
     }
     try {
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
-        const email = "ahmedhuzaifanaseer@gmail.com"
-        // Create a new employee record using the Employee model
+        // Add a new employee record using the Employee model
         const newEmployee = await Employee.insertEmployee({
             employeeName,
             phoneNumber,
             address,
-            password: hashedPassword,
             designation,
-            department,
-            email
+            department
         });
-        // Create a JWT token
-        const token = setUser(newEmployee);
-        // Set the token in a cookie
-        res.cookie('token', token);
-        res.status(201).json({ message: 'Account created successfully!', employee: newEmployee });
+        res.status(201).json({ message: 'Submit request sent successfully!', employee: newEmployee });
     } catch (error) {
-        console.error('Error creating account:', error);
-        return res.status(500).json({ message: 'Error creating account', error: error.message });
+        return res.status(500).json({ message: 'Error submitting request', error: error.message });
     }
 };
 
@@ -39,12 +30,12 @@ exports.forgotPassword = async (req, res) => {
 
     try {
         // Find the employee by email
-        const employee = await Employee.findByEmail(email);
+        const employee = await Employee.findByField('employee_email', email);
         if (!employee) {
             return res.status(404).json({ message: 'Employee not found' });
         }
         // Send the reset link to the user's email and handle the response
-        const sendResponse = await sendResetLink(email, employee.id);
+        await sendResetLink(email, employee.id);
         return res.status(200).json({ message: 'Password reset link sent to your email', success: true });
     } catch (error) {
         console.error('Error sending reset link:', error);
@@ -55,12 +46,11 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
         // Find the employee by email
-        const employee = await Employee.findByEmail(email);
+        const employee = await Employee.findByField('employee_email', email);
         if (!employee) {
             return res.status(404).json({ message: 'Employee not found' });
         }
         const passwordMatch = await bcrypt.compare(password, employee.password);
-        console.log(passwordMatch);
         // Compare the provided password with the hashed password
         if (!passwordMatch) {
             return res.status(401).json({ message: 'Invalid password' });
@@ -89,3 +79,16 @@ exports.resetPassword = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error resetting password', error: error.message });
     }
 };
+
+exports.getDepartmentandDesignation = async (req, res) => {
+    try {
+        // Fetch designations and departments from the database
+        const designations = await Employee.getDesignations();
+        const departments = await Employee.getDepartments();
+        return res.status(200).json({ designations, departments });
+    } catch (error) {
+        console.error('Error fetching designations and departments:', error);
+        return res.status(500).json({ message: 'Error fetching data', error: error.message });
+    }
+};
+

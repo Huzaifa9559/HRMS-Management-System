@@ -4,13 +4,13 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
     CREATE TABLE Contract (
-    ContractID INT PRIMARY KEY AUTO_INCREMENT,
-    Contract_Type ENUM('Full-Time', 'Part-Time', 'Internship', 'Contract'),
-    EmployeeID INT,
-    Sign_Status TINYINT(1),
-    Receive_Date DATE,
-    Document_URL VARCHAR(255),
-    CONSTRAINT CEK FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+    contractID INT PRIMARY KEY AUTO_INCREMENT,
+    contract_type ENUM('Full-Time', 'Part-Time', 'Internship', 'Contract'),
+    employeeID INT,
+    contract_signStatus TINYINT(1),
+    contract_receiveDate DATE,
+    contract_documentURL VARCHAR(255),
+    CONSTRAINT CEK FOREIGN KEY (employeeID) REFERENCES Employee(employeeID)
     );
 `);
   },

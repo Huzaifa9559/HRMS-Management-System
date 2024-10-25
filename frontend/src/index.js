@@ -7,7 +7,7 @@ import LoginPage from './components/employee/Login_Signup/LoginPage.jsx';
 import ForgotPassword from './components/employee/Login_Signup/ForgotPassword.jsx';
 import ResetPasswordSent from './components/employee/Login_Signup/ResetPasswordSent.jsx';
 import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.jsx';
-import Dashboard from './components/Admin/MainDashboard/Dashboard.jsx';
+import Dashboard from './components/admin/MainDashboard/Dashboard.jsx';
 import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
 import LeaveManagementD from './components/employee/EmployeeDashboard/LeaveManagementD.jsx';
 import './index.css';
@@ -24,7 +24,7 @@ root.render(
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
-        
+
         {/* Main dashboard route */}
         <Route path="/admin_main_dashboard" element={<Dashboard />} />
         <Route path="/employee_main_dashboard" element={<EDashboard />} />
