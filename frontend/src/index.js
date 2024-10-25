@@ -39,7 +39,7 @@ root.render(
           {/* <Route path="/dashboard/*" element={<Dashboard />} />
           <Route path="/employee_main_dashboard/*" element={<EDashboard />} />s
           <Route path="/admin_main_dashboard/*" element={<Dashboard />} /> */}
-          <Route path="/account" element={<Account />} />
+          <Route path="/account" element={<Account />} />
           {/* If no path matches, redirect to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
