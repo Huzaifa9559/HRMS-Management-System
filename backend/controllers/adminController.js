@@ -62,6 +62,7 @@ exports.inviteEmployee = async (req, res) => {
     try {
         // Send the create account link to the user's email and handle the response
         await sendCreateAccountLink(email);
+        //set password
         return res.status(200).json({ message: 'Create Account link sent to your email', success: true });
     } catch (error) {
         console.error('Error sending Create Account link:', error);

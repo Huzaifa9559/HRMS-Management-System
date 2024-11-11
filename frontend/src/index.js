@@ -35,12 +35,20 @@ root.render(
 
           {/* Employee Protected Routes
           <Route path="/employee_main_dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />
+<<<<<<< HEAD
           <Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} /> */}
           <Route path="/dashboard/*" element={<Dashboard />} />
           <Route path="/employee_main_dashboard/*" element={<EDashboard />} />
           <Route path="/admin_main_dashboard/*" element={<Dashboard />} />
           <Route path="/employee_leave_dashboard/*" element={<LeaveManagementD />} />
           <Route path="/account" element={<Account />} />
+=======
+          <Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} />
+          {/* <Route path="/dashboard/*" element={<Dashboard />} />
+          <Route path="/employee_main_dashboard/*" element={<EDashboard />} />s
+          <Route path="/admin_main_dashboard/*" element={<Dashboard />} /> */}
+          <Route path="/account" element={<Account />} />
+>>>>>>> b8f9e3355689235f09921e0ceebb45fb45227347
           {/* If no path matches, redirect to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
