@@ -1,58 +1,66 @@
 import React from 'react';
 import { Container, Row, Col, Card, Table, Image } from 'react-bootstrap';
 import SideMenu from './SideMenu';
-import Header from './Header'; // Import the Header component
+import Header from './Header';
 
 const EmpAccount = () => {
   const employeeData = {
     name: 'Katya Schleifer',
     title: 'UI UX Designer',
-    employeeId: 'EU 2453',
-    phoneNumber: '+1 233 123 123 1233',
-    email: 'xyzuser@gmail.com',
-    designation: 'Product designer',
-    department: 'Design',
-    address: 'Lahore, Punjab',
-    zipCode: '637994',
-    country: 'Pakistan',
+    nic: '35202-1234567-1',
+    details: {
+      employeeId: 'EU 2453',
+      phoneNumber: '+1 233 123 123 1233',
+      email: 'xyzuser@gmail.com',
+      designation: 'Product designer',
+      department: 'Design',
+      address: 'Lahore, Punjab',
+      zipCode: '637994',
+      country: 'Pakistan',
+    }
   };
+
+  const { name, title, nic, details } = employeeData;
+  const { employeeId, phoneNumber, email, designation, department, address, zipCode, country } = details;
 
   return (
     <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
       <SideMenu />
-      <div className="flex-grow-1 p-3"> {/* Same padding as Dashboard */}
-        <Header title="Account" /> {/* Use the Header component */}
-        <Container fluid className="py-3" style={{ margin: '0 20px' }}> {/* Added margin to match the Dashboard */}
+      <div className="flex-grow-1 p-3">
+        <Header title="Account" />
+        <Container fluid className="py-3" style={{ margin: '0 20px 0 0' }}>
           <Card className="mb-4">
             <Card.Body>
               <Row>
                 <Col md={4}>
-                  <Card className="bg-light text-center">
+                  <Card className="bg-light text-center" style={{ position: 'relative', height: '320px' }}>
                     <div
                       style={{
-                        backgroundImage: 'url(https://img.freepik.com/free-vector/pink-blue-swirl-gradient_78370-261.jpg)',
+                        backgroundImage: 'url(https://static.vecteezy.com/system/resources/previews/018/991/307/non_2x/soft-gradient-abstract-in-pastel-purple-and-pink-colors-gradient-background-blurred-gradient-texture-decorative-element-wallpaper-vector.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         borderTopLeftRadius: '0.5rem',
                         borderTopRightRadius: '0.5rem',
-                        paddingTop: '70px',
+                        paddingTop: '50px',
+                        height: '150px',
                       }}
-                    >
-                      <Image
-                        src="https://img.freepik.com/free-photo/human-face-expressions-emotions-positive-joyful-young-beautiful-female-with-fair-straight-hair-casual-clothing_176420-15188.jpg"
-                        roundedCircle
-                        className="mb-3"
-                        style={{
-                          width: '120px',
-                          height: '120px',
-                          border: '5px solid white',
-                          marginTop: '-60px',
-                        }}
-                      />
-                    </div>
-                    <Card.Body>
-                      <Card.Title>{employeeData.name}</Card.Title>
-                      <Card.Text>{employeeData.title}</Card.Text>
+                    ></div>
+                    <Image
+                      src="https://img.freepik.com/free-photo/human-face-expressions-emotions-positive-joyful-young-beautiful-female-with-fair-straight-hair-casual-clothing_176420-15188.jpg"
+                      roundedCircle
+                      style={{
+                        width: '140px',
+                        height: '140px',
+                        border: '2px solid #ffffff',
+                        position: 'absolute',
+                        top: '80px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                      }}
+                    />
+                    <Card.Body style={{ marginTop: '60px' }}>
+                      <Card.Title>{name}</Card.Title>
+                      <Card.Text>{title}</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -61,34 +69,38 @@ const EmpAccount = () => {
                   <Table responsive borderless className="mb-0">
                     <tbody>
                       <tr>
-                        <td>Employee ID</td>
-                        <td>{employeeData.employeeId}</td>
-                        <td>Name</td>
-                        <td>{employeeData.name}</td>
+                        <td className="text-muted">Employee ID</td>
+                        <td>{employeeId}</td>
+                        <td className="text-muted">Name</td>
+                        <td>{name}</td>
                       </tr>
                       <tr>
-                        <td>Phone Number</td>
-                        <td>{employeeData.phoneNumber}</td>
-                        <td>Email</td>
-                        <td>{employeeData.email}</td>
+                        <td className="text-muted">CNIC</td>
+                        <td>{nic}</td>
+                        <td className="text-muted">Phone Number</td>
+                        <td>{phoneNumber}</td>
                       </tr>
                       <tr>
-                        <td>Designation</td>
-                        <td>{employeeData.designation}</td>
-                        <td>Department</td>
-                        <td>{employeeData.department}</td>
+                        <td className="text-muted">Email</td>
+                        <td>{email}</td>
+                        <td className="text-muted">Designation</td>
+                        <td>{designation}</td>
                       </tr>
                       <tr>
-                        <td>Address</td>
-                        <td>{employeeData.address}</td>
-                        <td>Zip Code</td>
-                        <td>{employeeData.zipCode}</td>
+                        <td className="text-muted">Department</td>
+                        <td>{department}</td>
+                        <td className="text-muted">Address</td>
+                        <td>{address}</td>
                       </tr>
                       <tr>
-                        <td>City/State</td>
-                        <td>{employeeData.address}</td>
-                        <td>Country</td>
-                        <td>{employeeData.country}</td>
+                        <td className="text-muted">City/State</td>
+                        <td>{address}</td>
+                        <td className="text-muted">Zip Code</td>
+                        <td>{zipCode}</td>
+                      </tr>
+                      <tr>
+                        <td className="text-muted">Country</td>
+                        <td>{country}</td>
                       </tr>
                     </tbody>
                   </Table>

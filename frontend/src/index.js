@@ -30,15 +30,16 @@ root.render(
           <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
           <Route path="/set-new-password" element={<SetNewPassword />} />
 
-          Admin Protected Route
-          <Route path="/admin_main_dashboard" element={<PrivateRoute element={<Dashboard />} requiredRole="admin" />} />
+          {/* Admin Protected Route
+          <Route path="/admin_main_dashboard" element={<PrivateRoute element={<Dashboard />} requiredRole="admin" />} /> */}
 
-          {/* Employee Protected Routes */}
+          {/* Employee Protected Routes
           <Route path="/employee_main_dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />
-          <Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} />
-          {/* <Route path="/dashboard/*" element={<Dashboard />} />
-          <Route path="/employee_main_dashboard/*" element={<EDashboard />} />s
-          <Route path="/admin_main_dashboard/*" element={<Dashboard />} /> */}
+          <Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} /> */}
+          <Route path="/dashboard/*" element={<Dashboard />} />
+          <Route path="/employee_main_dashboard/*" element={<EDashboard />} />
+          <Route path="/admin_main_dashboard/*" element={<Dashboard />} />
+          <Route path="/employee_leave_dashboard/*" element={<LeaveManagementD />} />
           <Route path="/account" element={<Account />} />
           {/* If no path matches, redirect to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
