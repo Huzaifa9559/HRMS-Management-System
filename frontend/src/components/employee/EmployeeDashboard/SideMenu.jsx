@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaUsers, FaCalendarAlt, FaUserCheck, FaCogs, FaFileAlt } from 'react-icons/fa'; 
+import { FaTachometerAlt, FaUsers, FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn } from 'react-icons/fa'; 
 import { ChevronLeft, ChevronRight } from 'lucide-react'; 
 
 export default function SideMenu() {
@@ -97,7 +97,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/attendance"
+                    to="/employee_attendance"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -113,7 +113,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/employee_leave_dashboard"
+                    to="/employee_leave"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -129,7 +129,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/documents"
+                    to="/employee_documents"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -145,7 +145,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/settings"
+                    to="/employee_workschedule"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -156,8 +156,24 @@ export default function SideMenu() {
                     onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
                     onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                 >
-                    <FaCogs className="me-2" />
-                    <span style={menuTextStyles}>Settings</span>
+                    <FaBusinessTime className="me-2" />
+                    <span style={menuTextStyles}>Work Schedule</span>
+                </NavLink>
+
+                <NavLink
+                    to="/employee_announcements"
+                    className="nav-link d-flex align-items-center text-white mb-2"
+                    activeClassName="active"
+                    style={navLinkStyles}
+                    activeStyle={{
+                        backgroundColor: '#0056b3',
+                        color: '#ffffff',
+                    }}
+                    onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                >
+                    <FaBullhorn className="me-2" />
+                    <span style={menuTextStyles}>Announcements</span>
                 </NavLink>
             </nav>
 

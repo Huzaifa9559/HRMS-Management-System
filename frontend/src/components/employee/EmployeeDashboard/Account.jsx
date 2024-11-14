@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Image } from 'react-bootstrap';
 import SideMenu from './SideMenu';
 import Header from './Header';
+import Loader from '../../Loader';
 
 const EmpAccount = () => {
+  const [loading, setLoading] = useState(true); // Loading state
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
+    return () => clearTimeout(timer); // Cleanup on unmount
+  }, []);
+
   const employeeData = {
     name: 'Katya Schleifer',
     title: 'UI UX Designer',
@@ -22,6 +30,11 @@ const EmpAccount = () => {
 
   const { name, title, nic, details } = employeeData;
   const { employeeId, phoneNumber, email, designation, department, address, zipCode, country } = details;
+
+  // Show loader if loading is true
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}>

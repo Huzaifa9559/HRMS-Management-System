@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SideMenu from './SideMenu';  // Importing SideMenu component
 import Header from './Header';      // Importing Header component
 import { Table, Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import { FaMedkit, FaMoneyBillAlt, FaCheckCircle } from 'react-icons/fa';
+import Loader from '../../Loader';
 
 // Overlay component for viewing details
 function ViewDetailsOverlay({ show, onHide, leaveDetails }) {
@@ -25,13 +26,14 @@ function NewLeaveRequestOverlay({ show, onHide }) {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [reason, setReason] = useState('');
+
   
     const handleSubmit = (e) => {
       e.preventDefault();
       console.log({ leaveType, startDate, endDate, reason });
       onHide();
     };
-  
+    
     return (
       <Modal show={show} onHide={onHide} centered size="lg">
         <Modal.Header closeButton>
@@ -161,7 +163,13 @@ export default function LeaveManagementD() {
   const [showNewLeaveRequest, setShowNewLeaveRequest] = useState(false);
   const [showDetailsOverlay, setShowDetailsOverlay] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState({});
-
+  
+  const [loading, setLoading] = useState(true); // Loading state
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
+    return () => clearTimeout(timer); // Cleanup on unmount
+  }, []);
   // All leave data
   const allLeaveData = [
     { from: '04 Sep 2021', to: '05 Sep 2021', days: '1 day', status: 'Pending', type: 'Medical Leave', reason: 'Health issues', fileDate: '03 Sep 2021' },
@@ -215,6 +223,10 @@ export default function LeaveManagementD() {
       </div>
     );
   };
+
+  if (loading) {
+    return <Loader />;
+  } 
 
   return (
     <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
