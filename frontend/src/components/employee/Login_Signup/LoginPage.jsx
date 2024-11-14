@@ -60,7 +60,7 @@ export default function Login() {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.message == 'Login successful') {
         // Call loginAsEmployee from AuthContext to update authentication state
         loginAsEmployee();
         // Optionally, you could also show a loader and redirect to employee dashboard
@@ -68,14 +68,14 @@ export default function Login() {
         // Redirect to employee dashboard
         // You can use history.push('/employee_dashboard') if using react-router-dom v5
         // For react-router-dom v6, useNavigate can be used for navigation.
-        navigate('/employee_main_dashboard');
+        navigate('/employee/dashboard');
       } else {
         setError('Invalid credentials');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
     }
-    
+
   };
 
   const togglePasswordVisibility = () => {

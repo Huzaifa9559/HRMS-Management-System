@@ -3,14 +3,15 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
-    ALTER TABLE Employee
-    ADD COLUMN status TINYINT(1) DEFAULT 0;
+    ALTER TABLE Work_Schedule
+    ADD COLUMN work_type_ID INT;
+    
   `);
   },
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
-      ALTER TABLE Employee
-      DROP COLUMN status;`);
+      ALTER TABLE Work_Schedule
+      DROP COLUMN work_type_ID;`);
   }
 };

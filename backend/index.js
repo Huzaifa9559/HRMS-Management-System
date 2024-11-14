@@ -6,8 +6,8 @@ const adminRoutes = require('./routes/admin'); // Import admin routes
 const dotenv = require('dotenv'); // Import dotenv
 const db = require('./db'); // Import the database connection
 dotenv.config({ path: `${process.cwd()}/.env` });
-const protectedUsers = require('./middlewares/protectedUsers');
-const protectedEmployeeRoutes = require('./routes/protectedEmployee');
+//const protectedUsers = require('./middlewares/protectedUsers');
+//const protectedEmployeeRoutes = require('./routes/protectedEmployee');
 const app = express();
 
 // Important Middlewares

@@ -6,11 +6,8 @@ module.exports = {
     CREATE TABLE Work_Schedule (
     scheduleID INT PRIMARY KEY AUTO_INCREMENT,
     schedule_day VARCHAR(50),
-    employeeID INT,
     schedule_startTime TIME,
-    schedule_endTime TIME,
-    schedule_place VARCHAR(50),
-    CONSTRAINT WEK FOREIGN KEY (employeeID) REFERENCES Employee(employeeID)
+    schedule_endTime TIME
     );
 `);
   },

@@ -2,34 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Image } from 'react-bootstrap';
 import SideMenu from './SideMenu';
 import Header from './Header';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import Loader from '../../Loader';
-
 const EmpAccount = () => {
+  const navigate = useNavigate();
+  const [employeeData, setEmployeeData] = useState();
   const [loading, setLoading] = useState(true); // Loading state
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
     return () => clearTimeout(timer); // Cleanup on unmount
   }, []);
 
-  const employeeData = {
-    name: 'Katya Schleifer',
-    title: 'UI UX Designer',
-    nic: '35202-1234567-1',
-    details: {
-      employeeId: 'EU 2453',
-      phoneNumber: '+1 233 123 123 1233',
-      email: 'xyzuser@gmail.com',
-      designation: 'Product designer',
-      department: 'Design',
-      address: 'Lahore, Punjab',
-      zipCode: '637994',
-      country: 'Pakistan',
-    }
-  };
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      try {
+        const token = Cookies.get('token');
+        const response = await axios.get(`/api/employees/employee`, {
+          headers: {
+            'Authorization': `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
+          }
+        });
+        setEmployeeData(response.data.data);
+      } catch (error) {
+        console.error('Error fetching employee data:', error);
+        toast.error('Session expired. Please try again.');
+        navigate('/login');
+      }
+    };
 
-  const { name, title, nic, details } = employeeData;
-  const { employeeId, phoneNumber, email, designation, department, address, zipCode, country } = details;
+    fetchEmployeeData();
+
+  }, []);
+
+
+  const {
+    employeeID, employee_first_name, employee_last_name, employee_email,
+    employee_DOB, employee_phonenumber, department_name, designation_name,
+    street_address, city, state, country, zip_code, employee_status,
+    employee_joining_date
+  } = employeeData || {};
+
 
   // Show loader if loading is true
   if (loading) {
@@ -72,8 +89,8 @@ const EmpAccount = () => {
                       }}
                     />
                     <Card.Body style={{ marginTop: '60px' }}>
-                      <Card.Title>{name}</Card.Title>
-                      <Card.Text>{title}</Card.Text>
+                      <Card.Title>{employee_first_name} {employee_last_name}</Card.Title>
+                      <Card.Text>{designation_name}</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -83,37 +100,39 @@ const EmpAccount = () => {
                     <tbody>
                       <tr>
                         <td className="text-muted">Employee ID</td>
-                        <td>{employeeId}</td>
+                        <td>{employeeID}</td>
                         <td className="text-muted">Name</td>
-                        <td>{name}</td>
+                        <td>{employee_first_name}</td>
                       </tr>
                       <tr>
-                        <td className="text-muted">CNIC</td>
-                        <td>{nic}</td>
+                        <td className="text-muted">Date Of Birth</td>
+                        <td>{employee_DOB}</td>
                         <td className="text-muted">Phone Number</td>
-                        <td>{phoneNumber}</td>
+                        <td>{employee_phonenumber}</td>
                       </tr>
                       <tr>
                         <td className="text-muted">Email</td>
-                        <td>{email}</td>
+                        <td>{employee_email}</td>
                         <td className="text-muted">Designation</td>
-                        <td>{designation}</td>
+                        <td>{designation_name}</td>
                       </tr>
                       <tr>
                         <td className="text-muted">Department</td>
-                        <td>{department}</td>
+                        <td>{department_name}</td>
                         <td className="text-muted">Address</td>
-                        <td>{address}</td>
+                        <td>{street_address}</td>
                       </tr>
                       <tr>
+                        <td className="text-muted">Joining Date</td>
+                        <td>{employee_joining_date}</td>
                         <td className="text-muted">City/State</td>
-                        <td>{address}</td>
-                        <td className="text-muted">Zip Code</td>
-                        <td>{zipCode}</td>
+                        <td>{city}, {state}</td>
                       </tr>
                       <tr>
                         <td className="text-muted">Country</td>
                         <td>{country}</td>
+                        <td className="text-muted">Zip Code</td>
+                        <td>{zip_code}</td>
                       </tr>
                     </tbody>
                   </Table>

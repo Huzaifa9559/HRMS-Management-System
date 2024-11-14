@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Import Axios
+import axios from 'axios'; 
 
 const InviteEmployee = ({ onClose }) => {
     const [email, setEmail] = useState(''); 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaUsers, FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn } from 'react-icons/fa'; 
-import { ChevronLeft, ChevronRight } from 'lucide-react'; 
+import { FaTachometerAlt, FaUsers, FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn } from 'react-icons/fa';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function SideMenu() {
     const [isCollapsed, setIsCollapsed] = useState(false); // State for collapsed status
@@ -65,7 +65,7 @@ export default function SideMenu() {
             {/* Navigation Links with Hover Effect */}
             <nav className="nav flex-column">
                 <NavLink
-                    to="/employee_main_dashboard"
+                    to="/employee/dashboard"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -81,23 +81,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/organization"
-                    className="nav-link d-flex align-items-center text-white mb-2"
-                    activeClassName="active"
-                    style={navLinkStyles}
-                    activeStyle={{
-                        backgroundColor: '#0056b3',
-                        color: '#ffffff',
-                    }}
-                    onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
-                    onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
-                >
-                    <FaUsers className="me-2" />
-                    <span style={menuTextStyles}>Organization</span>
-                </NavLink>
-
-                <NavLink
-                    to="/employee_attendance"
+                    to="/employee/attendance"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -113,7 +97,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/employee_leave"
+                    to="/employee/leave"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -129,7 +113,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/employee_documents"
+                    to="/employee/documents"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -145,7 +129,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/employee_workschedule"
+                    to="/employee/workschedule"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -161,7 +145,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/employee_announcements"
+                    to="/employee/announcements"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
