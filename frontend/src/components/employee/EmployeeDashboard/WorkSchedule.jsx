@@ -8,66 +8,44 @@ import Loader from '../../Loader';
 export default function WorkSchedule() {
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [loading, setLoading] = useState(true); // Loading state
+  const [scheduleData, setScheduleData] = useState({ months: [], weeks: [] }); // Initialize state for schedule data
   
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
-    return () => clearTimeout(timer); // Cleanup on unmount
+    const fetchScheduleData = async () => {
+      try {
+        const response = await fetch('/api/work-schedule'); // Replace with your actual API endpoint
+        const data = await response.json();
+        
+        // Transform the data to match the expected format
+        const transformedData = {
+          months: [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+          ],
+          weeks: data.map(week => ({
+            weekNumber: week.scheduleID, // Assuming scheduleID corresponds to week number
+            schedule: {
+              mon: `${week.schedule_startTime} - ${week.schedule_endTime}`, // Adjust as necessary
+              tue: `${week.schedule_startTime} - ${week.schedule_endTime}`,
+              wed: `${week.schedule_startTime} - ${week.schedule_endTime}`,
+              thu: `${week.schedule_startTime} - ${week.schedule_endTime}`,
+              fri: `${week.schedule_startTime} - ${week.schedule_endTime}`,
+              sat: `${week.schedule_startTime} - ${week.schedule_endTime}`
+            }
+          }))
+        };
+
+        setScheduleData(transformedData); // Update state with fetched data
+      } catch (error) {
+        console.error('Error fetching schedule data:', error);
+      } finally {
+        setLoading(false); // Stop loading
+      }
+    };
+
+    fetchScheduleData(); // Call the fetch function
   }, []);
 
-
-  // Data for all 12 months
-  const scheduleData = {
-    months: [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ],
-    weeks: [
-      {
-        weekNumber: 1,
-        schedule: {
-          mon: '9:00 - 18:00',
-          tue: '9:00 - 18:00',
-          wed: '9:00 - 18:00',
-          thu: '9:00 - 20:00',
-          fri: '9:00 - 18:00',
-          sat: '9:00 - 18:00'
-        }
-      },
-      {
-        weekNumber: 2,
-        schedule: {
-          mon: '9:00 - 18:00',
-          tue: '9:00 - 18:00',
-          wed: '9:00 - 18:00',
-          thu: '9:00 - 20:00',
-          fri: '9:00 - 18:00',
-          sat: '9:00 - 18:00'
-        }
-      },
-      {
-        weekNumber: 3,
-        schedule: {
-          mon: '9:00 - 18:00',
-          tue: '9:00 - 18:00',
-          wed: '9:00 - 18:00',
-          thu: '9:00 - 20:00',
-          fri: '9:00 - 18:00',
-          sat: '9:00 - 18:00'
-        }
-      },
-      {
-        weekNumber: 4,
-        schedule: {
-          mon: '9:00 - 18:00',
-          tue: '9:00 - 18:00',
-          wed: '9:00 - 18:00',
-          thu: '9:00 - 20:00',
-          fri: '9:00 - 18:00',
-          sat: '9:00 - 18:00'
-        }
-      }
-    ]
-  };
   if (loading) {
     return <Loader />;
   }

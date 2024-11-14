@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Table, Button, Pagination, Dropdown, Modal } from 'react-bootstrap'
 import SideMenu from './SideMenu'
 import Header from './Header'
@@ -16,7 +16,7 @@ const mockTimesheet = [
   {
     date: '03 Sep 2021',
     checkIn: '8:30',
-    checkOut: '19:30', 
+    checkOut: '19:30',
     breakHours: '00:40',
     status: 'late'
   },
@@ -80,7 +80,7 @@ const mockTimesheet = [
 
 export default function Component() {
   const [loading, setLoading] = useState(true); // Loading state
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
     return () => clearTimeout(timer); // Cleanup on unmount
@@ -92,7 +92,7 @@ export default function Component() {
   const [checkInTime, setCheckInTime] = useState(null)
   const [breakInTime, setBreakInTime] = useState(null)
   const [totalBreakTime, setTotalBreakTime] = useState(0)
-  
+
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 4
 
@@ -100,12 +100,21 @@ export default function Component() {
   const [selectedMonth, setSelectedMonth] = useState('Month')
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
 
-
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString())
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 
+    'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
+
+  // Filtered timesheet based on selected month, year, and search term
+  const filteredTimesheet = useMemo(() => {
+    return timesheet.filter(item => {
+      const itemDate = new Date(item.date);
+      const monthMatches = selectedMonth === 'Month' || itemDate.toLocaleString('default', { month: 'long' }) === selectedMonth;
+      const yearMatches = selectedYear === 'Year' || itemDate.getFullYear().toString() === selectedYear;
+      return monthMatches && yearMatches;
+    });
+  }, [timesheet, selectedMonth, selectedYear]);
 
   // Update clock
   useEffect(() => {
@@ -155,21 +164,20 @@ export default function Component() {
       checkIn: checkInTime ? checkInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
       checkOut: checkOutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       breakHours: secondsToTime(totalBreakTime),
-      status: 'present'  // Adjust based on actual status if needed
+      status: 'present', // Adjust based on actual status if needed
     }
     // Reset all values
-   try{
-    // Make API call to save attendance data
-    //axios.post('/api/employee/attendance', newEntry)
-    console.log("happy");
+    try {
+      // Make API call to save attendance data
+      //axios.post('/api/employee/attendance', newEntry)
 
-    // Update timesheet state to display the new entry
-    setTimesheet(prevTimesheet => [newEntry, ...prevTimesheet])
+      // Update timesheet state to display the new entry
+      setTimesheet(prevTimesheet => [newEntry, ...prevTimesheet])
     } catch (error) {
-    console.error('Error saving attendance:', error)
+      console.error('Error saving attendance:', error)
     }
 
-  // Reset all values
+    // Reset all values
     setCheckInTime(null)
     setBreakInTime(null)
     setTotalBreakTime(0)
@@ -200,8 +208,8 @@ export default function Component() {
   // Calculate pagination
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = mockTimesheet.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.ceil(mockTimesheet.length / itemsPerPage)
+  const currentItems = filteredTimesheet.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(filteredTimesheet.length / itemsPerPage)
 
   // Handle pagination navigation
   const handlePrevPage = () => {
@@ -212,20 +220,20 @@ export default function Component() {
     setCurrentPage(prevPage => Math.min(prevPage + 1, totalPages))
   }
 
-   // Show loader if loading is true
-   if (loading) {
+  // Show loader if loading is true
+  if (loading) {
     return <Loader />;
-  } 
+  }
 
   return (
     <div className="d-flex" style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <SideMenu />
       <div className="flex-grow-1" style={{ padding: '20px' }}>
         <Header title="Attendance" />
-        
+
         {/* Timer and Check-in Section */}
         <div className="py-2 px-4 d-flex align-items-center justify-content-between" style={{ backgroundColor: '#ffffff', borderRadius: '8px', position: 'relative' }}>
-          <Button 
+          <Button
             variant={isCheckedIn ? "danger" : "success"}
             onClick={isCheckedIn ? handleCheckOut : handleCheckIn}
             className="px-4 py-2"
@@ -247,9 +255,9 @@ export default function Component() {
 
             {/* Break Button Positioned Below the Timer */}
             {isCheckedIn && (
-              <Button 
-                variant={isOnBreak ? "outline-primary" : "outline-primary"} 
-                onClick={isOnBreak ? handleBreakOut : handleBreakIn} 
+              <Button
+                variant={isOnBreak ? "outline-primary" : "outline-primary"}
+                onClick={isOnBreak ? handleBreakOut : handleBreakIn}
                 size="sm"
                 className="mt-2"
               >
@@ -260,11 +268,11 @@ export default function Component() {
 
           {/* Current Date in the Right Corner */}
           <div className="bg-secondary text-white d-flex flex-column align-items-center justify-content-center rounded" style={{
-              width: '80px',
-              height: '80px',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              textAlign: 'center'
+            width: '80px',
+            height: '80px',
+            fontSize: '1.25rem',
+            fontWeight: 'bold',
+            textAlign: 'center'
           }}>
             <div>{new Date().getDate()}</div>
             <div style={{ fontSize: '0.75rem', fontWeight: 'normal' }}>{new Date().toLocaleString('en-GB', { month: 'long' })}</div>
@@ -316,7 +324,7 @@ export default function Component() {
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map((item, index) => (
+                {filteredTimesheet.slice(indexOfFirstItem, indexOfLastItem).map((item, index) => (
                   <tr key={index} style={{ borderBottom: '1px solid #e9ecef', height: '50px' }}>
                     <td>{item.date}</td>
                     <td>{item.checkIn}</td>
@@ -330,7 +338,7 @@ export default function Component() {
           </div>
         </div>
 
-        
+
         {/* Pagination Controls */}
         <div className="d-flex justify-content-center mt-3">
           <Pagination style={{ fontSize: '0.875rem', border: '1px solid #ddd', borderRadius: '5px', padding: '0 8px' }}>

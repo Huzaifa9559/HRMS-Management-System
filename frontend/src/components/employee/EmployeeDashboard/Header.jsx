@@ -13,7 +13,7 @@ export default function Header({ title }) {
     };
 
     const handleProfileClick = () => {
-        navigate('/account');
+        navigate('/employee/account');
     };
 
     const handleChangePasswordClick = () => {
@@ -30,7 +30,7 @@ export default function Header({ title }) {
         <Popover id="popover-profile" style={{ minWidth: '200px', marginLeft: '10px' }}>
             <Popover.Body>
                 <div className="d-flex align-items-center">
-                    <Image 
+                    <Image
                         src={profileDetails.imageUrl}
                         roundedCircle
                         style={{
@@ -46,8 +46,8 @@ export default function Header({ title }) {
                     </div>
                 </div>
                 <hr />
-                <a 
-                    onClick={handleProfileClick} 
+                <a
+                    onClick={handleProfileClick}
                     className="d-flex align-items-center mb-2"
                     style={{
                         textDecoration: 'none',
@@ -62,9 +62,9 @@ export default function Header({ title }) {
                 >
                     <PersonCircle className="me-2" /> Profile
                 </a>
-                <a 
-                    onClick={handleChangePasswordClick} 
-                    className="d-flex align-items-center mb-2" 
+                <a
+                    onClick={handleChangePasswordClick}
+                    className="d-flex align-items-center mb-2"
                     style={{
                         textDecoration: 'none',
                         color: 'black',
@@ -78,9 +78,9 @@ export default function Header({ title }) {
                 >
                     <Key className="me-2" /> Change Password
                 </a>
-                <a 
-                    onClick={handleLogoutClick} 
-                    className="d-flex align-items-center" 
+                <a
+                    onClick={handleLogoutClick}
+                    className="d-flex align-items-center"
                     style={{
                         textDecoration: 'none',
                         color: 'black',
@@ -99,13 +99,13 @@ export default function Header({ title }) {
     );
 
     return (
-        <div 
+        <div
             className="d-flex align-items-center justify-content-between p-3 mb-4 w-100"
             style={{ backgroundColor: '#fff', boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)', position: 'sticky', top: '0', zIndex: '1', margin: '0' }}
         >
             <h1 className="h4 mb-0">{title}</h1>
             <OverlayTrigger trigger="click" placement="bottom-end" overlay={popover} rootClose>
-                <Image 
+                <Image
                     src={profileDetails.imageUrl}
                     roundedCircle
                     style={{

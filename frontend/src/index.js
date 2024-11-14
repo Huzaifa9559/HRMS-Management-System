@@ -12,7 +12,7 @@ import ResetPasswordSent from './components/employee/Login_Signup/ResetPasswordS
 import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.jsx';
 import Dashboard from './components/admin/MainDashboard/Dashboard.jsx';
 import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
-import LeaveManagementD from './components/employee/EmployeeDashboard/LeaveManagementD.jsx';
+import Leave from './components/employee/EmployeeDashboard/Leave.jsx';
 import Attendance from './components/employee/EmployeeDashboard/Attendance.jsx';
 import Account from './components/employee/EmployeeDashboard/Account.jsx'
 import './index.css';
@@ -41,7 +41,7 @@ root.render(
           {/*<Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} />*/}
           <Route path="/employee/dashboard" element={<EDashboard />} />
           <Route path="/employee/account" element={<Account />} />
-          <Route path="/employee/leave" element={<LeaveManagementD />} />
+          <Route path="/employee/leave" element={<Leave />} />
           <Route path="/employee/attendance" element={<Attendance />} />
           <Route path="/employee/workschedule" element={<WorkSchedule />} />
 
