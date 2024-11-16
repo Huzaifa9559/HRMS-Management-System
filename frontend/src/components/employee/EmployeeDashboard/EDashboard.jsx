@@ -30,7 +30,7 @@ export default function Dashboard() {
   const [showCurrentMonthLeave, setShowCurrentMonthLeave] = useState(false);
   const [showYesterdayWorkingHours, setShowYesterdayWorkingHours] = useState(false);
   const [showTimesheet, setShowTimesheet] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(true);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const [loading, setLoading] = useState(true); // Loading state
   
@@ -47,8 +47,8 @@ export default function Dashboard() {
     },
   ];
 
-   // Show loader if loading is true
-   if (loading) {
+  // Show loader if loading is true
+  if (loading) {
     return <Loader />;
   }
 
@@ -60,7 +60,11 @@ export default function Dashboard() {
         <Container fluid>
           <Row className="mb-2">
             <Col md={4}>
-              <Card onClick={() => setShowCurrentYearLeave(!showCurrentYearLeave)} style={{ cursor: 'pointer', height: '90px' }}>
+              <Card
+                className="hover-card"
+                onClick={() => setShowCurrentYearLeave(!showCurrentYearLeave)}
+                style={{ cursor: 'pointer', height: '90px' }}
+              >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
                     <Card.Title style={{ fontWeight: 'normal' }}>Current Year Leaves</Card.Title>
@@ -71,7 +75,11 @@ export default function Dashboard() {
               </Card>
             </Col>
             <Col md={4}>
-              <Card onClick={() => setShowCurrentMonthLeave(!showCurrentMonthLeave)} style={{ cursor: 'pointer', height: '90px' }}>
+              <Card
+                className="hover-card"
+                onClick={() => setShowCurrentMonthLeave(!showCurrentMonthLeave)}
+                style={{ cursor: 'pointer', height: '90px' }}
+              >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
                     <Card.Title style={{ fontWeight: 'normal' }}>Current Month Leaves</Card.Title>
@@ -82,7 +90,11 @@ export default function Dashboard() {
               </Card>
             </Col>
             <Col md={4}>
-              <Card onClick={() => setShowYesterdayWorkingHours(!showYesterdayWorkingHours)} style={{ cursor: 'pointer', height: '90px' }}>
+              <Card
+                className="hover-card"
+                onClick={() => setShowYesterdayWorkingHours(!showYesterdayWorkingHours)}
+                style={{ cursor: 'pointer', height: '90px' }}
+              >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
                     <Card.Title style={{ fontWeight: 'normal' }}>Yesterday's Working Hours</Card.Title>
@@ -94,10 +106,9 @@ export default function Dashboard() {
             </Col>
           </Row>
 
-          {/* Updated Calendar Section with Increased Font Size */}
           <Row className="mb-2">
             <Col>
-              <Card style={{ backgroundColor: '#ffffff', width: '100%' }}>
+              <Card className="hover-card" style={{ backgroundColor: '#ffffff', width: '100%' }}>
                 <Card.Header 
                   onClick={() => setShowCalendar(!showCalendar)} 
                   style={{
@@ -126,11 +137,10 @@ export default function Dashboard() {
               </Card>
             </Col>
           </Row>
-
           {/* Updated Timesheet Section with Increased Font Size */}
           <Row>
             <Col>
-              <Card onClick={() => setShowTimesheet(!showTimesheet)} style={{ cursor: 'pointer' }}>
+              <Card className="hover-card" onClick={() => setShowTimesheet(!showTimesheet)} style={{ cursor: 'pointer' }}>
                 <Card.Body className="d-flex justify-content-between align-items-center" style={{ fontSize: '1.25rem' }}> {/* Increased font size */}
                   <Card.Title style={{ fontWeight: 'normal' }}>Timesheet</Card.Title>
                   <Clipboard size={24} color="#FF9800" />
@@ -171,3 +181,18 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// Add this CSS for styling
+const cardHoverCSS = document.createElement('style');
+cardHoverCSS.innerHTML = `
+  .hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  .hover-card:hover {
+    transform: scale(1.001); /* Scales evenly from all sides */
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  }
+`;
+document.head.appendChild(cardHoverCSS);
+

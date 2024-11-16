@@ -19,9 +19,9 @@ module.exports = {
         employee_password: hashedPassword,
         employee_DOB: new Date(1990, i % 12, i % 28 + 1), // Example DOB
         employee_phonenumber: `123456789${i}`,
-        departmentID: 13,
-        designationID: 14,
-        address_ID: 19, // Assuming address_ID is a foreign key
+        departmentID: 1,
+        designationID: 2,
+        address_ID: 3, // Assuming address_ID is a foreign key
         employee_status: 'active', // Example status
         employee_joining_date: new Date(2020, i % 12, i % 28 + 1) // Example joining date
       };

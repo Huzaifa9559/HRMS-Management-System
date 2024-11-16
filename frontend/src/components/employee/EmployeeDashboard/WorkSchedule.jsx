@@ -67,7 +67,7 @@ export default function WorkSchedule() {
             <div className="mx-3">
               <Row className="mb-3 align-items-center">
                 <Col>
-                  <h2 className="h5 mb-0">Timesheet</h2>
+                  <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>Monthly Timesheet</h5>
                 </Col>
                 <Col xs="auto" className="d-flex gap-2">
                   <Dropdown>

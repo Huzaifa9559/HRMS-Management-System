@@ -177,13 +177,12 @@ function NewLeaveRequestOverlay({ show, onHide }) {
   );
 }
 
-export default function LeaveManagementD() {
+export default function Leave() {
   const [activeTab, setActiveTab] = useState('Leave Requests');
   const [showNewLeaveRequest, setShowNewLeaveRequest] = useState(false);
   const [showDetailsOverlay, setShowDetailsOverlay] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState({});
-
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
@@ -194,15 +193,13 @@ export default function LeaveManagementD() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Set the number of items per page
 
-  // All leave data
-  // Fetch data from backend
   useEffect(() => {
     const fetchLeaveData = async () => {
       try {
         const token = Cookies.get('token');
         const response = await axios.get(`/api/employees/leave-details`, {
           headers: {
-            'Authorization': `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
+            'Authorization': `Bearer ${token}`,
           }
         });
 
@@ -217,17 +214,16 @@ export default function LeaveManagementD() {
     fetchLeaveData();
   }, []);
 
-  // Filtered data based on the active tab
   const getFilteredData = () => {
     switch (activeTab) {
       case 'Leave Requests':
         return allLeaveData;
       case 'My Pending':
-        return allLeaveData.filter((leave) => leave.leave_status == 0);
+        return allLeaveData.filter((leave) => leave.leave_status === 0);
       case 'My Approved':
-        return allLeaveData.filter((leave) => leave.leave_status == 1);
+        return allLeaveData.filter((leave) => leave.leave_status === 1);
       case 'My Rejected':
-        return allLeaveData.filter((leave) => leave.leave_status == 2);
+        return allLeaveData.filter((leave) => leave.leave_status === 2);
       default:
         return allLeaveData;
     }
@@ -242,7 +238,7 @@ export default function LeaveManagementD() {
       textAlign: 'center',
       display: 'inline-block',
     };
-    var temp;
+    let temp;
     switch (leave.leave_status) {
       case 0:
         variant = { backgroundColor: '#e1ecff', color: '#006eff' };
@@ -267,23 +263,28 @@ export default function LeaveManagementD() {
     );
   };
 
+  const changePage = (page) => {
+    setCurrentPage(page);
+  };
+
   if (loading) {
     return <Loader />;
   }
-  // Calculate the current leaves to display based on pagination
+
   const indexOfLastLeave = currentPage * itemsPerPage;
   const indexOfFirstLeave = indexOfLastLeave - itemsPerPage;
   const currentLeaves = getFilteredData().slice(indexOfFirstLeave, indexOfLastLeave);
 
-  // Calculate total pages
   const totalPages = Math.ceil(getFilteredData().length / itemsPerPage);
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
+    <div className="d-flex flex-column" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
       <SideMenu />
       <div className="flex-grow-1 p-3">
         <Header title="Leave Management" />
-        <div className="bg-white p-4 rounded shadow-sm">
+        
+        {/* Main White Container for Content */}
+        <div className="bg-white p-4 rounded shadow-sm mb-3">
           {/* Tabs to switch between different views */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -300,7 +301,6 @@ export default function LeaveManagementD() {
             </div>
             <div>
               <Button variant="success" className="me-2" onClick={() => setShowNewLeaveRequest(true)}>Apply Leave</Button>
-
             </div>
           </div>
 
@@ -325,7 +325,6 @@ export default function LeaveManagementD() {
                   <td>{Math.ceil((new Date(leave.leave_toDate) - new Date(leave.leave_fromDate)) / (1000 * 60 * 60 * 24))}</td>
                   <td>{renderStatusButton(leave)}</td>
                   <td>
-                    {/* View Details Button with cyan outline */}
                     <Button
                       variant="outline-info"
                       style={{
@@ -345,20 +344,73 @@ export default function LeaveManagementD() {
               ))}
             </tbody>
           </Table>
-
-          {/* Pagination Controls */}
-          <Pagination>
-            <Pagination.Prev
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            />
-            <Pagination.Item active>{currentPage}</Pagination.Item>
-            <Pagination.Next
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            />
-          </Pagination>
         </div>
+
+        {/* Pagination Controls on Grey Background */}
+        <div className="pagination-container d-flex justify-content-center mt-3">
+          <button
+            className="pagination-btn"
+            onClick={() => changePage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            &lt;
+          </button>
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index + 1}
+              className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
+              onClick={() => changePage(index + 1)}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            className="pagination-btn"
+            onClick={() => changePage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            &gt;
+          </button>
+        </div>
+
+        <style>{`
+          .pagination-container {
+            display: flex;
+            gap: 8px;
+          }
+
+          .pagination-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            color: #007bff;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+          }
+
+          .pagination-btn:hover {
+            background-color: #007bff;
+            color: #fff;
+          }
+
+          .pagination-btn.active {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+          }
+
+          .pagination-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+          }
+        `}</style>
       </div>
 
       {/* View Details Modal */}

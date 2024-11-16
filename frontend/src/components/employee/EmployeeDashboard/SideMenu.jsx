@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaUsers, FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn } from 'react-icons/fa';
+import { FaTachometerAlt, FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn, FaFile, FaMoneyBill } from 'react-icons/fa';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function SideMenu() {
     const [isCollapsed, setIsCollapsed] = useState(false); // State for collapsed status
+    const [showDocumentsDropdown, setShowDocumentsDropdown] = useState(false); // State for documents dropdown
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed); // Toggle collapse/expand
@@ -112,21 +113,60 @@ export default function SideMenu() {
                     <span style={menuTextStyles}>Leave</span>
                 </NavLink>
 
-                <NavLink
-                    to="/employee/documents"
+                {/* Documents Dropdown */}
+                <div
                     className="nav-link d-flex align-items-center text-white mb-2"
-                    activeClassName="active"
-                    style={navLinkStyles}
-                    activeStyle={{
-                        backgroundColor: '#0056b3',
-                        color: '#ffffff',
-                    }}
+                    style={{ ...navLinkStyles, cursor: 'pointer' }}
+                    onClick={() => setShowDocumentsDropdown(!showDocumentsDropdown)}
                     onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
                     onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                 >
                     <FaFileAlt className="me-2" />
                     <span style={menuTextStyles}>Documents</span>
-                </NavLink>
+                    <ChevronRight
+                        className="ms-auto"
+                        style={{
+                            transform: showDocumentsDropdown ? 'rotate(90deg)' : 'rotate(0)',
+                            transition: 'transform 0.3s',
+                            width: '16px', // Adjust the width
+                            height: '16px', // Adjust the height
+                        }}
+                    />
+                </div>
+                {showDocumentsDropdown && (
+                    <div style={{ marginLeft: isCollapsed ? '15px' : '35px', transition: 'margin-left 0.3s' }}>
+                        <NavLink
+                            to="/employee/documents/mydocuments"
+                            className="nav-link d-flex align-items-center text-white mb-2"
+                            activeClassName="active"
+                            style={navLinkStyles}
+                            activeStyle={{
+                                backgroundColor: '#0056b3',
+                                color: '#ffffff',
+                            }}
+                            onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                        >
+                            <FaFile className="me-2" />
+                            <span style={menuTextStyles}>My Documents</span>
+                        </NavLink>
+                        <NavLink
+                            to="/employee/documents/payslip"
+                            className="nav-link d-flex align-items-center text-white mb-2"
+                            activeClassName="active"
+                            style={navLinkStyles}
+                            activeStyle={{
+                                backgroundColor: '#0056b3',
+                                color: '#ffffff',
+                            }}
+                            onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                        >
+                            <FaMoneyBill className="me-2" />
+                            <span style={menuTextStyles}>Payslips</span>
+                        </NavLink>
+                    </div>
+                )}
 
                 <NavLink
                     to="/employee/workschedule"

@@ -116,6 +116,16 @@ export default function Component() {
     });
   }, [timesheet, selectedMonth, selectedYear]);
 
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = filteredTimesheet.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(filteredTimesheet.length / itemsPerPage)
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber)
+  }
+
+
   // Update clock
   useEffect(() => {
     const timer = setInterval(() => {
@@ -205,21 +215,6 @@ export default function Component() {
     return secondsToTime(workingSeconds > 0 ? workingSeconds : 0) // Handle cases where the result might be negative
   }
 
-  // Calculate pagination
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredTimesheet.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.ceil(filteredTimesheet.length / itemsPerPage)
-
-  // Handle pagination navigation
-  const handlePrevPage = () => {
-    setCurrentPage(prevPage => Math.max(prevPage - 1, 1))
-  }
-
-  const handleNextPage = () => {
-    setCurrentPage(prevPage => Math.min(prevPage + 1, totalPages))
-  }
-
   // Show loader if loading is true
   if (loading) {
     return <Loader />;
@@ -288,7 +283,7 @@ export default function Component() {
 
         {/* Timesheet Heading */}
         <div className="mt-4 mb-2 d-flex justify-content-between align-items-center">
-          <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>Monthly Timesheet</h5>
+          <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>Monthly Attendance</h5>
           <div className="d-flex gap-2">
             <Dropdown onSelect={(eventKey) => setSelectedMonth(eventKey)}>
               <Dropdown.Toggle variant="outline-secondary" size="sm">{selectedMonth}</Dropdown.Toggle>
@@ -339,20 +334,33 @@ export default function Component() {
         </div>
 
 
-        {/* Pagination Controls */}
-        <div className="d-flex justify-content-center mt-3">
-          <Pagination style={{ fontSize: '0.875rem', border: '1px solid #ddd', borderRadius: '5px', padding: '0 8px' }}>
-            <Pagination.Prev onClick={handlePrevPage} disabled={currentPage === 1} style={{ color: '#333', border: 'none', backgroundColor: 'transparent' }}>
-              {"<"}
-            </Pagination.Prev>
-            <Pagination.Item active style={{ pointerEvents: 'none', color: '#333', backgroundColor: 'transparent', border: 'none' }}>
-              {`${currentPage} of ${totalPages}`}
-            </Pagination.Item>
-            <Pagination.Next onClick={handleNextPage} disabled={currentPage === totalPages} style={{ color: '#333', border: 'none', backgroundColor: 'transparent' }}>
-              {">"}
-            </Pagination.Next>
-          </Pagination>
+         {/* Custom Pagination Controls */}
+         <div className="custom-pagination d-flex justify-content-center mt-3 mb-3">
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            &lt;
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+              onClick={() => handlePageChange(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            &gt;
+          </button>
         </div>
+
 
 
 
@@ -370,6 +378,40 @@ export default function Component() {
           </Modal.Footer>
         </Modal>
       </div>
+
+      <style jsx>{`
+        .pagination-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 1px solid #ddd;
+          background-color: #f9f9f9;
+          color: #007bff;
+          font-size: 0.9rem;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .pagination-btn:hover {
+          background-color: #007bff;
+          color: #fff;
+        }
+
+        .pagination-btn.active {
+          background-color: #007bff;
+          color: #fff;
+          font-weight: bold;
+        }
+
+        .pagination-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+      `}</style>
     </div>
   )
 }

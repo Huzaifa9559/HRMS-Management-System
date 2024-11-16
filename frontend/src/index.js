@@ -15,9 +15,13 @@ import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
 import Leave from './components/employee/EmployeeDashboard/Leave.jsx';
 import Attendance from './components/employee/EmployeeDashboard/Attendance.jsx';
 import Account from './components/employee/EmployeeDashboard/Account.jsx'
+import WorkSchedule from './components/employee/EmployeeDashboard/WorkSchedule.jsx';
+import Payslip from './components/employee/EmployeeDashboard/Payslip.jsx';
+import MyDocuments from './components/employee/EmployeeDashboard/MyDocuments.jsx';
+import Announcements from './components/employee/EmployeeDashboard/Announcements.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import WorkSchedule from './components/employee/EmployeeDashboard/WorkSchedule.jsx';
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -40,7 +44,10 @@ root.render(
           {/*<Route path="/employee_main_dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />*/}
           {/*<Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} />*/}
           <Route path="/employee/dashboard" element={<EDashboard />} />
+          <Route path="/employee/documents/payslip" element={<Payslip />} />
+          <Route path="/employee/documents/mydocuments" element={<MyDocuments />} />
           <Route path="/employee/account" element={<Account />} />
+          <Route path="/employee/announcements" element={<Announcements />} />
           <Route path="/employee/leave" element={<Leave />} />
           <Route path="/employee/attendance" element={<Attendance />} />
           <Route path="/employee/workschedule" element={<WorkSchedule />} />
