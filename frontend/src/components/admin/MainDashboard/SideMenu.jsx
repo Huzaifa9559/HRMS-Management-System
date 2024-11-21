@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaUsers, FaCalendarAlt, FaUserCheck, FaCogs, FaFileAlt } from 'react-icons/fa'; 
+import { FaBuilding, FaUsers, FaCalendarAlt, FaUserCheck, FaBullhorn, FaFileAlt,FaSitemap } from 'react-icons/fa'; 
 import { ChevronLeft, ChevronRight } from 'lucide-react'; 
+import { MdDashboard } from 'react-icons/md';
 
 export default function SideMenu() {
     const [isCollapsed, setIsCollapsed] = useState(false); // State for collapsed status
+    const [showOrganizationsDropdown, setShowOrganizationsDropdown] = useState(false); // State for documents dropdown
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed); // Toggle collapse/expand
@@ -65,7 +67,7 @@ export default function SideMenu() {
             {/* Navigation Links with Hover Effect */}
             <nav className="nav flex-column">
                 <NavLink
-                    to="/admin_main_dashboard"
+                    to="/admin/dashboard"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -76,28 +78,66 @@ export default function SideMenu() {
                     onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
                     onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                 >
-                    <FaTachometerAlt className="me-2" />
+                    <MdDashboard className="me-2" />
                     <span style={menuTextStyles}>Dashboard</span>
                 </NavLink>
-
-                <NavLink
-                    to="/organization"
+                {/* Documents Dropdown */}
+                <div
                     className="nav-link d-flex align-items-center text-white mb-2"
-                    activeClassName="active"
-                    style={navLinkStyles}
-                    activeStyle={{
-                        backgroundColor: '#0056b3',
-                        color: '#ffffff',
-                    }}
+                    style={{ ...navLinkStyles, cursor: 'pointer' }}
+                    onClick={() => setShowOrganizationsDropdown(!showOrganizationsDropdown)}
                     onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
                     onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                 >
-                    <FaUsers className="me-2" />
+                    <FaSitemap className="me-2" />
                     <span style={menuTextStyles}>Organization</span>
-                </NavLink>
+                    <ChevronRight
+                        className="ms-auto"
+                        style={{
+                            transform: showOrganizationsDropdown ? 'rotate(90deg)' : 'rotate(0)',
+                            transition: 'transform 0.3s',
+                            width: '16px', // Adjust the width
+                            height: '16px', // Adjust the height
+                        }}
+                    />
+                </div>
+                {showOrganizationsDropdown && (
+                    <div style={{ marginLeft: isCollapsed ? '15px' : '35px', transition: 'margin-left 0.3s' }}>
+                        <NavLink
+                            to="/admin/organization/employee-list"
+                            className="nav-link d-flex align-items-center text-white mb-2"
+                            activeClassName="active"
+                            style={navLinkStyles}
+                            activeStyle={{
+                                backgroundColor: '#0056b3',
+                                color: '#ffffff',
+                            }}
+                            onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                        >
+                            <FaUsers className="me-2" />
+                            <span style={menuTextStyles}>Employee List</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/organization/departments"
+                            className="nav-link d-flex align-items-center text-white mb-2"
+                            activeClassName="active"
+                            style={navLinkStyles}
+                            activeStyle={{
+                                backgroundColor: '#0056b3',
+                                color: '#ffffff',
+                            }}
+                            onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                        >
+                            <FaBuilding className="me-2" />
+                            <span style={menuTextStyles}>Departments</span>
+                        </NavLink>
+                    </div>
+                )}
 
                 <NavLink
-                    to="/attendance"
+                    to="/admin/attendance"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -113,7 +153,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/leave"
+                    to="/admin/leave"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -129,7 +169,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/documents"
+                    to="/admin/documents"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -145,7 +185,7 @@ export default function SideMenu() {
                 </NavLink>
 
                 <NavLink
-                    to="/settings"
+                    to="/admin/announcements"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -156,8 +196,8 @@ export default function SideMenu() {
                     onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
                     onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                 >
-                    <FaCogs className="me-2" />
-                    <span style={menuTextStyles}>Settings</span>
+                    <FaBullhorn className="me-2" />
+                    <span style={menuTextStyles}>Announcements</span>
                 </NavLink>
             </nav>
 

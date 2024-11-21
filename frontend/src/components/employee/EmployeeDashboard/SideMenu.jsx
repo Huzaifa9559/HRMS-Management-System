@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaTachometerAlt, FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn, FaFile, FaMoneyBill } from 'react-icons/fa';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { MdDashboard } from 'react-icons/md';
 
 export default function SideMenu() {
     const [isCollapsed, setIsCollapsed] = useState(false); // State for collapsed status
@@ -77,7 +78,7 @@ export default function SideMenu() {
                     onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
                     onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                 >
-                    <FaTachometerAlt className="me-2" />
+                    <MdDashboard className="me-2" />
                     <span style={menuTextStyles}>Dashboard</span>
                 </NavLink>
 

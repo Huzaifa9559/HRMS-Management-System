@@ -37,8 +37,6 @@ export default function MyDocuments() {
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState({ type: "", message: "" });
 
-
-
   const sigCanvas = useRef(null);
 
   useEffect(() => {

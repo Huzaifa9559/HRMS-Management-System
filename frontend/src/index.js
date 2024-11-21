@@ -10,7 +10,6 @@ import LoginPage from './components/employee/Login_Signup/LoginPage.jsx';
 import ForgotPassword from './components/employee/Login_Signup/ForgotPassword.jsx';
 import ResetPasswordSent from './components/employee/Login_Signup/ResetPasswordSent.jsx';
 import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.jsx';
-import Dashboard from './components/admin/MainDashboard/Dashboard.jsx';
 import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
 import Leave from './components/employee/EmployeeDashboard/Leave.jsx';
 import Attendance from './components/employee/EmployeeDashboard/Attendance.jsx';
@@ -19,6 +18,16 @@ import WorkSchedule from './components/employee/EmployeeDashboard/WorkSchedule.j
 import Payslip from './components/employee/EmployeeDashboard/Payslip.jsx';
 import MyDocuments from './components/employee/EmployeeDashboard/MyDocuments.jsx';
 import Announcements from './components/employee/EmployeeDashboard/Announcements.jsx';
+
+import ADashboard from './components/admin/MainDashboard/ADashboard.jsx';
+import EmployeeList from './components/admin/MainDashboard/EmployeeList.jsx';
+import Departments from './components/admin/MainDashboard/Departments.jsx';
+import ViewDepartments from './components/admin/MainDashboard/ViewDepartment.jsx';
+import AAttendance from './components/admin/MainDashboard/AAttendance.jsx';
+import ViewAttendance from './components/admin/MainDashboard/ViewAttendance.jsx';
+import VEmpAttendance from './components/admin/MainDashboard/VEmpAttendance.jsx';
+import CreateAnnouncements from './components/admin/MainDashboard/CreateAnnouncements.jsx';
+import AAnnouncements from './components/admin/MainDashboard/AAnnouncements.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -38,7 +47,15 @@ root.render(
 
           {/*Admin Protected Route*/}
           {/*<Route path="/admin_main_dashboard" element={<PrivateRoute element={<Dashboard />} requiredRole="admin" />} />*/}
-          <Route path="/admin/dashboard/*" element={<Dashboard />} />
+          <Route path="/admin/dashboard/*" element={<ADashboard />} />
+          <Route path="/admin/organization/employee-list/*" element={<EmployeeList />} />
+          <Route path="/admin/organization/departments*" element={<Departments />} />
+          <Route path="/admin/organization/view-departments*" element={<ViewDepartments />} />
+          <Route path="/admin/attendance*" element={<AAttendance />} />
+          <Route path="/admin/view-attendance*" element={<ViewAttendance />} />
+          <Route path="/admin/view-employee-attendance*" element={<VEmpAttendance />} />
+          <Route path="/admin/create-announcements*" element={<CreateAnnouncements />} />
+          <Route path="/admin/announcements*" element={<AAnnouncements />} />
 
           {/* Employee Protected Routes */}
           {/*<Route path="/employee_main_dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />*/}
