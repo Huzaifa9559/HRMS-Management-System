@@ -3,7 +3,7 @@ import Header from './Header';
 import SideMenu from './SideMenu';
 import { Eye, ChevronDown } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import Loader from '../../Loader';
+import Loader from '../Loader';
 
 const ADocuments = () => {
   // Mock Data with relevant fields

@@ -27,13 +27,13 @@ import Departments from './components/admin/Departments.jsx';
 import ViewDepartments from './components/admin/ViewDepartment.jsx';
 import AAttendance from './components/admin/AAttendance.jsx';
 import ViewAttendance from './components/admin/ViewAttendance.jsx';
-import VEmpAttendance from './components/admin/VEmpAttendance.jsx';
 import CreateAnnouncements from './components/admin/CreateAnnouncements.jsx';
 import ALeave from './components/admin/ALeave.jsx';
 import VEmpAttendance from './components/admin/VEmpAttendance.jsx';
 import VEmpLeave from './components/admin/VEmpLeave.jsx';
 import ADocuments from './components/admin/ADocuments.jsx';
 import AAnnouncements from './components/admin/AAnnouncements.jsx';
+import CreateNewDoc from './components/admin/CreateNewDoc.jsx';
 import Login from './components/admin/Login.jsx';
 
 import 'bootstrap/dist/css/bootstrap.min.css';

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import SideMenu from './SideMenu'; 
 import Header from './Header'; 
-import Loader from '../../Loader';
+import Loader from '../Loader';
 
 export default function CreateNewDoc() {
     const [loading, setLoading] = useState(true); // Loading state

@@ -4,7 +4,7 @@ import Header from "./Header";
 import { Bell, User } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Loader from "../../Loader";
+import Loader from "../Loader";
 
 export default function LeaveManagement() {
 

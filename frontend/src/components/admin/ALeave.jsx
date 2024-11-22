@@ -3,7 +3,7 @@ import Header from './Header';
 import SideMenu from './SideMenu';
 import { Eye } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import Loader from '../../Loader';
+import Loader from '../Loader';
 
 const LeaveManagement = () => {
   const [leaveData] = useState([
