@@ -28,7 +28,15 @@ import ViewAttendance from './components/admin/MainDashboard/ViewAttendance.jsx'
 import VEmpAttendance from './components/admin/MainDashboard/VEmpAttendance.jsx';
 import CreateAnnouncements from './components/admin/MainDashboard/CreateAnnouncements.jsx';
 import AAnnouncements from './components/admin/MainDashboard/AAnnouncements.jsx';
+<<<<<<< Updated upstream
 import AnnouncementView from './components/employee/EmployeeDashboard/AnnouncementView.jsx';
+=======
+import ADocuments from './components/admin/MainDashboard/ADocuments.jsx';
+import CreateNewDoc from './components/admin/MainDashboard/CreateNewDoc.jsx';
+import ALeave from './components/admin/MainDashboard/ALeave.jsx';
+import VEmpLeave from './components/admin/MainDashboard/VEmpLeave.jsx';
+import './index.css';
+>>>>>>> Stashed changes
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
@@ -47,6 +55,7 @@ root.render(
 
           {/*Admin Protected Route*/}
           {/*<Route path="/admin_main_dashboard" element={<PrivateRoute element={<Dashboard />} requiredRole="admin" />} />*/}
+<<<<<<< Updated upstream
           <Route path="/admin/dashboard" element={<ADashboard />} />
           <Route path="/admin/organization/employee-list" element={<EmployeeList />} />
           <Route path="/admin/organization/departments" element={<Departments />} />
@@ -56,6 +65,21 @@ root.render(
           <Route path="/admin/view-employee-attendance" element={<VEmpAttendance />} />
           <Route path="/admin/create-announcements" element={<CreateAnnouncements />} />
           <Route path="/admin/announcements" element={<AAnnouncements />} />
+=======
+          <Route path="/admin/dashboard/*" element={<ADashboard />} />
+          <Route path="/admin/organization/employee-list/*" element={<EmployeeList />} />
+          <Route path="/admin/organization/departments*" element={<Departments />} />
+          <Route path="/admin/organization/view-departments*" element={<ViewDepartments />} />
+          <Route path="/admin/attendance*" element={<AAttendance />} />
+          <Route path="/admin/view-attendance*" element={<ViewAttendance />} />
+          <Route path="/admin/view-employee-attendance*" element={<VEmpAttendance />} />
+          <Route path="/admin/create-announcements*" element={<CreateAnnouncements />} />
+          <Route path="/admin/announcements*" element={<AAnnouncements />} />
+          <Route path="/admin/documents/upload-document*" element={<CreateNewDoc />} />
+          <Route path="/admin/documents/all-received*" element={<ADocuments />} />
+          <Route path="/admin/leave*" element={<ALeave />} />
+          <Route path="/admin/view-employee-leave*" element={<VEmpLeave />} />
+>>>>>>> Stashed changes
 
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />
