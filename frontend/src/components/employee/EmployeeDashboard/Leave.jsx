@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Loader from '../../Loader';
 import SideMenu from './SideMenu'; // Importing SideMenu component
 import Header from './Header'; // Importing Header component
-import { Table, Button, Modal, Form, Row, Col, Pagination } from 'react-bootstrap';
+import { Table, Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import { FaMedkit, FaMoneyBillAlt, FaCheckCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -10,7 +10,7 @@ import Cookies from 'js-cookie';
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer and toast
 import 'react-toastify/dist/ReactToastify.css'; // Import the CSS for styling
 
-const ITEMS_PER_PAGE = 6;
+var isSubmit = 0;
 // Overlay component for viewing details
 function ViewDetailsOverlay({ show, onHide, leaveDetails }) {
   return (
@@ -33,25 +33,31 @@ function NewLeaveRequestOverlay({ show, onHide }) {
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     // Prepare the leave request data
     const leaveRequestData = { startDate, endDate, leaveType, reason };
-
     try {
       const token = Cookies.get('token'); // Get the token for authorization
-      await axios.post('/api/employees/leave-request', leaveRequestData, {
+      await axios.post('/api/employees/leave/leave-request', leaveRequestData, {
         headers: {
           'Authorization': `Bearer ${token}`, // Include the token in the request headers
         }
       });
       onHide(); // Close the modal after successful submission
+
       toast.success('Leave request submitted successfully!'); // Show success notification
+      isSubmit = 1;
+ 
     } catch (error) {
       console.error('Error submitting leave request:', error);
       toast.error('Failed to submit leave request. Please try again.'); // Show error notification
     }
+    setLeaveType('');
+    setStartDate('');
+    setEndDate('');
+    setReason('');
   };
 
   return (
@@ -70,12 +76,12 @@ function NewLeaveRequestOverlay({ show, onHide }) {
                     variant="outline-primary"
                     className="w-100 text-start"
                     style={{
-                      borderColor: leaveType === 'Medical Leave' ? '#0d6efd' : '#c1e0ff',
-                      color: leaveType === 'Medical Leave' ? '#007bff' : '#007bff',
+                      borderColor: leaveType === 'Medical' ? '#0d6efd' : '#c1e0ff',
+                      color: leaveType === 'Medical' ? '#007bff' : '#007bff',
                       backgroundColor: 'transparent',
                       position: 'relative',
                     }}
-                    onClick={() => setLeaveType('Medical Leave')}
+                    onClick={() => setLeaveType('Medical')}
                   >
                     <FaMedkit className="me-2" />
                     Medical Leave
@@ -84,7 +90,7 @@ function NewLeaveRequestOverlay({ show, onHide }) {
                     </small>
                   </Button>
                   {/* Show green checkmark when selected */}
-                  {leaveType === 'Medical Leave' && (
+                  {leaveType === 'Medical' && (
                     <FaCheckCircle
                       style={{
                         color: 'green',
@@ -103,12 +109,12 @@ function NewLeaveRequestOverlay({ show, onHide }) {
                     variant="outline-primary"
                     className="w-100 text-start"
                     style={{
-                      borderColor: leaveType === 'Unpaid Leave' ? '#0d6efd' : '#c1e0ff',
-                      color: leaveType === 'Unpaid Leave' ? '#007bff' : '#007bff',
+                      borderColor: leaveType === 'Unpaid' ? '#0d6efd' : '#c1e0ff',
+                      color: leaveType === 'Unpaid' ? '#007bff' : '#007bff',
                       backgroundColor: 'transparent',
                       position: 'relative',
                     }}
-                    onClick={() => setLeaveType('Unpaid Leave')}
+                    onClick={() => setLeaveType('Unpaid')}
                   >
                     <FaMoneyBillAlt className="me-2" />
                     Unpaid Leave
@@ -117,7 +123,7 @@ function NewLeaveRequestOverlay({ show, onHide }) {
                     </small>
                   </Button>
                   {/* Show green checkmark when selected */}
-                  {leaveType === 'Unpaid Leave' && (
+                  {leaveType === 'Unpaid' && (
                     <FaCheckCircle
                       style={{
                         color: 'green',
@@ -201,14 +207,12 @@ export default function Leave() {
     const fetchLeaveData = async () => {
       try {
         const token = Cookies.get('token');
-        const response = await axios.get(`/api/employees/leave-details`, {
+        const response = await axios.get(`/api/employees/leave/leave-details`, {
           headers: {
             'Authorization': `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
           }
         });
-
         setAllLeaveData(response.data.data);
-        console.log(response.data);
       } catch (error) {
         console.error('Error fetching leave data:', error);
         navigate('/login');
@@ -216,7 +220,8 @@ export default function Leave() {
     };
 
     fetchLeaveData();
-  }, []);
+    isSubmit = 0;
+  }, [isSubmit]);
 
   // Filtered data based on the active tab
   const getFilteredData = () => {
@@ -351,8 +356,8 @@ export default function Leave() {
             </tbody>
           </Table>
 
-           {/* Compact Pagination Controls */}
-           <div className="pagination-container d-flex justify-content-center mt-3">
+          {/* Compact Pagination Controls */}
+          <div className="pagination-container d-flex justify-content-center mt-3">
             <button
               className="pagination-btn"
               onClick={() => changePage(currentPage - 1)}

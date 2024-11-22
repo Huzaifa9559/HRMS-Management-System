@@ -7,7 +7,8 @@ module.exports = {
     payslipID INT PRIMARY KEY AUTO_INCREMENT,
     payslip_monthName VARCHAR(50) NOT NULL,
     payslip_receiveDate DATE NOT NULL,
-    payslip_year INT NOT NULL
+    payslip_year INT NOT NULL,
+    payslip_fileName VARCHAR(255)
     );
 `);
   },

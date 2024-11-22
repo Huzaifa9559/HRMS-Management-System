@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Table, Card, Form, Dropdown, Modal, Button } from 'react-bootstrap';
 import Header from './Header';
 import SideMenu from './SideMenu';
@@ -7,24 +7,10 @@ import SignatureCanvas from 'react-signature-canvas';
 import { ToastContainer, toast } from 'react-toastify';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { AiOutlineEye, AiOutlineDownload, AiOutlineEdit } from 'react-icons/ai';
-
-const myDocuments = [
-  { documentType: "Job Contract", receivedDate: "01 Aug 2021", id: 1 },
-  { documentType: "Promotion Letter", receivedDate: "01 Aug 2021", id: 2 },
-  { documentType: "Achievement Letter", receivedDate: "01 Aug 2021", id: 3 },
-  { documentType: "Salary Slip", receivedDate: "01 Sep 2021", id: 4 },
-  { documentType: "Tax Form", receivedDate: "15 Feb 2022", id: 5 },
-  { documentType: "Insurance Policy", receivedDate: "10 Mar 2022", id: 6 },
-  { documentType: "Certificate of Employment", receivedDate: "20 Jun 2022", id: 7 },
-  { documentType: "Annual Review", receivedDate: "30 Dec 2022", id: 8 },
-  { documentType: "Leave Approval", receivedDate: "12 Jul 2023", id: 9 },
-  { documentType: "Performance Bonus", receivedDate: "18 Dec 2023", id: 10 },
-  { documentType: "Medical Certificate", receivedDate: "05 Jan 2024", id: 11 },
-  { documentType: "Travel Reimbursement", receivedDate: "20 Feb 2024", id: 12 },
-  { documentType: "Retirement Plan", receivedDate: "14 Mar 2024", id: 13 },
-  { documentType: "Non-Disclosure Agreement", receivedDate: "01 May 2024", id: 14 },
-  { documentType: "Employee Handbook", receivedDate: "10 May 2024", id: 15 },
-];
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import 'react-toastify/dist/ReactToastify.css'
+import '../../../styles/MyDocuments.css'; // Import your CSS file for custom styles
 
 const ITEMS_PER_PAGE = 6;
 
@@ -36,16 +22,34 @@ export default function MyDocuments() {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState({ type: "", message: "" });
+  const [myDocuments, setMyDocuments] = useState([]);
+  const [signatures, setSignatures] = useState([]);
 
   const sigCanvas = useRef(null);
 
+  const fetchDocuments = useCallback(async () => {
+    try {
+      const token = Cookies.get('token');
+      const response = await axios.get('/api/employees/my-documents', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      setMyDocuments(response.data.data);
+
+    } catch (error) {
+      console.error(error);
+    }
+  }, [showSignatureModal]);
+
   useEffect(() => {
+    fetchDocuments(); // Call the fetch function on component mount
     const timer = setTimeout(() => setLoading(false), 1250);
     return () => clearTimeout(timer);
-  }, []);
+  }, [fetchDocuments]);
 
   const filteredDocuments = myDocuments.filter(doc => {
-    const documentYear = new Date(doc.receivedDate).getFullYear();
+    const documentYear = new Date(doc.document_receiveDate).getFullYear();
     return documentYear === parseInt(selectedYear);
   });
 
@@ -61,27 +65,39 @@ export default function MyDocuments() {
   const changePage = (page) => {
     setCurrentPage(page);
   };
+  function getObjectByDocumentID(items, documentID) {
+    return items.find(item => item.document_ID === documentID);
+  }
 
   const openSignatureModal = (documentId) => {
-    setSelectedDocumentId(documentId);
-    setShowSignatureModal(true);
+    let check = {};
+    check = getObjectByDocumentID(currentItems, documentId);
+    if (check.signature_status) {
+      toast.error("Already Signed!");
+      setShowSignatureModal(false);
+    }
+    else {
+      setShowSignatureModal(true);
+      setSelectedDocumentId(documentId);
+    }
+
   };
 
   const saveSignature = async () => {
     if (sigCanvas.current) {
       const signatureData = sigCanvas.current.toDataURL("image/png");
-  
       try {
-        const response = await fetch('/api/save-signature', {
+        const response = await fetch('/api/employees/my-documents/save-signature', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ documentId: selectedDocumentId, signature: signatureData }),
         });
-  
+
         if (response.ok) {
           setFeedbackMessage({ type: "success", message: "Signature saved successfully!" });
+          setShowSignatureModal(false);
         } else {
           setFeedbackMessage({ type: "error", message: "Failed to save signature. Please try again." });
         }
@@ -90,11 +106,46 @@ export default function MyDocuments() {
       }
     }
   };
-    
 
   const clearSignature = () => {
     if (sigCanvas.current) {
       sigCanvas.current.clear();
+    }
+  };
+
+  const downloadDocument = async (documentId) => {
+    try {
+      const token = Cookies.get('token');
+      const response = await axios.get(`/api/employees/my-documents/download/${documentId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        responseType: 'blob', // Important for downloading files
+      });
+      toast.success(`Download successful!`);
+      // Extract the filename from the Content-Disposition header
+      const disposition = response.headers.get('Content-Disposition');
+      let filename = 'default_filename.pdf'; // Fallback filename
+
+      if (disposition && disposition.indexOf('attachment') !== -1) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, ''); // Remove quotes if present
+        }
+      }
+      // Create a URL for the file and trigger the download
+      const blob = new Blob([response.data], { type: 'application/pdf' }); // Create a Blob from the response data
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error(`Download failed!`);
+      setFeedbackMessage({ type: "error", message: "Failed to download document." });
     }
   };
 
@@ -109,8 +160,8 @@ export default function MyDocuments() {
         <Header title="Documents" />
         <div className="mt-4">
           <div className="d-flex justify-content-between align-items-center" style={{ marginTop: '40px', marginBottom: '10px' }}>
-            <h5 style={{ fontWeight: '500', color: '#4b4b4b'}}>My Documents</h5>
-            <Form.Select 
+            <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>My Documents</h5>
+            <Form.Select
               style={{ width: '100px' }}
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
@@ -128,27 +179,36 @@ export default function MyDocuments() {
                   <tr>
                     <th>Document Type</th>
                     <th>Received Date</th>
+                    <th>Signed Status</th>
                     <th className="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentItems.map((doc) => (
-                    <tr key={doc.id}>
-                      <td>{doc.documentType}</td>
-                      <td>{doc.receivedDate}</td>
+                    <tr key={doc.document_ID}>
+                      <td>{doc.document_type}</td>
+                      <td>{new Date(doc.document_receiveDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td>
+                        {doc.signature_status ? (
+                          <span className="status-box signed">
+                            Signed on {new Date(doc.signature_signedAt).toLocaleDateString('en-GB')}
+                          </span>
+                        ) : (
+                          <span className="status-box not-signed">
+                            Not Signed
+                          </span>
+                        )}
+                      </td>
                       <td className="text-center">
                         <Dropdown align="end">
                           <Dropdown.Toggle variant="link" className="p-0 custom-dropdown-toggle">
                             <BsThreeDotsVertical />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="custom-dropdown-menu">
-                            <Dropdown.Item onClick={() => openSignatureModal(doc.id)} className="d-flex align-items-center gap-2">
+                            <Dropdown.Item onClick={() => openSignatureModal(doc.document_ID)} className="d-flex align-items-center gap-2">
                               <AiOutlineEdit /> Digital Signature
                             </Dropdown.Item>
-                            <Dropdown.Item href="#view" className="d-flex align-items-center gap-2">
-                              <AiOutlineEye /> View
-                            </Dropdown.Item>
-                            <Dropdown.Item href="#download" className="d-flex align-items-center gap-2">
+                            <Dropdown.Item onClick={() => downloadDocument(doc.document_ID)} className="d-flex align-items-center gap-2">
                               <AiOutlineDownload /> Download
                             </Dropdown.Item>
                           </Dropdown.Menu>
@@ -160,7 +220,6 @@ export default function MyDocuments() {
               </Table>
             </Card.Body>
           </Card>
-
           <div className="pagination-container d-flex justify-content-center mt-3">
             <button
               className="pagination-btn"
@@ -194,35 +253,40 @@ export default function MyDocuments() {
           <Modal.Title>Digital Signature</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <SignatureCanvas
-            ref={sigCanvas}
-            penColor="black"
-            canvasProps={{
-              width: 400,
-              height: 200,
-              className: 'signature-canvas'
-            }}
-          />
+          {/* yaha par current item. status wo us document id ka status return karna chyai hai*/}
+          {signatures.signature_status ? (
+            <img src={signatures.signature} alt="Existing Signature" style={{ width: '100%', height: 'auto' }} />
+          ) : (
+            <SignatureCanvas
+              ref={sigCanvas}
+              penColor="black"
+              canvasProps={{
+                width: 400,
+                height: 200,
+                className: 'signature-canvas'
+              }}
+            />
+          )}
         </Modal.Body>
         <Modal.Footer>
-        <div className="feedback-message">
+          <div className="feedback-message">
             {feedbackMessage.message && (
-            <span
+              <span
                 style={{
-                color: feedbackMessage.type === "success" ? "green" : "red",
-                marginRight: "auto", // Align to the left
+                  color: feedbackMessage.type === "success" ? "green" : "red",
+                  marginRight: "auto", // Align to the left
                 }}
-            >
+              >
                 {feedbackMessage.message}
-            </span>
+              </span>
             )}
-        </div>
-        <Button variant="secondary" onClick={clearSignature}>
+          </div>
+          <Button variant="secondary" onClick={clearSignature}>
             Clear
-        </Button>
-        <Button variant="primary" onClick={saveSignature}>
+          </Button>
+          <Button variant="primary" onClick={saveSignature}>
             Save Signature
-        </Button>
+          </Button>
         </Modal.Footer>
 
 
@@ -281,6 +345,7 @@ export default function MyDocuments() {
           opacity: 0.5;
         }
       `}</style>
+      <ToastContainer />
     </div>
   );
 }

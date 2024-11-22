@@ -58,9 +58,10 @@ export default function CreateAccount() {
     useEffect(() => {
         const fetchDesignationsAndDepartments = async () => {
             try {
-                const response = await axios.get('/api/employees/get-designations-and-departments');
-                setDesignations(response.data.designations);
-                setDepartments(response.data.departments);
+                const response = await axios.get('/api/public/department');
+                setDesignations(response.data.data);
+                const response2 = await axios.get('/api/public/designation');
+                setDepartments(response2.data.data);
             } catch (error) {
                 console.error('Error fetching designations and departments:', error);
             }
@@ -142,7 +143,7 @@ export default function CreateAccount() {
         setSubmitMessage('');
 
         try {
-            const response = await fetch('/api/employees/create-account', {
+            const response = await fetch('/api/employees/auth/create-account', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -278,9 +279,9 @@ export default function CreateAccount() {
                                     required
                                 >
                                     <option value="">Select Department</option>
-                                    {departments.map((department) => (
-                                        <option key={department.department_name} value={department.department_name}>
-                                            {department.department_name}
+                                    {departments.map((d) => (
+                                        <option key={d.department_name} value={d.department_name}>
+                                            {d.department_name}
                                         </option>
                                     ))}
                                 </select>

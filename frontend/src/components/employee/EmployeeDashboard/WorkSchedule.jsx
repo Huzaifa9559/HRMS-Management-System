@@ -4,34 +4,42 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../../Loader';
+import axios from 'axios'; 
+import Cookies from 'js-cookie'; 
 
 export default function WorkSchedule() {
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [loading, setLoading] = useState(true); // Loading state
-  const [scheduleData, setScheduleData] = useState({ months: [], weeks: [] }); // Initialize state for schedule data
-  
+  const [scheduleData, setScheduleData] = useState({ weeks: [] }); // Initialize state for schedule data
+
   useEffect(() => {
     const fetchScheduleData = async () => {
       try {
-        const response = await fetch('/api/work-schedule'); // Replace with your actual API endpoint
-        const data = await response.json();
-        
+        const token = Cookies.get('token');
+        const response = await axios.get(`/api/employees/work-schedule/${selectedMonth}`, {
+          headers: {
+            Authorization: `Bearer ${token}` // Add token to headers
+          }
+        });
         // Transform the data to match the expected format
+        //schedule_week: 1, schedule_day: 'Thursday',
+        //schedule_startTime: '09:00:00', schedule_endTime:
+        //'17:00:00', schedule_worktype: 'remote'
+
         const transformedData = {
-          months: [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-          ],
-          weeks: data.map(week => ({
-            weekNumber: week.scheduleID, // Assuming scheduleID corresponds to week number
-            schedule: {
-              mon: `${week.schedule_startTime} - ${week.schedule_endTime}`, // Adjust as necessary
-              tue: `${week.schedule_startTime} - ${week.schedule_endTime}`,
-              wed: `${week.schedule_startTime} - ${week.schedule_endTime}`,
-              thu: `${week.schedule_startTime} - ${week.schedule_endTime}`,
-              fri: `${week.schedule_startTime} - ${week.schedule_endTime}`,
-              sat: `${week.schedule_startTime} - ${week.schedule_endTime}`
-            }
+          weeks: response.data.data.map((week) => ({ // Adjusted to map directly over the weeks
+            weekNumber: week.week, // Use the week number directly from the new format
+            schedule: week.days.reduce((acc, day) => { // Reduce days into a schedule object
+              acc[day.day.toLowerCase().slice(0, 3)] = `${convertTo24HourFormat(day.startTime)} - ${convertTo24HourFormat(day.endTime)}`; // Convert day names to short form
+              return acc;
+            }, {
+              mon: 'Free Slot', // Default to 'Free Slot'
+              tue: 'Free Slot',
+              wed: 'Free Slot',
+              thu: 'Free Slot',
+              fri: 'Free Slot',
+              sat: 'Free Slot'
+            })
           }))
         };
 
@@ -44,7 +52,24 @@ export default function WorkSchedule() {
     };
 
     fetchScheduleData(); // Call the fetch function
-  }, []);
+  }, [selectedMonth]); // Dependency array includes selectedMonth
+
+  // Hardcoded months
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const convertTo24HourFormat = (timeString) => {
+    if (!timeString) {
+      return 'N/A'; // Return a default message or handle the error as needed
+    }
+    // Split the time string into hours and minutes
+    const [hours, minutes] = timeString.split(':').map(Number);
+
+    // Format the time in "HH:MM" (24-hour format)
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
 
   if (loading) {
     return <Loader />;
@@ -75,10 +100,10 @@ export default function WorkSchedule() {
                       {selectedMonth}
                     </Dropdown.Toggle>
                     <Dropdown.Menu style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                      {scheduleData.months.map((month) => (
-                        <Dropdown.Item 
-                          key={month} 
-                          onClick={() => setSelectedMonth(month)}
+                      {months.map((month) => (
+                        <Dropdown.Item
+                          key={month}
+                          onClick={() => setSelectedMonth(month)} // Set selected month
                         >
                           {month}
                         </Dropdown.Item>
@@ -98,10 +123,11 @@ export default function WorkSchedule() {
                       <th style={{ padding: '16px' }}>Wed</th>
                       <th style={{ padding: '16px' }}>Thu</th>
                       <th style={{ padding: '16px' }}>Fri</th>
-                      <th style={{ padding: '16px', borderTopRightRadius: '8px' }}>Sat</th>
+                      <th style={{ padding: '16px' }}>Sat</th>
                     </tr>
                   </thead>
                   <tbody>
+                    {/* Existing schedule data rendering */}
                     {scheduleData.weeks.map((week) => (
                       <tr key={week.weekNumber}>
                         <td style={{ padding: '20px' }}>Week {week.weekNumber}</td>

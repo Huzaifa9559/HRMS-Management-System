@@ -1,24 +1,9 @@
 const express = require('express'); // Import express
-const router = express.Router(); // Create a router instance
-
+const employee = express.Router();
 // Import the specific controller
-const { createAccount, login, forgotPassword, resetPassword,
-    DepartmentandDesignation, EmployeeDetailsById,
-    LeaveDetailsById, createLeaveRequest } =
-    require('../controllers/employeeController');
+const { EmployeeDetailsById } =
+    require('../controllers/employee');
 
-// Creating routes
-router.post('/create-account', createAccount);
-router.post('/login', login);
-router.post('/forgot-password', forgotPassword);  //send reset link
-router.post('/set-new-password', resetPassword);  // sets new password
+employee.get('/', EmployeeDetailsById);
 
-
-
-//these should be protected
-router.get('/designations-and-departments', DepartmentandDesignation);
-router.get('/employee', EmployeeDetailsById);
-router.get('/leave-details', LeaveDetailsById);
-router.post('/leave-request', createLeaveRequest);
-
-module.exports = router; // Export the router
+module.exports = employee;

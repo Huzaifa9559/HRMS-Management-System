@@ -4,45 +4,68 @@ import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../../Loader';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { AiOutlineEye, AiOutlineDownload } from 'react-icons/ai';
+import { AiOutlineEye } from 'react-icons/ai';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const myAnnouncements = [
-  { title: "For Sending Picture", creationDate: "01-08-2021", department: "HR", id: 1 },
-  { title: "Policy Update", creationDate: "10-07-2021", department: "Finance", id: 2 },
-  { title: "Meeting Minutes", creationDate: "15-06-2021", department: "IT", id: 3 },
-  { title: "New Hire Announcement", creationDate: "05-09-2021", department: "Marketing", id: 4 },
-  { title: "Holiday Schedule", creationDate: "12-10-2021", department: "Operations", id: 5 },
-];
-
-const departments = ["Departments", "HR", "Finance", "IT", "Marketing", "Operations"];
 const ITEMS_PER_PAGE = 6;
 
 export default function Announcements() {
-  const [selectedDepartment, setSelectedDepartment] = useState("Departments");
+  const [selectedDepartment, setSelectedDepartment] = useState("HR");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [myAnnouncements, setMyAnnouncements] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1250);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
+    fetchDepartments();
+    return () => clearTimeout(timer); // Cleanup on unmount
   }, []);
 
-  // Filter announcements based on selected department (if it's not "Departments")
-  const filteredAnnouncements = selectedDepartment === "Departments"
-    ? myAnnouncements
-    : myAnnouncements.filter(announcement => announcement.department === selectedDepartment);
+  useEffect(() => {
+    fetchAnnouncements(selectedDepartment);
+  }, [selectedDepartment]);
 
-  const totalPages = Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE);
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get('/api/employees/department');
+      setDepartments(response.data.data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
+  };
+
+  const fetchAnnouncements = async (department) => {
+    try {
+      const response = await axios.get(`/api/employees/announcements?department=${department}`);
+
+      setMyAnnouncements(response.data.data);
+    } catch (error) {
+      console.error("Error fetching announcements:", error);
+    }
+  };
+
+  // const filteredAnnouncements = myAnnouncements.filter(announcement =>
+  //   selectedDepartment === "Departments" || announcement.department === selectedDepartment
+  // );
+
+  const totalPages = Math.ceil(myAnnouncements.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = filteredAnnouncements.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = myAnnouncements.slice(indexOfFirstItem, indexOfLastItem);
 
   useEffect(() => {
-    setCurrentPage(1); // Reset to the first page when department changes
+    setCurrentPage(1);
   }, [selectedDepartment]);
 
   const changePage = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleViewClick = (id) => {
+    navigate(`/employee/announcements/view/${id}`);
   };
 
   if (loading) {
@@ -57,14 +80,14 @@ export default function Announcements() {
         <div className="mt-4">
           <div className="d-flex justify-content-between align-items-center" style={{ marginTop: '40px', marginBottom: '10px' }}>
             <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>Announcements List</h5>
-            <Form.Select 
+            <Form.Select
               style={{ width: '150px' }}
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
             >
-              {departments.map((department, index) => (
-                <option key={index} value={department} disabled={department === "Departments"}>
-                  {department}
+              {departments.map((d) => (
+                <option value={d.department_name} key={d.department_name}>
+                  {d.department_name}
                 </option>
               ))}
             </Form.Select>
@@ -82,20 +105,20 @@ export default function Announcements() {
                 </thead>
                 <tbody>
                   {currentItems.map((doc) => (
-                    <tr key={doc.id}>
-                      <td>{doc.title}</td>
-                      <td>{doc.creationDate}</td>
+                    <tr key={doc.announcementID}>
+                      <td>{doc.announcement_title}</td>
+                      <td>{doc.announcement_date}</td>
                       <td className="text-center">
                         <Dropdown align="end">
                           <Dropdown.Toggle variant="link" className="p-0 custom-dropdown-toggle">
                             <BsThreeDotsVertical />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="custom-dropdown-menu">
-                            <Dropdown.Item href="#view" className="d-flex align-items-center gap-2">
+                            <Dropdown.Item
+                              onClick={() => handleViewClick(doc.announcementID)}
+                              className="d-flex align-items-center gap-2"
+                            >
                               <AiOutlineEye /> View
-                            </Dropdown.Item>
-                            <Dropdown.Item href="#download" className="d-flex align-items-center gap-2">
-                              <AiOutlineDownload /> Download
                             </Dropdown.Item>
                           </Dropdown.Menu>
                         </Dropdown>

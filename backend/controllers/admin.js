@@ -1,7 +1,6 @@
 const Employee = require('../models/employee'); // Import the Employee model
 const { sendCreateAccountLink } = require('../service/nodemailer');
 const Admin = require('../models/admin');
-const { setUser } = require('../service/auth');
 
 
 exports.loginAdmin = async (req, res) => {

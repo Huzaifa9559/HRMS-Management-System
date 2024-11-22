@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../AuthContext';
+import { useAuth } from '../../../auth/AuthContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -15,6 +15,15 @@ export default function Login() {
   const [passwordAlert, setPasswordAlert] = useState('');
   const [emailAlert, setEmailAlert] = useState('');
   const [showPassword, setShowPassword] = useState(false); // State to manage password visibility
+
+  useEffect(() => {
+    // Check if there's a saved email in localStorage
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setEmail(savedEmail); // Set the email state to the saved email
+      setRememberMe(true); // Set rememberMe to true
+    }
+  }, []); // Run once on component mount
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -49,25 +58,25 @@ export default function Login() {
       return;
     }
 
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', email); // Save email to localStorage
+    } else {
+      localStorage.removeItem('rememberedEmail'); // Remove email from localStorage if not remembered
+    }
+
     try {
-      const response = await fetch('/api/employees/login', {
+      const response = await fetch('/api/employees/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
 
       if (data.message == 'Login successful') {
         // Call loginAsEmployee from AuthContext to update authentication state
         loginAsEmployee();
-        // Optionally, you could also show a loader and redirect to employee dashboard
-        console.log('Login successful');
-        // Redirect to employee dashboard
-        // You can use history.push('/employee_dashboard') if using react-router-dom v5
-        // For react-router-dom v6, useNavigate can be used for navigation.
         navigate('/employee/dashboard');
       } else {
         setError('Invalid credentials');

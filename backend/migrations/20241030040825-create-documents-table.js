@@ -6,7 +6,9 @@ module.exports = {
     CREATE TABLE Documents (
         document_ID INT PRIMARY KEY AUTO_INCREMENT,
         document_type VARCHAR(100) NOT NULL,
-        document_url VARCHAR(255) NOT NULL
+        document_receiveDate DATE NOT NULL,
+        document_fileName VARCHAR(50) NOT NULL,
+        signature_status TINYINT(1) DEFAULT 0
     );
 `);
   },

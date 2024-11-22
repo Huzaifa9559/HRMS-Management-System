@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
-import { AuthProvider } from './AuthContext';
-import PrivateRoute from './PrivateRoute';
+import { AuthProvider } from './auth/AuthContext.js';
+import PrivateRoute from './auth/PrivateRoute.js';
 
 import CreateAccount from './components/employee/Login_Signup/CreateAccount.jsx';
 import LoginPage from './components/employee/Login_Signup/LoginPage.jsx';
@@ -28,7 +28,7 @@ import ViewAttendance from './components/admin/MainDashboard/ViewAttendance.jsx'
 import VEmpAttendance from './components/admin/MainDashboard/VEmpAttendance.jsx';
 import CreateAnnouncements from './components/admin/MainDashboard/CreateAnnouncements.jsx';
 import AAnnouncements from './components/admin/MainDashboard/AAnnouncements.jsx';
-import './index.css';
+import AnnouncementView from './components/employee/EmployeeDashboard/AnnouncementView.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
@@ -47,27 +47,26 @@ root.render(
 
           {/*Admin Protected Route*/}
           {/*<Route path="/admin_main_dashboard" element={<PrivateRoute element={<Dashboard />} requiredRole="admin" />} />*/}
-          <Route path="/admin/dashboard/*" element={<ADashboard />} />
-          <Route path="/admin/organization/employee-list/*" element={<EmployeeList />} />
-          <Route path="/admin/organization/departments*" element={<Departments />} />
-          <Route path="/admin/organization/view-departments*" element={<ViewDepartments />} />
-          <Route path="/admin/attendance*" element={<AAttendance />} />
-          <Route path="/admin/view-attendance*" element={<ViewAttendance />} />
-          <Route path="/admin/view-employee-attendance*" element={<VEmpAttendance />} />
-          <Route path="/admin/create-announcements*" element={<CreateAnnouncements />} />
-          <Route path="/admin/announcements*" element={<AAnnouncements />} />
+          <Route path="/admin/dashboard" element={<ADashboard />} />
+          <Route path="/admin/organization/employee-list" element={<EmployeeList />} />
+          <Route path="/admin/organization/departments" element={<Departments />} />
+          <Route path="/admin/organization/view-departments" element={<ViewDepartments />} />
+          <Route path="/admin/attendance" element={<AAttendance />} />
+          <Route path="/admin/view-attendance" element={<ViewAttendance />} />
+          <Route path="/admin/view-employee-attendance" element={<VEmpAttendance />} />
+          <Route path="/admin/create-announcements" element={<CreateAnnouncements />} />
+          <Route path="/admin/announcements" element={<AAnnouncements />} />
 
           {/* Employee Protected Routes */}
-          {/*<Route path="/employee_main_dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />*/}
-          {/*<Route path="/employee_leave_dashboard" element={<PrivateRoute element={<LeaveManagementD />} requiredRole="employee" />} />*/}
-          <Route path="/employee/dashboard" element={<EDashboard />} />
-          <Route path="/employee/documents/payslip" element={<Payslip />} />
-          <Route path="/employee/documents/mydocuments" element={<MyDocuments />} />
-          <Route path="/employee/account" element={<Account />} />
-          <Route path="/employee/announcements" element={<Announcements />} />
-          <Route path="/employee/leave" element={<Leave />} />
-          <Route path="/employee/attendance" element={<Attendance />} />
-          <Route path="/employee/workschedule" element={<WorkSchedule />} />
+          <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />
+          <Route path="/employee/documents/payslip" element={<PrivateRoute element={<Payslip />} requiredRole="employee" />} />
+          <Route path="/employee/documents/mydocuments" element={<PrivateRoute element={<MyDocuments />} requiredRole="employee" />} />
+          <Route path="/employee/account" element={<PrivateRoute element={<Account />} requiredRole="employee" />} />
+          <Route path="/employee/announcements" element={<PrivateRoute element={<Announcements />} requiredRole="employee" />} />
+          <Route path="/employee/leave" element={<PrivateRoute element={<Leave />} requiredRole="employee" />} />
+          <Route path="/employee/attendance" element={<PrivateRoute element={<Attendance />} requiredRole="employee" />} />
+          <Route path="/employee/workschedule" element={<PrivateRoute element={<WorkSchedule />} requiredRole="employee" />} />
+          <Route path="/employee/announcements/view/:id" element={<PrivateRoute element={<AnnouncementView />} requiredRole="employee" />} />
 
 
           {/* If no path matches, redirect to login */}

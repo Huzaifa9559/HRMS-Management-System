@@ -21,6 +21,13 @@ export default function Header({ title }) {
     };
 
     const handleLogoutClick = () => {
+        // Clear cache and cookies
+        localStorage.clear(); // Clear local storage
+        sessionStorage.clear(); // Clear session storage
+        document.cookie.split(";").forEach((c) => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+        }); // Clear cookies
+
         navigate('/login');
     };
 

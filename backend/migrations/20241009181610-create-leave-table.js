@@ -8,8 +8,9 @@ module.exports = {
     leave_fromDate DATE NOT NULL,
     leave_toDate DATE NOT NULL,
     leave_reason VARCHAR(255),
-    leave_type VARCHAR(100) NOT NULL,
-    leave_status TINYINT(1) NOT NULL
+    leave_type ENUM('Medical','Unpaid','Paid') NOT NULL,
+    leave_status TINYINT(1) NOT NULL CHECK (leave_status IN (0, 1, 2)),
+    leave_filedOn DATE
 );
 `);
   },

@@ -47,7 +47,7 @@ export default function SetNewPassword() {
     }
 
     try {
-      const response = await fetch('/api/employees/set-new-password', {
+      const response = await fetch('/api/employees/auth/set-new-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

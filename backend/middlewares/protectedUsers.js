@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken'); // Import jsonwebtoken
+const dotenv = require('dotenv');
+dotenv.config({ path: `${process.cwd()}/.env` });
 
 const authenticateToken = (req, res, next) => {
     const token = req.cookies.token; // Get token from cookies
@@ -12,4 +14,4 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-module.exports = { authenticateToken }; // Export the authenticateToken function
+module.exports=  authenticateToken ; 

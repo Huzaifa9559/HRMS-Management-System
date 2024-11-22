@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     setMessage('');
     //this backend api sends reset link to that particular user
     try {
-      const response = await fetch('/api/employees/forgot-password', {
+      const response = await fetch('/api/employees/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
