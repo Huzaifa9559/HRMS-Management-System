@@ -29,6 +29,10 @@ import AAttendance from './components/admin/AAttendance.jsx';
 import ViewAttendance from './components/admin/ViewAttendance.jsx';
 import VEmpAttendance from './components/admin/VEmpAttendance.jsx';
 import CreateAnnouncements from './components/admin/CreateAnnouncements.jsx';
+import ALeave from './components/admin/ALeave.jsx';
+import VEmpAttendance from './components/admin/VEmpAttendance.jsx';
+import VEmpLeave from './components/admin/VEmpLeave.jsx';
+import ADocuments from './components/admin/ADocuments.jsx';
 import AAnnouncements from './components/admin/AAnnouncements.jsx';
 import Login from './components/admin/Login.jsx';
 
@@ -46,6 +50,7 @@ root.render(
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
           <Route path="/set-new-password" element={<SetNewPassword />} />
+          <Route path="/admin/login" element={<Login />} />
 
           {/*Admin Protected Route*/}
           {/*<Route path="/admin_main_dashboard" element={<PrivateRoute element={<Dashboard />} requiredRole="admin" />} />*/}
@@ -58,7 +63,10 @@ root.render(
           <Route path="/admin/view-employee-attendance" element={<VEmpAttendance />} />
           <Route path="/admin/create-announcements" element={<CreateAnnouncements />} />
           <Route path="/admin/announcements" element={<AAnnouncements />} />
-          <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin/documents/upload-document" element={<CreateNewDoc />} />
+          <Route path="/admin/documents/all-received" element={<ADocuments />} />
+          <Route path="/admin/leave" element={<ALeave />} />
+          <Route path="/admin/view-employee-leave" element={<VEmpLeave />} />
 
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />

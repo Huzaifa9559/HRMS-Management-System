@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import SideMenu from './SideMenu'; 
 import Header from './Header'; 
-import Loader from '../Loader';
+import Loader from '../../Loader';
 
-export default function CreateAnnouncements() {
-    const [activeButton, setActiveButton] = useState(null); // To track which button is clicked
-    const navigate = useNavigate(); // Initialize navigate for redirection
+export default function CreateNewDoc() {
     const [loading, setLoading] = useState(true); // Loading state
 
     useEffect(() => {
@@ -14,14 +12,6 @@ export default function CreateAnnouncements() {
     return () => clearTimeout(timer);
     }, []);
 
-    const handleButtonClick = (button) => {
-        setActiveButton(button); // Set the clicked button as active
-        if (button === 'create') {
-            navigate('/admin/create-announcements'); // Redirect to create-announcements route
-        } else if (button === 'previous') {
-            navigate('/admin/announcements'); // Redirect to announcements route
-        }
-    };
 
     if (loading) {
         return <Loader />;
@@ -38,51 +28,19 @@ export default function CreateAnnouncements() {
         >
             <SideMenu />
             <div className="flex-grow-1 d-flex flex-column p-3">
-                <Header title="Announcements" />
+                <Header title="Documents" />
                 <main
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-start',
-                        alignItems: 'center',
-                        height: '100%',
-                        padding: '0 20px',
-                        overflow: 'hidden',
-                    }}
-                >
-                    {/* Buttons at the Top Left */}
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'flex-start',
-                            alignItems: 'center',
-                            gap: '10px',
-                            width: '100%',
-                            marginBottom: '10px',
-                            maxWidth: '1200px',
-                        }}
-                    >
-                        <button
-                            style={
-                                activeButton === 'create'
-                                    ? clickedButtonStyle
-                                    : defaultButtonStyle
-                            }
-                            onClick={() => handleButtonClick('create')}
-                        >
-                            Create
-                        </button>
-                        <button
-                            style={
-                                activeButton === 'previous'
-                                    ? clickedButtonStyle
-                                    : defaultButtonStyle
-                            }
-                            onClick={() => handleButtonClick('previous')}
-                        >
-                            Previous
-                        </button>
-                    </div>
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center', // Vertically centered
+                    alignItems: 'center',
+                    height: '100%', // Take up the full available height
+                    padding: '20px', // Adjusted padding for spacing
+                    overflow: 'hidden',
+                }}
+            >
+
 
                     {/* Form Container */}
                     <div style={formContainerStyle}>
@@ -94,21 +52,12 @@ export default function CreateAnnouncements() {
                                 textAlign: 'left',
                             }}
                         >
-                            Create New Announcements
+                            Create New Document
                         </h4>
                         <form>
                             <div style={formGroupStyle}>
-                                <label htmlFor="departments" style={labelStyle}>
-                                    Departments
-                                </label>
-                                <select id="departments" style={inputStyle}>
-                                    <option>All Departments</option>
-                                    {/* Add more options as needed */}
-                                </select>
-                            </div>
-                            <div style={formGroupStyle}>
                                 <label htmlFor="title" style={labelStyle}>
-                                    Title <span style={{ color: 'red' }}>*</span>
+                                    Document Title <span style={{ color: 'red' }}>*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -119,7 +68,7 @@ export default function CreateAnnouncements() {
                             </div>
                             <div style={formGroupStyle}>
                                 <label htmlFor="description" style={labelStyle}>
-                                    Description <span style={{ color: 'red' }}>*</span>
+                                    Document Description <span style={{ color: 'red' }}>*</span>
                                 </label>
                                 <textarea
                                     id="description"
@@ -132,7 +81,7 @@ export default function CreateAnnouncements() {
                             </div>
                             <div style={formGroupStyle}>
                                 <label htmlFor="fileUpload" style={labelStyle}>
-                                    Upload Announcement
+                                    Upload Documents
                                 </label>
                                 <label htmlFor="fileUpload" style={fileUploadStyle}>
                                     <span>Browse to upload</span>
@@ -161,29 +110,6 @@ export default function CreateAnnouncements() {
     );
 }
 
-// Button Styles
-const defaultButtonStyle = {
-    padding: '8px 15px',
-    backgroundColor: 'transparent',
-    color: '#007bff',
-    border: '2px solid #007bff',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '15px',
-    transition: 'all 0.3s ease',
-};
-
-const clickedButtonStyle = {
-    padding: '8px 15px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: '2px solid #007bff',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '15px',
-    transition: 'all 0.3s ease',
-};
-
 // Send Button Style (always blue with white text)
 const sendButtonStyle = {
     padding: '8px 15px',
@@ -199,7 +125,7 @@ const sendButtonStyle = {
 // Form Styles
 const formContainerStyle = {
     backgroundColor: '#fff',
-    padding: '20px',
+    padding: '40px 20px', // Increased padding for more space inside
     borderRadius: '8px',
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
     width: '100%',
@@ -207,7 +133,12 @@ const formContainerStyle = {
     alignSelf: 'center',
     textAlign: 'left',
     overflow: 'hidden',
+    minHeight: '550px', // Increased minimum height
+    display: 'flex', // Added flexbox for centering content
+    flexDirection: 'column',
+    justifyContent: 'center',
 };
+
 
 const formGroupStyle = {
     marginBottom: '15px',

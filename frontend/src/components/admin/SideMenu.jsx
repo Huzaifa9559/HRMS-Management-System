@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaBuilding, FaUsers, FaCalendarAlt, FaUserCheck, FaBullhorn, FaFileAlt,FaSitemap } from 'react-icons/fa'; 
+import { FaBuilding, FaUsers, FaCalendarAlt, FaUserCheck, FaBullhorn, FaBusinessTime, FaFileAlt,FaSitemap } from 'react-icons/fa'; 
 import { ChevronLeft, ChevronRight } from 'lucide-react'; 
 import { MdDashboard } from 'react-icons/md';
+import { HiOutlineDocumentText } from "react-icons/hi";
+import { FiUpload } from "react-icons/fi";
 
 export default function SideMenu() {
     const [isCollapsed, setIsCollapsed] = useState(false); // State for collapsed status
-    const [showOrganizationsDropdown, setShowOrganizationsDropdown] = useState(false); // State for documents dropdown
+    const [showOrganizationsDropdown, setShowOrganizationsDropdown] = useState(false); // State for organizations dropdown
+    const [showDocumentsDropdown, setShowDocumentsDropdown] = useState(false); // State for documents dropdown
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed); // Toggle collapse/expand
@@ -81,7 +84,8 @@ export default function SideMenu() {
                     <MdDashboard className="me-2" />
                     <span style={menuTextStyles}>Dashboard</span>
                 </NavLink>
-                {/* Documents Dropdown */}
+
+                {/* Organizations Dropdown */}
                 <div
                     className="nav-link d-flex align-items-center text-white mb-2"
                     style={{ ...navLinkStyles, cursor: 'pointer' }}
@@ -167,9 +171,63 @@ export default function SideMenu() {
                     <FaUserCheck className="me-2" />
                     <span style={menuTextStyles}>Leave</span>
                 </NavLink>
-
+                
+                {/* Documents Dropdown */}
+                <div
+                    className="nav-link d-flex align-items-center text-white mb-2"
+                    style={{ ...navLinkStyles, cursor: 'pointer' }}
+                    onClick={() => setShowDocumentsDropdown(!showDocumentsDropdown)}
+                    onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                >
+                    <FaFileAlt className="me-2" />
+                    <span style={menuTextStyles}>Documents</span>
+                    <ChevronRight
+                        className="ms-auto"
+                        style={{
+                            transform: showDocumentsDropdown ? 'rotate(90deg)' : 'rotate(0)',
+                            transition: 'transform 0.3s',
+                            width: '16px', // Adjust the width
+                            height: '16px', // Adjust the height
+                        }}
+                    />
+                </div>
+                {showDocumentsDropdown && (
+                    <div style={{ marginLeft: isCollapsed ? '15px' : '35px', transition: 'margin-left 0.3s' }}>
+                        <NavLink
+                            to="/admin/documents/all-received"
+                            className="nav-link d-flex align-items-center text-white mb-2"
+                            activeClassName="active"
+                            style={navLinkStyles}
+                            activeStyle={{
+                                backgroundColor: '#0056b3',
+                                color: '#ffffff',
+                            }}
+                            onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                        >
+                            <HiOutlineDocumentText className="me-2" />
+                            <span style={menuTextStyles}>All Received</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/documents/upload-document"
+                            className="nav-link d-flex align-items-center text-white mb-2"
+                            activeClassName="active"
+                            style={navLinkStyles}
+                            activeStyle={{
+                                backgroundColor: '#0056b3',
+                                color: '#ffffff',
+                            }}
+                            onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                        >
+                            <FiUpload className="me-2" />
+                            <span style={menuTextStyles}>Upload</span>
+                        </NavLink>
+                    </div>
+                )}
                 <NavLink
-                    to="/admin/documents"
+                    to="/admin/workschedule"
                     className="nav-link d-flex align-items-center text-white mb-2"
                     activeClassName="active"
                     style={navLinkStyles}
@@ -180,10 +238,9 @@ export default function SideMenu() {
                     onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
                     onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                 >
-                    <FaFileAlt className="me-2" />
-                    <span style={menuTextStyles}>Documents</span>
+                    <FaBusinessTime className="me-2" />
+                    <span style={menuTextStyles}>Work Schedule</span>
                 </NavLink>
-
                 <NavLink
                     to="/admin/announcements"
                     className="nav-link d-flex align-items-center text-white mb-2"
