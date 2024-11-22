@@ -8,7 +8,7 @@ Leave.getLeaveDetails = async function (employeeId) {
     const query = `
     SELECT leave_fromDate, leave_toDate, leave_reason, leave_type,
     leave_status, leave_filedOn FROM \`Leave\`
-    WHERE employeeID = ? AND YEAR(leave_fromDate) = YEAR(CURDATE()) ORDER BY leave_filedOn DESC;`;
+    WHERE employeeID = ? ORDER BY leave_filedOn DESC;`;
 
     try {
         const rows = await sequelize.query(query, {
@@ -35,6 +35,34 @@ Leave.setLeaveRequest = async function (leaveData) {
     } catch (error) {
         console.error('Error creating leave request:', error);
         throw error; // Rethrow the error to be handled in the controller
+    }
+};
+
+Leave.getAllLeaveDetails = async function () {
+    const query = `
+   SELECT 
+    CONCAT(e.employee_first_name, ' ', e.employee_last_name) AS employee_name,
+    d.department_name,
+    l.leave_status,
+    DATEDIFF(l.leave_toDate, l.leave_fromDate) AS days -- Calculates the difference in days
+    FROM 
+        \`Leave\` l
+    JOIN 
+        Employee e ON l.employeeID = e.employeeID
+    JOIN 
+        Department d ON d.departmentID = e.departmentID
+    ORDER BY 
+        l.leave_filedOn DESC;
+    `;
+
+    try {
+        const rows = await sequelize.query(query, {
+            type: Sequelize.QueryTypes.SELECT
+        });
+        return rows; 
+    } catch (error) {
+        console.error('Error fetching leave details:', error);
+        throw error; 
     }
 };
 

@@ -42,3 +42,24 @@ exports.createLeaveRequest = async (req, res) => {
     }
 };
 
+exports.getAllEmployeesLeaveDetails = async (req, res) => {
+    const token = extractToken(req, res); // Use the utility function
+    if (!token) return; // Exit if token extraction failed
+
+    try {
+        const payload = getUser(token);
+        if (!payload) {
+            return sendResponse(res, httpStatus.FORBIDDEN, null, 'Unauthorized access');
+        }
+        
+        const leaveDetails = await Leave.getAllLeaveDetails(); // Fetch all leave details
+        if (!leaveDetails || leaveDetails.length === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'No leave details found');
+        }
+
+        return sendResponse(res, httpStatus.OK, leaveDetails, 'All leave details retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching all employees leave details:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching leave details', error.message);
+    }
+};

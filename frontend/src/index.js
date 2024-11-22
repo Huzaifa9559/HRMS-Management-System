@@ -10,27 +10,29 @@ import LoginPage from './components/employee/Login_Signup/LoginPage.jsx';
 import ForgotPassword from './components/employee/Login_Signup/ForgotPassword.jsx';
 import ResetPasswordSent from './components/employee/Login_Signup/ResetPasswordSent.jsx';
 import SetNewPassword from './components/employee/Login_Signup/SetNewPassword.jsx';
-import EDashboard from './components/employee/EmployeeDashboard/EDashboard.jsx';
-import Leave from './components/employee/EmployeeDashboard/Leave.jsx';
-import Attendance from './components/employee/EmployeeDashboard/Attendance.jsx';
-import Account from './components/employee/EmployeeDashboard/Account.jsx'
-import WorkSchedule from './components/employee/EmployeeDashboard/WorkSchedule.jsx';
-import Payslip from './components/employee/EmployeeDashboard/Payslip.jsx';
-import MyDocuments from './components/employee/EmployeeDashboard/MyDocuments.jsx';
-import Announcements from './components/employee/EmployeeDashboard/Announcements.jsx';
+import EDashboard from './components/employee/EDashboard.jsx';
+import Leave from './components/employee/Leave.jsx';
+import Attendance from './components/employee/Attendance.jsx';
+import Account from './components/employee/Account.jsx'
+import WorkSchedule from './components/employee/WorkSchedule.jsx';
+import Payslip from './components/employee/Payslip.jsx';
+import MyDocuments from './components/employee/MyDocuments.jsx';
+import Announcements from './components/employee/Announcements.jsx';
+import AnnouncementView from './components/employee/AnnouncementView.jsx';
 
-import ADashboard from './components/admin/MainDashboard/ADashboard.jsx';
-import EmployeeList from './components/admin/MainDashboard/EmployeeList.jsx';
-import Departments from './components/admin/MainDashboard/Departments.jsx';
-import ViewDepartments from './components/admin/MainDashboard/ViewDepartment.jsx';
-import AAttendance from './components/admin/MainDashboard/AAttendance.jsx';
-import ViewAttendance from './components/admin/MainDashboard/ViewAttendance.jsx';
-import VEmpAttendance from './components/admin/MainDashboard/VEmpAttendance.jsx';
-import CreateAnnouncements from './components/admin/MainDashboard/CreateAnnouncements.jsx';
-import AAnnouncements from './components/admin/MainDashboard/AAnnouncements.jsx';
-import AnnouncementView from './components/employee/EmployeeDashboard/AnnouncementView.jsx';
+
+import ADashboard from './components/admin/ADashboard.jsx';
+import EmployeeList from './components/admin/EmployeeList.jsx';
+import Departments from './components/admin/Departments.jsx';
+import ViewDepartments from './components/admin/ViewDepartment.jsx';
+import AAttendance from './components/admin/AAttendance.jsx';
+import ViewAttendance from './components/admin/ViewAttendance.jsx';
+import VEmpAttendance from './components/admin/VEmpAttendance.jsx';
+import CreateAnnouncements from './components/admin/CreateAnnouncements.jsx';
+import AAnnouncements from './components/admin/AAnnouncements.jsx';
+import Login from './components/admin/Login.jsx';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
-
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -56,6 +58,7 @@ root.render(
           <Route path="/admin/view-employee-attendance" element={<VEmpAttendance />} />
           <Route path="/admin/create-announcements" element={<CreateAnnouncements />} />
           <Route path="/admin/announcements" element={<AAnnouncements />} />
+          <Route path="/admin/login" element={<Login />} />
 
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />

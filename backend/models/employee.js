@@ -71,5 +71,40 @@ Employee.updatePassword = async function (id, hashedPassword) {
 };
 
 
+Employee.getTotalNumberofEmployees = async function () {
+    const query = `
+    SELECT COUNT(*) AS total_count FROM Employee;`;
+
+    try {
+        const [row] = await sequelize.query(query, {
+            type: Sequelize.QueryTypes.SELECT
+        });
+        return row;
+    } catch (error) {
+        console.error('Error fetching leave details:', error);
+        throw error;
+    }
+};
+
+Employee.getAllEmployees = async function () {
+    const query = `
+    SELECT e.employeeID, CONCAT(e.employee_first_name, ' ', e.employee_last_name) AS employee_name,
+    d.department_name, des.designation_name,e.employee_status, e.employee_joining_date
+    FROM Employee e
+    JOIN Department d ON e.departmentID = d.departmentID
+    JOIN Designation des ON e.designationID = des.designationID
+    ORDER BY e.employeeID ASC;`;
+
+    try {
+        const rows = await sequelize.query(query, {
+            type: Sequelize.QueryTypes.SELECT
+        });
+        return rows; // Return all employee details
+    } catch (error) {
+        console.error('Error fetching all employees:', error);
+        throw error; // Rethrow the error to be handled in the controller
+    }
+};
+
 module.exports = Employee;
 

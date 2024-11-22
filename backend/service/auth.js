@@ -5,9 +5,9 @@ const secreteKey = process.env.JWT_SECRET;
 
 function setUser(user) {
   const payload = {
-    _id: user.employeeID,
-    email: user.employee_email,
-    username: user.employee_first_name,
+    _id: user.id,
+    email: user.email,
+    username: user.username,
     iat: Math.floor(Date.now() / 1000), // issued at
   };
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });

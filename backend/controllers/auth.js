@@ -1,9 +1,44 @@
-const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
-const Employee = require('../models/employee'); // Import the Employee model
-const { setUser } = require('../service/auth'); // Import setUser function
+const bcrypt = require('bcrypt'); 
+const Employee = require('../models/employee'); 
+const { setUser } = require('../service/auth');
 const { sendResetLink } = require('../service/nodemailer');
 const sendResponse = require('../utils/responseUtil');
 const httpStatus = require('../utils/httpStatus');
+
+
+exports.loginAdmin = async (req, res) => {
+    const { email, password } = req.body;
+
+     if(email==="k224586@nu.edu.pk" && password==="Password@123"){
+        const user = {
+        id: 1,
+        email:'k224586@nu.edu.pk' ,
+        username: 'huzaifa'
+        };
+        const token = setUser(user);
+        res.cookie('token', token);
+        return sendResponse(res, httpStatus.OK, null, 'Login successful', null, true);
+        }
+        else {
+             return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error logging in', error.message);
+        }
+    //try {
+        // const admin = await 
+        // if (!employee) {
+        //     return sendResponse(res, httpStatus.NOT_FOUND, null, 'Employee not found');
+        // }
+        // const passwordMatch = await bcrypt.compare(password, employee.employee_password);
+        // if (!passwordMatch) {
+        //     return sendResponse(res, httpStatus.UNAUTHORIZED, null, 'Invalid password');
+        // }
+       
+        
+    // } catch (error) {
+    //     console.error('Error logging in:', error);
+       
+    // }
+};
+
 
 exports.createAccount = async (req, res) => {
     const { employeeName, phoneNumber, address, designation, department } = req.body;
@@ -47,7 +82,12 @@ exports.login = async (req, res) => {
         if (!passwordMatch) {
             return sendResponse(res, httpStatus.UNAUTHORIZED, null, 'Invalid password');
         }
-        const token = setUser(employee);
+        const user = {
+        id: employee.employeeID,
+        email: employee.employee_email,
+        username: employee.employee_first_name
+        };
+        const token = setUser(user);
         res.cookie('token', token);
 
         return sendResponse(res, httpStatus.OK, null, 'Login successful', null, true);

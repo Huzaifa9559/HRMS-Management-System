@@ -5,10 +5,11 @@ const dotenv = require('dotenv');
 const db = require('./db'); 
 dotenv.config({ path: `${process.cwd()}/.env` });
 
-const employeeRoutes = require('./routes/index'); // Import employee routes
-const authRoutes = require('./routes/auth');
-const publicRoutes = require('./routes/public');
-//const adminRoutes = require('./routes/admin'); // Import admin routes
+const employeeRoutes = require('./routes/employee/index'); // Import employee routes
+const employeeAuthRoutes = require('./routes/employee/auth'); // Import auth routes
+const adminAuthRoutes = require('./routes/admin/auth'); // Import admin routes
+const publicRoutes = require('./routes/employee/public');
+const adminRoutes = require('./routes/admin/index'); // Import admin routes
 
 const app = express();
 
@@ -22,19 +23,21 @@ app.use(express.json()); // Use express's built-in JSON parser
 app.use(cookieParser()); // Use cookie-parser middleware
 
 const authenticateToken = require('./middlewares/protectedUsers');
+
 // Routes
 
 //public authentication routes
-app.use('/api/employees/auth', authRoutes);
+app.use('/api/employees/auth', employeeAuthRoutes);
+app.use('/api/admin/auth', adminAuthRoutes);
+
 //protected employees routes
 app.use('/api/employees', authenticateToken, employeeRoutes);
-
+//admin protected routes
+app.use('/api/admin', adminRoutes);
 
 //other public route
 app.use('/api/public', publicRoutes);
 
-//app.use('/api/admin', adminRoutes);
-//app.use('/api/employees/protected', protectedUsers, protectedEmployeeRoutes);
 
 
 const PORT = process.env.PORT || 5000;
