@@ -17,13 +17,6 @@ module.exports = {
         ON DELETE CASCADE
         ON UPDATE CASCADE;`,
 
-      `ALTER TABLE Department
-        ADD COLUMN address_ID INT,
-        ADD CONSTRAINT department_address FOREIGN KEY (address_ID) 
-        REFERENCES Address(address_ID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE;`,
-
       `ALTER TABLE Notification
         ADD COLUMN employeeID INT,
         ADD CONSTRAINT notification_employee FOREIGN KEY (employeeID) 
@@ -50,7 +43,10 @@ module.exports = {
         ADD CONSTRAINT documents_employee FOREIGN KEY (employeeID)
         REFERENCES Employee(employeeID)
         ON DELETE CASCADE
-        ON UPDATE CASCADE;`
+        ON UPDATE CASCADE;`,
+      
+      `ALTER TABLE Employee
+       ADD COLUMN last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;`
     ];
 
     for (const query of queries) {
@@ -68,10 +64,6 @@ module.exports = {
         DROP FOREIGN KEY payslip_employee, 
         DROP COLUMN employeeID`,
 
-      `ALTER TABLE Department 
-        DROP FOREIGN KEY department_address, 
-        DROP COLUMN address_ID;`,
-
       `ALTER TABLE Notification 
         DROP FOREIGN KEY notification_employee, 
         DROP COLUMN employeeID;`,
@@ -86,7 +78,10 @@ module.exports = {
 
       `ALTER TABLE Documents
         DROP FOREIGN KEY documents_employee, 
-        DROP COLUMN employeeID;`
+        DROP COLUMN employeeID;`,
+      
+      `ALTER TABLE Employee
+       DROP COLUMN last_updated;`
 
     ];
 

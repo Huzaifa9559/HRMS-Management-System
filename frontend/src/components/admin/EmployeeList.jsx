@@ -1,9 +1,9 @@
-// EmployeeList.jsx
-
 import React, { useState, useEffect, useMemo } from 'react';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
     Modal,
     Button,
@@ -15,9 +15,9 @@ import {
 import { FaSearch, FaEllipsisV } from 'react-icons/fa';
 import Loader from '../Loader';
 import debounce from 'lodash.debounce';
+import Cookies from 'js-cookie';
 
 export default function EmployeeList() {
-    // State variables
     const [showInviteForm, setShowInviteForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -29,301 +29,169 @@ export default function EmployeeList() {
     const [email, setEmail] = useState('');
     const [designations, setDesignations] = useState([]);
     const [departments, setDepartments] = useState([]);
-    const [loading, setLoading] = useState(true); // Loading state
+    const [loading, setLoading] = useState(true);
+    const [showEmployeeDetails, setShowEmployeeDetails] = useState(false);
+    const [employeeDetails, setEmployeeDetails] = useState(null);
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [editedEmployee, setEditedEmployee] = useState(null);
 
-    // Debounce the search input to improve performance
     const debouncedChangeHandler = useMemo(
         () => debounce((value) => setDebouncedSearchTerm(value), 300),
         []
     );
 
-    // Cleanup debounce on unmount
     useEffect(() => {
         return () => {
             debouncedChangeHandler.cancel();
         };
     }, [debouncedChangeHandler]);
 
-    // Update debounced search term when searchTerm changes
     useEffect(() => {
         debouncedChangeHandler(searchTerm);
     }, [searchTerm, debouncedChangeHandler]);
 
-    // Simulate loading (replace with actual API calls as needed)
     useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
-        return () => clearTimeout(timer); // Cleanup on unmount
+        const timer = setTimeout(() => setLoading(false), 1250);
+        return () => clearTimeout(timer);
     }, []);
 
-    // Fetch designations and departments from API
     useEffect(() => {
         const fetchDesignationsAndDepartments = async () => {
             try {
-                const response = await axios.get(
-                    '/api/employees/get-designations-and-departments'
-                );
-                setDesignations(response.data.designations);
-                setDepartments(response.data.departments);
+                const response = await axios.get('/api/public/designation');
+                setDesignations(response.data.data);
+
+                const response2 = await axios.get('/api/public/department');
+                setDepartments(response2.data.data);
             } catch (error) {
-                console.error(
-                    'Error fetching designations and departments:',
-                    error
-                );
+                console.error('Error fetching data:', error);
             }
         };
-
         fetchDesignationsAndDepartments();
     }, []);
 
-    // Fetch employee data (replace mock data with actual API calls as needed)
     useEffect(() => {
-        // Mock Employee Data
-        const mockData = [
-            {
-                id: '61234',
-                name: 'Randy Aminoff',
-                department: 'Designing',
-                designation: 'UI UX designer',
-                joiningDate: '05 Sep 2021',
-                status: 'Enable',
-            },
-            {
-                id: '61235',
-                name: 'Jane Doe',
-                department: 'Development',
-                designation: 'Frontend Developer',
-                joiningDate: '10 Oct 2021',
-                status: 'Enable',
-            },
-            {
-                id: '61236',
-                name: 'John Smith',
-                department: 'HR',
-                designation: 'HR Manager',
-                joiningDate: '15 Nov 2021',
-                status: 'Disable',
-            },
-            {
-                id: '61237',
-                name: 'Alice Johnson',
-                department: 'Marketing',
-                designation: 'Marketing Manager',
-                joiningDate: '20 Dec 2021',
-                status: 'Enable',
-            },
-            {
-                id: '61238',
-                name: 'Bob Brown',
-                department: 'Sales',
-                designation: 'Sales Executive',
-                joiningDate: '25 Jan 2022',
-                status: 'Disable',
-            },
-            {
-                id: '61239',
-                name: 'Charlie Davis',
-                department: 'Support',
-                designation: 'Support Engineer',
-                joiningDate: '30 Feb 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61240',
-                name: 'Diana Evans',
-                department: 'Finance',
-                designation: 'Accountant',
-                joiningDate: '05 Mar 2022',
-                status: 'Disable',
-            },
-            {
-                id: '61241',
-                name: 'Evan Green',
-                department: 'IT',
-                designation: 'System Administrator',
-                joiningDate: '10 Apr 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61242',
-                name: 'Fiona Harris',
-                department: 'Operations',
-                designation: 'Operations Manager',
-                joiningDate: '15 May 2022',
-                status: 'Disable',
-            },
-            {
-                id: '61243',
-                name: 'George King',
-                department: 'Logistics',
-                designation: 'Logistics Coordinator',
-                joiningDate: '20 Jun 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61244',
-                name: 'Hannah Lee',
-                department: 'Legal',
-                designation: 'Legal Advisor',
-                joiningDate: '25 Jul 2022',
-                status: 'Disable',
-            },
-            {
-                id: '61245',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-            // Duplicate entries for testing pagination and search
-            {
-                id: '61246',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61247',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61248',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61249',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61250',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61251',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-            {
-                id: '61252',
-                name: 'Ian Moore',
-                department: 'Research',
-                designation: 'Research Scientist',
-                joiningDate: '30 Aug 2022',
-                status: 'Enable',
-            },
-        ];
-        setEmployees(mockData);
+        const fetchEmployees = async () => {
+            try {
+                const response = await axios.get('/api/admin/employee/all');
+                setEmployees(response.data.data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+        fetchEmployees();
     }, []);
 
-    // Reset currentPage to 1 whenever filters or search term change
     useEffect(() => {
         setCurrentPage(1);
     }, [debouncedSearchTerm, selectedDepartment, selectedDesignation]);
 
-    // Filter employees based on search term and selected filters
     const filteredEmployees = useMemo(() => {
-        return employees.filter((employee) => {
-            // Enhanced search across multiple fields
-            const matchesSearch = debouncedSearchTerm
-                ? Object.values(employee).some((value) =>
-                      value
-                          .toString()
-                          .toLowerCase()
-                          .includes(debouncedSearchTerm.toLowerCase())
+    return employees.filter((employee) => {
+        const matchesSearch = debouncedSearchTerm
+            ? Object.values(employee)
+                  .filter((value) => value != null) // Exclude null/undefined values
+                  .some((value) =>
+                      value.toString().toLowerCase().includes(debouncedSearchTerm.toLowerCase())
                   )
-                : true;
+            : true;
 
-            const matchesDepartment = selectedDepartment
-                ? employee.department === selectedDepartment
-                : true;
+        const matchesDepartment = selectedDepartment
+            ? employee.department === selectedDepartment
+            : true;
 
-            const matchesDesignation = selectedDesignation
-                ? employee.designation === selectedDesignation
-                : true;
+        const matchesDesignation = selectedDesignation
+            ? employee.designation === selectedDesignation
+            : true;
 
-            return matchesSearch && matchesDepartment && matchesDesignation;
-        });
-    }, [
-        employees,
-        debouncedSearchTerm,
-        selectedDepartment,
-        selectedDesignation,
-    ]);
+        return matchesSearch && matchesDepartment && matchesDesignation;
+    });
+}, [employees, debouncedSearchTerm, selectedDepartment, selectedDesignation]);
 
-    // Determine the current page's employees
+
     const currentEmployees = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         return filteredEmployees.slice(startIndex, endIndex);
     }, [filteredEmployees, currentPage, itemsPerPage]);
 
-    // Calculate total pages based on filtered employees
     const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
-    // Handle page change with boundary checks
     const handlePageChange = (pageNumber) => {
         if (pageNumber < 1 || pageNumber > totalPages) return;
         setCurrentPage(pageNumber);
     };
 
-    // Handle invite modal visibility
     const handleInviteClick = () => setShowInviteForm(true);
+
     const handleCloseInvite = () => {
         setShowInviteForm(false);
         setEmail('');
     };
 
-    // Handle email input change
     const handleEmailChange = (e) => setEmail(e.target.value);
 
-    // Handle sending invitation
     const handleSendInvite = async (e) => {
         e.preventDefault();
         try {
+            const token = Cookies.get('token');
             const response = await axios.post(
-                '/api/admin/invite-new-employee',
-                { email }
+                '/api/admin/auth/invite-new-employee',
+                { email },
+                { headers: { 'Authorization': `Bearer ${token}` } }
             );
+
             console.log('Response:', response.data);
-            alert('Invitation sent successfully!');
+            toast.success('Invitation sent successfully!');
         } catch (error) {
             console.error('Error sending invitation:', error);
-            alert('Failed to send the invitation.');
+            toast.error('Failed to send the invitation.');
         }
         handleCloseInvite();
     };
 
-    // Handle status change (Enable/Disable)
-    const handleStatusChange = (id, newStatus) => {
-        setEmployees((prevEmployees) =>
-            prevEmployees.map((emp) =>
-                emp.id === id ? { ...emp, status: newStatus } : emp
-            )
-        );
+    const handleStatusChange = async (id, newStatus) => {
+        try {
+            const response = await axios.post(
+                '/api/admin/employee/update-status',
+                { employeeId: id}
+            );
+
+            //Update the status in the local state
+            setEmployees((prevEmployees) =>
+                prevEmployees.map((emp) =>
+                    emp.id === id ? { ...emp, status: newStatus } : emp
+                )
+            );
+
+            toast.success('Employee status updated!');
+        } catch (error) {
+            console.error('Error updating status:', error);
+            toast.error('Failed to update status.');
+        }
     };
 
-    // Show loader if loading is true
+    const handleViewEmployee = (employee) => {
+        setEmployeeDetails(employee);
+        setShowEmployeeDetails(true);
+    };
+
+    const handleEditEmployee = (employee) => {
+        setEditedEmployee(employee);
+        setShowEditForm(true);
+    };
+
+    const handleDeleteEmployee = async (id) => {
+        try {
+            await axios.delete(`/api/admin/employee/delete/${id}`);
+            setEmployees(employees.filter((employee) => employee.id !== id));
+            toast.success('Employee deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting employee:', error);
+            toast.error('Failed to delete employee.');
+        }
+    };
+
     if (loading) {
         return <Loader />;
     }
@@ -334,20 +202,15 @@ export default function EmployeeList() {
             style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}
         >
             <div className="row">
-                {/* Sidebar */}
                 <div className="col-md-2 p-0 d-none d-md-block">
                     <SideMenu />
                 </div>
 
-                {/* Main Content */}
                 <div className="col-md-10 p-4">
-                    {/* Header */}
                     <Header title="Organization Management" />
 
-                    {/* Search Bar, Filters, and Invite Button */}
                     <div className="d-flex justify-content-between align-items-center mb-4">
                         <div className="d-flex flex-wrap">
-                            {/* Search Input */}
                             <InputGroup className="me-2 mb-2" style={{ width: '250px' }}>
                                 <InputGroup.Text className="bg-white border-end-0">
                                     <FaSearch color="#6c757d" />
@@ -360,24 +223,19 @@ export default function EmployeeList() {
                                 />
                             </InputGroup>
 
-                            {/* Department Filter */}
                             <Dropdown className="me-2 mb-2">
                                 <Dropdown.Toggle variant="outline-secondary">
                                     {selectedDepartment || 'Select by Department'}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                    <Dropdown.Item
-                                        onClick={() => setSelectedDepartment('')}
-                                    >
+                                    <Dropdown.Item onClick={() => setSelectedDepartment('')}>
                                         All Departments
                                     </Dropdown.Item>
                                     {departments.map((department, index) => (
                                         <Dropdown.Item
                                             key={index}
                                             onClick={() =>
-                                                setSelectedDepartment(
-                                                    department.department_name
-                                                )
+                                                setSelectedDepartment(department.department_name)
                                             }
                                         >
                                             {department.department_name}
@@ -386,24 +244,19 @@ export default function EmployeeList() {
                                 </Dropdown.Menu>
                             </Dropdown>
 
-                            {/* Designation Filter */}
                             <Dropdown className="me-2 mb-2">
                                 <Dropdown.Toggle variant="outline-secondary">
                                     {selectedDesignation || 'Select by Designation'}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                    <Dropdown.Item
-                                        onClick={() => setSelectedDesignation('')}
-                                    >
+                                    <Dropdown.Item onClick={() => setSelectedDesignation('')}>
                                         All Designations
                                     </Dropdown.Item>
                                     {designations.map((designation, index) => (
                                         <Dropdown.Item
                                             key={index}
                                             onClick={() =>
-                                                setSelectedDesignation(
-                                                    designation.designation_name
-                                                )
+                                                setSelectedDesignation(designation.designation_name)
                                             }
                                         >
                                             {designation.designation_name}
@@ -413,173 +266,449 @@ export default function EmployeeList() {
                             </Dropdown>
                         </div>
 
-                        {/* Invite New Employee Button */}
-                        <Button
-                            className="btn btn-success"
-                            onClick={handleInviteClick}
-                        >
-                            Invite New Employee
+                        <Button variant="primary" onClick={handleInviteClick}>
+                            Invite Employee
                         </Button>
                     </div>
 
-                    {/* Employee List */}
-                    <div
-                        className="p-4 rounded-lg shadow-md"
-                        style={{ backgroundColor: '#ffffff' }}
-                    >
-                        <Table bordered hover responsive>
-                            <thead className="table-light">
-                                <tr>
-                                    <th>Employee ID</th>
-                                    <th>Name</th>
-                                    <th>Department</th>
-                                    <th>Designation</th>
-                                    <th>Joining Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
+                    <Table responsive hover>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentEmployees.map((employee, index) => (
+                                <tr key={index}>
+                                    <td>{employee.name}</td>
+                                    <td>{employee.email}</td>
+                                    <td>{employee.department}</td>
+                                    <td>{employee.designation}</td>
+                                    <td>
+                                        <Dropdown>
+                                            <Dropdown.Toggle variant="outline-secondary"  style={{ color: employee.status === 1 ? 'green' : 'red' }}>
+                                                
+                                                {employee.status===1?'Active':'Disabled'}
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item
+                                                    onClick={() => handleStatusChange(employee.id, 1)}
+                                                >
+                                                    Active
+                                                </Dropdown.Item>
+                                                <Dropdown.Item
+                                                    onClick={() => handleStatusChange(employee.id, 0)}
+                                                >
+                                                    Disabled
+                                                </Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                    </td>
+                                    <td>
+                                        <Button
+                                            variant="primary"
+                                            onClick={() => handleViewEmployee(employee)}
+                                        >
+                                            View
+                                        </Button>
+                                        <Button
+                                            variant="warning"
+                                            onClick={() => handleEditEmployee(employee)}
+                                            className="ms-2"
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            onClick={() => handleDeleteEmployee(employee.id)}
+                                            className="ms-2"
+                                        >
+                                            Delete
+                                        </Button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {currentEmployees.length > 0 ? (
-                                    currentEmployees.map((employee) => (
-                                        <tr key={employee.id}>
-                                            <td>{employee.id}</td>
-                                            <td>{employee.name}</td>
-                                            <td>{employee.department}</td>
-                                            <td>{employee.designation}</td>
-                                            <td>{employee.joiningDate}</td>
-                                            <td>
-                                                <Dropdown>
-                                                    <Dropdown.Toggle
-                                                        variant={
-                                                            employee.status === 'Enable'
-                                                                ? 'success'
-                                                                : 'danger'
-                                                        }
-                                                        size="sm"
-                                                    >
-                                                        {employee.status}
-                                                    </Dropdown.Toggle>
-                                                    <Dropdown.Menu>
-                                                        {employee.status !== 'Enable' && (
-                                                            <Dropdown.Item
-                                                                onClick={() =>
-                                                                    handleStatusChange(
-                                                                        employee.id,
-                                                                        'Enable'
-                                                                    )
-                                                                }
-                                                            >
-                                                                Enable
-                                                            </Dropdown.Item>
-                                                        )}
-                                                        {employee.status !== 'Disable' && (
-                                                            <Dropdown.Item
-                                                                onClick={() =>
-                                                                    handleStatusChange(
-                                                                        employee.id,
-                                                                        'Disable'
-                                                                    )
-                                                                }
-                                                            >
-                                                                Disable
-                                                            </Dropdown.Item>
-                                                        )}
-                                                    </Dropdown.Menu>
-                                                </Dropdown>
-                                            </td>
-                                            <td>
-                                                <Dropdown>
-                                                    <Dropdown.Toggle
-                                                        as="div"
-                                                        className="border-0 bg-transparent p-0"
-                                                    >
-                                                        <FaEllipsisV
-                                                            style={{
-                                                                cursor: 'pointer',
-                                                                color: '#6c757d',
-                                                            }}
-                                                        />
-                                                    </Dropdown.Toggle>
-                                                    <Dropdown.Menu>
-                                                        <Dropdown.Item>View</Dropdown.Item>
-                                                        <Dropdown.Item>Edit</Dropdown.Item>
-                                                        <Dropdown.Item>Delete</Dropdown.Item>
-                                                    </Dropdown.Menu>
-                                                </Dropdown>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="7" className="text-center">
-                                            No employees found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </Table>
+                            ))}
+                        </tbody>
+                    </Table>
 
-                        {/* Pagination Controls */}
-                        {filteredEmployees.length > itemsPerPage && (
-                            <div className="d-flex justify-content-center mt-3">
-                                <Button
-                                    variant="outline-secondary"
-                                    disabled={currentPage === 1}
-                                    onClick={() => handlePageChange(currentPage - 1)}
-                                    className="me-2"
-                                >
-                                    Previous
-                                </Button>
-                                <span className="align-self-center">
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                <Button
-                                    variant="outline-secondary"
-                                    disabled={currentPage === totalPages}
-                                    onClick={() => handlePageChange(currentPage + 1)}
-                                    className="ms-2"
-                                >
-                                    Next
-                                </Button>
-                            </div>
+                    <div className="d-flex justify-content-between">
+                        <button
+                            className="btn btn-secondary"
+                            disabled={currentPage === 1}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                        >
+                            Previous
+                        </button>
+                        <span>
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                            className="btn btn-secondary"
+                            disabled={currentPage === totalPages}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                        >
+                            Next
+                        </button>
+                    </div>
+
+                    {/* Invite Employee Modal */}
+                    <Modal show={showInviteForm} onHide={handleCloseInvite}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Invite Employee</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <form onSubmit={handleSendInvite}>
+                                <div className="mb-3">
+                                    <label>Email Address</label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={handleEmailChange}
+                                        className="form-control"
+                                        placeholder="Enter email"
+                                    />
+                                </div>
+                                <div className="mb-3 text-end">
+                                    <Button variant="primary" type="submit">
+                                        Send Invite
+                                    </Button>
+                                </div>
+                            </form>
+                        </Modal.Body>
+                    </Modal>
+
+                    {/* Employee Details Modal */}
+                    <Modal show={showEmployeeDetails} onHide={() => setShowEmployeeDetails(false)}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Employee Details</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            {employeeDetails && (
+                                <>
+                                    <p>Name: {employeeDetails.name}</p>
+                                    <p>Email: {employeeDetails.email}</p>
+                                    <p>Department: {employeeDetails.department}</p>
+                                    <p>Designation: {employeeDetails.designation}</p>
+                                    <p>Status: {employeeDetails.status===1? 'Active':'Disabled'}</p>
+                                </>
+                            )}
+                        </Modal.Body>
+                    </Modal>
+
+                 {/* Edit Employee Modal */}
+<Modal show={showEditForm} onHide={() => setShowEditForm(false)} size="lg">
+    <Modal.Header closeButton>
+        <Modal.Title>Edit Employee</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+        {editedEmployee && (
+            <form>
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="firstName" className="form-label">
+                            First Name
+                        </label>
+                        <input
+                            type="text"
+                            id="firstName"
+                            className="form-control"
+                            value={editedEmployee.name}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    name: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="lastName" className="form-label">
+                            Last Name
+                        </label>
+                        <input
+                            type="text"
+                            id="lastName"
+                            className="form-control"
+                            value={editedEmployee.lastName}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    lastName: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="email" className="form-label">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            className="form-control"
+                            value={editedEmployee.email}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                   email: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="phoneNumber" className="form-label">
+                            Phone Number
+                        </label>
+                        <input
+                            type="text"
+                            id="phoneNumber"
+                            className="form-control"
+                            value={editedEmployee.employee_phonenumber}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    employee_phonenumber: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="department" className="form-label">
+                            Department
+                        </label>
+                        <select
+                            id="department"
+                            className="form-select"
+                            value={editedEmployee.department || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    department: e.target.value,
+                                })
+                            }
+                        >
+                            <option value="">Select Department</option>
+                            {departments.map((department) => (
+                                <option key={department.id} value={department.id}>
+                                    {department.department_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="designation" className="form-label">
+                            Designation
+                        </label>
+                        <select
+                            id="designation"
+                            className="form-select"
+                            value={editedEmployee.designation || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    designation: e.target.value,
+                                })
+                            }
+                        >
+                            <option value="">Select Designation</option>
+                            {designations.map((designation) => (
+                                <option key={designation.id} value={designation.id}>
+                                    {designation.designation_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="dob" className="form-label">
+                            Date of Birth
+                        </label>
+                        <input
+                            type="date"
+                            id="dob"
+                            className="form-control"
+                            value={editedEmployee.employee_DOB || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    employee_DOB: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="joiningDate" className="form-label">
+                            Joining Date
+                        </label>
+                        <input
+                            type="date"
+                            id="joiningDate"
+                            className="form-control"
+                            value={editedEmployee.joiningDate || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    joiningDate: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="streetAddress" className="form-label">
+                            Street Address
+                        </label>
+                        <input
+                            type="text"
+                            id="streetAddress"
+                            className="form-control"
+                            value={editedEmployee.street_address || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    street_address: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="city" className="form-label">
+                            City
+                        </label>
+                        <input
+                            type="text"
+                            id="city"
+                            className="form-control"
+                            value={editedEmployee.city || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    city: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="state" className="form-label">
+                            State
+                        </label>
+                        <input
+                            type="text"
+                            id="state"
+                            className="form-control"
+                            value={editedEmployee.state || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    state: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="country" className="form-label">
+                            Country
+                        </label>
+                        <input
+                            type="text"
+                            id="country"
+                            className="form-control"
+                            value={editedEmployee.country || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    country: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="zipCode" className="form-label">
+                            ZIP Code
+                        </label>
+                        <input
+                            type="text"
+                            id="zipCode"
+                            className="form-control"
+                            value={editedEmployee.zip_code || ""}
+                            onChange={(e) =>
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    zip_code: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                        <label htmlFor="profileImage" className="form-label">
+                            Profile Image
+                        </label>
+                        <input
+                            type="file"
+                            id="profileImage"
+                            className="form-control"
+                            accept="image/*"
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                setEditedEmployee({
+                                    ...editedEmployee,
+                                    profile_image: file,
+                                });
+                            }}
+                        />
+                        {editedEmployee.profile_image_url && (
+                            <img
+                                src={editedEmployee.profile_image_url}
+                                alt="Profile"
+                                className="img-thumbnail mt-2"
+                                style={{ maxWidth: "100px" }}
+                            />
                         )}
                     </div>
                 </div>
-            </div>
+            </form>
+        )}
+    </Modal.Body>
+    <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowEditForm(false)}>
+            Cancel
+        </Button>
+        <Button
+            variant="primary"
+            onClick={() => {
+                /* Save Changes logic here */
+            }}
+        >
+            Save Changes
+        </Button>
+    </Modal.Footer>
+</Modal>
 
-            {/* Invite New Employee Modal */}
-            <Modal show={showInviteForm} onHide={handleCloseInvite} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Invite New Employee</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <form onSubmit={handleSendInvite}>
-                        <div style={{ marginBottom: '15px' }}>
-                            <label htmlFor="email">
-                                Enter Email <span style={{ color: 'red' }}>*</span>
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={handleEmailChange}
-                                placeholder="Enter employee email"
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
-                                }}
-                                required
-                            />
-                        </div>
-                        <Button type="submit" className="btn btn-primary w-100">
-                            Send Invitation
-                        </Button>
-                    </form>
-                </Modal.Body>
-            </Modal>
+
+                </div>
+            </div>
+            <ToastContainer />
         </div>
     );
 }

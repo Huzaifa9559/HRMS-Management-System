@@ -5,11 +5,11 @@ const httpStatus = require('../utils/httpStatus');
 const { extractToken } = require('../utils/authUtil'); // Import the extractToken function
 const path = require('path');
 const fs = require('fs');
+const { sequelize } = require("../config/sequelizeConfig");
 
 exports.getEmployeePayslipDetails = async (req, res) => {
     const year = req.params.year; // Get payslip ID from request parameters
     const token = extractToken(req, res);
-    console.log(year);
     if (!token) return;
     try {
         const payload = getUser(token);
@@ -46,6 +46,48 @@ exports.downloadPayslip = async (req, res) => {
             }
         });
     });
+};
+
+exports.uploadPayslip = async (req, res) => {
+ const { employeeId, payslipYear,payslipMonth} = req.body;
+    const file = req.file;
+
+    // Check if all fields are present
+    if (!employeeId || !payslipMonth  || !file || !payslipYear) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'All fields are required');
+    }
+
+    try {
+        // Create a new document entry in the database
+        const newDoc = {
+            employeeId: employeeId,
+            year: payslipYear,
+            month:payslipMonth,
+            fileName: file.filename, // Save the original file name
+            uploadedAt: new Date(),
+        };
+
+        await sequelize.query(
+            `INSERT INTO Payslip
+            (employeeID, payslip_year, payslip_fileName, payslip_receiveDate,payslip_monthName)
+             VALUES (?, ?, ?, ?,?);`,
+            {
+                replacements: [
+                    newDoc.employeeId,
+                    newDoc.year,
+                    newDoc.fileName,
+                    newDoc.uploadedAt,
+                    newDoc.month
+                ],
+                type: sequelize.QueryTypes.INSERT
+            }
+        );
+
+        return sendResponse(res, httpStatus.OK, newDoc, 'Document uploaded successfully');
+    } catch (error) {
+        console.error('Error uploading document:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error uploading document', error.message);
+    }
 };
 
 

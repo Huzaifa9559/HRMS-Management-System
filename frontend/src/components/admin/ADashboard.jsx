@@ -4,7 +4,6 @@ import { Box, Briefcase, Users } from 'lucide-react';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import Loader from '../Loader';
 
 export default function ADashboard() {
@@ -23,33 +22,16 @@ export default function ADashboard() {
   useEffect(() => {
     const run = async () => {
       try {
-        const token = Cookies.get('token');
-        const res1 = await axios.get('/api/admin/department', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        })
+        const res1 = await axios.get('/api/admin/department');
         setTotalDepartments(res1.data.data.length);
 
-        const res2 = await axios.get('/api/admin/designation', {
-          headers: {
-            'Authorization': `Bearer ${token}`, 
-          }
-        });
+        const res2 = await axios.get('/api/admin/designation');
         setTotalDesignations(res2.data.data.length);
 
-        const res3 = await axios.get('/api/admin/employee', {
-          headers: {
-            'Authorization': `Bearer ${token}`, 
-          }
-        });
+        const res3 = await axios.get('/api/admin/employee');
         setTotalEmployees(res3.data.data.total_count);
 
-        const res4 = await axios.get('/api/admin/leave', {
-          headers: {
-            'Authorization': `Bearer ${token}`, 
-          }
-        });
+        const res4 = await axios.get('/api/admin/leave');
         const firstFiveRecords = res4.data.data.slice(0, 5); // Get the first 5 records
         setLeaveData(firstFiveRecords);
       }
@@ -113,7 +95,7 @@ export default function ADashboard() {
               >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
-                    <Card.Title style={{ fontWeight: 'normal' }}>Total Employees</Card.Title>
+                    <Card.Title style={{ fontWeight: 'normal' }}>Total Active Employees</Card.Title>
                     {showEmployees && <Card.Text className="h5 mt-2">{ totalEmployees}</Card.Text>}
                   </div>
                   <Users size={28} color="#FF5722" />

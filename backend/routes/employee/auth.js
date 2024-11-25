@@ -1,6 +1,5 @@
 const express = require('express'); // Import express
 const auth = express.Router();
-
 const { createAccount, login, forgotPassword, resetPassword } = require('../../controllers/auth');
 
 auth.post('/create-account', createAccount);

@@ -57,7 +57,7 @@ root.render(
           <Route path="/admin/dashboard" element={<ADashboard />} />
           <Route path="/admin/organization/employee-list" element={<EmployeeList />} />
           <Route path="/admin/organization/departments" element={<Departments />} />
-          <Route path="/admin/organization/view-departments" element={<ViewDepartments />} />
+          <Route path="/admin/organization/view-departments/:id" element={<ViewDepartments />} />
           <Route path="/admin/attendance" element={<AAttendance />} />
           <Route path="/admin/view-attendance" element={<ViewAttendance />} />
           <Route path="/admin/view-employee-attendance" element={<VEmpAttendance />} />
@@ -66,7 +66,7 @@ root.render(
           <Route path="/admin/documents/upload-document" element={<CreateNewDoc />} />
           <Route path="/admin/documents/all-received" element={<ADocuments />} />
           <Route path="/admin/leave" element={<ALeave />} />
-          <Route path="/admin/view-employee-leave" element={<VEmpLeave />} />
+          <Route path="/admin/view-employee-leave/:leaveID/:employeeId" element={<VEmpLeave />} /> 
 
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />

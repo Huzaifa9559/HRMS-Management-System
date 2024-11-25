@@ -7,9 +7,5 @@ const { getEmployeeAttendanceRecords, getEmployeeAttendanceRecord,
 
 attendance.get('/all', getEmployeeAttendanceRecords);
 attendance.get('/', getEmployeeAttendanceRecord);
-attendance.post('/clockin', createNewAttendance);
-attendance.post('/clockout', updateEmployeeAttendance);
-attendance.post('/breakin', updateEmployeeAttendance);
-attendance.post('/breakout', updateEmployeeAttendance);
 
 module.exports = attendance;

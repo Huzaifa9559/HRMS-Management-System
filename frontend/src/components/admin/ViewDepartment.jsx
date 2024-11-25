@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Modal, Button, Form, InputGroup, FormControl } from 'react-bootstrap';
 import { FaSearch } from 'react-icons/fa';
@@ -7,6 +7,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS for the toaster
 import Header from './Header';
 import SideMenu from './SideMenu';
+import axios from 'axios';
 
 const ViewDepartments = () => {
   const navigate = useNavigate();
@@ -19,20 +20,42 @@ const ViewDepartments = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [designationName, setDesignationName] = useState('');
+  const [designations, setDesignations] = useState([]);
 
-  const designations = [
-    { name: 'Product Design', employees: 6, lastUpdate: '05 Sep 2021' },
-    { name: 'Graphic Designer', employees: 30, lastUpdate: '05 Sep 2021' },
-    { name: 'UI/UX Design', employees: 10, lastUpdate: '05 Sep 2021' },
-    { name: 'Advertising Designer', employees: 30, lastUpdate: '05 Sep 2021' },
-  ];
+    useEffect(() => {
+    const fetchDesignations = async () => {
+      const departmentId = window.location.pathname.split('/').pop();
+      try {
+        const response = await axios.get(`/api/admin/designation/view/${departmentId}`);
+        setDesignations(response.data.data);
+      } catch (error) {
+        console.error('Error', error);
+      }
+    };
+    fetchDesignations();
+    }, [designationName]);
+
 
   const filteredDesignations = designations.filter((designation) =>
     designation.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateDesignation = () => {
+  const handleCreateDesignation = async() => {
     if (designationName) {
+      const designationExists = designations.find(
+        (d) => d.name === designationName);
+      if (designationExists) {
+        toast.error('Designation already exists!');
+        setShowModal(false);
+        return;
+      }
+      try {
+        const departmentId = window.location.pathname.split('/').pop();
+          await axios.post('/api/admin/designation/create', { name: designationName,id:departmentId });
+      }
+      catch (error) {
+          console.error(error);
+      }
       toast.success(`Designation "${designationName}" created successfully!`, {
         position: 'top-right',
         autoClose: 3000,

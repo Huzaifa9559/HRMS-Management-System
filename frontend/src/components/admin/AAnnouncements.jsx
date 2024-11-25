@@ -4,24 +4,43 @@ import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
 import { FaEye, FaTrashAlt } from 'react-icons/fa';
+import axios from 'axios';
 
 export default function AnnouncementsDashboard() {
     const [activeButton, setActiveButton] = useState(null); // To track which button is clicked
-    const navigate = useNavigate(); // Initialize navigate for redirection
+    const [departments, setDepartments] = useState([]);
+    const navigate = useNavigate(); 
     const [loading, setLoading] = useState(true); // Loading state
-    const [announcements, setAnnouncements] = useState([
-        { id: 1, title: 'For Sending Picture', department: 'All', date: '01-08-2021' },
-        { id: 2, title: 'For Sending Picture', department: 'All', date: '01-08-2021' },
-        { id: 3, title: 'For Sending Picture', department: 'All', date: '01-08-2021' },
-        { id: 4, title: 'For Sending Picture', department: 'All', date: '01-08-2021' },
-        { id: 5, title: 'For Sending Picture', department: 'All', date: '01-08-2021' },
-        { id: 6, title: 'For Sending Picture', department: 'All', date: '01-08-2021' },
-    ]);
+    const [announcements, setAnnouncements] = useState([]);
+    const [selectedDepartment, setSelectedDepartment] = useState('HR');
+
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get('/api/admin/department');
+        setDepartments(response.data.data);
+      } catch (error) {
+        console.error('Error', error);
+      }
+    };
+    const fetchAnnouncements = async () => {
+      try {
+        const response = await axios.get(`/api/admin/announcements?department=${selectedDepartment}`);
+        setAnnouncements(response.data.data);
+      } catch (error) {
+        console.error('Error', error);
+      }
+    };
+    fetchDepartments();    
+    fetchAnnouncements();
+        
+  }, [selectedDepartment]);
 
     const handleButtonClick = (button) => {
         setActiveButton(button); // Set the clicked button as active
@@ -31,11 +50,22 @@ export default function AnnouncementsDashboard() {
             navigate('/admin/announcements'); // Redirect to announcements route
         }
     };
-
-    const handleDelete = (id) => {
+    const handleSelectChange = (event) => {
+        setSelectedDepartment(event.target.value);
+    };
+    const handleDelete = async (id) => {
         // Filter out the announcement with the matching id
-        const updatedAnnouncements = announcements.filter((announcement) => announcement.id !== id);
+        try {
+        await axios.post('/api/admin/announcements/delete',{id});
+      } catch (error) {
+        console.error('Error', error);
+      }
+        const updatedAnnouncements = announcements.filter((announcement) => announcement.announcementID !== id);
         setAnnouncements(updatedAnnouncements);
+    };
+
+    const handleViewClick = () => {
+        //navigate('/anotherComponent'); // Replace '/edit announcement component' with your desired path
     };
 
     if (loading) {
@@ -83,9 +113,17 @@ export default function AnnouncementsDashboard() {
                             </button>
                         </div>
                         <div>
-                            <select style={dropdownStyle}>
-                                <option>Departments</option>
-                                {/* Add more options as needed */}
+                            <select
+                            style={{ padding: '10px', fontSize: '14px' }}
+                            value={selectedDepartment} // Bind the selected value
+                            onChange={handleSelectChange} // Update state on change
+                            >
+                            <option value="">Select Department</option>
+                            {departments.map((department) => (
+                                <option key={department.department_name} value={department.department_name}>
+                                {department.department_name }
+                                </option>
+                            ))}
                             </select>
                         </div>
                     </div>
@@ -103,19 +141,19 @@ export default function AnnouncementsDashboard() {
                             <tbody>
                                 {announcements.map((announcement) => (
                                     <tr
-                                        key={announcement.id}
+                                        key={announcement.announcementID}
                                         style={hoverRowStyle}
                                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#eef2f7')}
                                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
                                     >
-                                        <td style={tableCellStyle}>{announcement.title}</td>
-                                        <td style={tableCellStyle}>{announcement.department}</td>
-                                        <td style={tableCellStyle}>{announcement.date}</td>
+                                        <td style={tableCellStyle}>{announcement.announcement_title}</td>
+                                        <td style={tableCellStyle}>{selectedDepartment}</td>
+                                        <td style={tableCellStyle}>{announcement.announcement_date }</td>
                                         <td style={tableCellStyle}>
-                                            <button style={actionButtonStyle}><FaEye /></button>
+                                            <button style={actionButtonStyle} onClick={handleViewClick}><FaEye /></button>
                                             <button
                                                 style={{ ...actionButtonStyle, color: 'red' }}
-                                                onClick={() => handleDelete(announcement.id)}
+                                                onClick={() => handleDelete(announcement.announcementID)}
                                             >
                                                 <FaTrashAlt />
                                             </button>

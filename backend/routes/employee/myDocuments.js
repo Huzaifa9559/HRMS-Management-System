@@ -10,6 +10,5 @@ myDocumentsrouter.get('/', getEmployeeMyDocuments);
 myDocumentsrouter.get('/download/:documentId', downloadDocument);
 myDocumentsrouter.get('/signature/:documentId', getDocumentSignature);
 myDocumentsrouter.post('/save-signature', saveDocumentSignature);
-//router.post('/my-documents/upload', upload.single('document'), uploadDocument);
 
 module.exports = myDocumentsrouter; // Export the router

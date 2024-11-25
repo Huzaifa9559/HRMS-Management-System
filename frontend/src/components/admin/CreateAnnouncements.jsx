@@ -1,17 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
+import axios from 'axios'; // Import axios for making API requests
 import SideMenu from './SideMenu'; 
 import Header from './Header'; 
 import Loader from '../Loader';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function CreateAnnouncements() {
     const [activeButton, setActiveButton] = useState(null); // To track which button is clicked
-    const navigate = useNavigate(); // Initialize navigate for redirection
     const [loading, setLoading] = useState(true); // Loading state
+    const [departments, setDepartments] = useState([]); // State to store department data
+    const [selectedDepartment, setSelectedDepartment] = useState(""); // State for selected department
+    const [title, setTitle] = useState(""); // State for the title
+    const [description, setDescription] = useState(""); // State for the description
+    const navigate = useNavigate(); // Initialize navigate for redirection
 
     useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
-    return () => clearTimeout(timer);
+        const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Fetch departments from the API
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const response = await axios.get('/api/admin/department'); // Replace with your actual API URL
+                setDepartments(response.data.data); // Set department data from the API response
+            } catch (error) {
+                console.error('Error fetching departments:', error);
+            }
+        };
+        fetchDepartments();
     }, []);
 
     const handleButtonClick = (button) => {
@@ -23,10 +43,54 @@ export default function CreateAnnouncements() {
         }
     };
 
+    const handleDepartmentChange = (e) => {
+        setSelectedDepartment(e.target.value); // Update selected department
+    };
+
+    const handleTitleChange = (e) => {
+        setTitle(e.target.value); // Update title
+    };
+
+    const handleDescriptionChange = (e) => {
+        setDescription(e.target.value); // Update description
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault(); // Prevent default form submission
+
+        // Validation: Check if all required fields are filled
+        if (!selectedDepartment || !title || !description) {
+            alert('All fields are required!');
+            return; // If any field is empty, alert the user and stop form submission
+        }
+
+        // Prepare the form data to be sent in the request
+        const formData = {
+            departmentID: selectedDepartment,
+            title,
+            description,
+        };
+
+        try {
+            // Send the form data via a POST request to the backend API
+            const response = await axios.post('/api/admin/announcements/create', formData); // Replace with your actual API endpoint
+                toast.success('Announcement created successfully!');
+
+                // Clear the form fields after successful submission
+                setSelectedDepartment(""); // Reset department dropdown
+                setTitle(""); // Reset title field
+                setDescription(""); // Reset description field
+        } catch (error) {
+            console.error('Error creating announcement:', error);
+            alert('Failed to create announcement. Please try again.');
+        }
+    };
+
+
     if (loading) {
         return <Loader />;
-      }
-      
+    }
+
     return (
         <div
             className="d-flex"
@@ -96,14 +160,23 @@ export default function CreateAnnouncements() {
                         >
                             Create New Announcements
                         </h4>
-                        <form>
+                        <form onSubmit={handleSubmit}>
                             <div style={formGroupStyle}>
                                 <label htmlFor="departments" style={labelStyle}>
                                     Departments
                                 </label>
-                                <select id="departments" style={inputStyle}>
-                                    <option>All Departments</option>
-                                    {/* Add more options as needed */}
+                                <select
+                                    id="departments"
+                                    style={inputStyle}
+                                    value={selectedDepartment}
+                                    onChange={handleDepartmentChange}
+                                >
+                                    <option value="">All Departments</option>
+                                    {departments.map((department) => (
+                                        <option key={department.departmentID} value={department.departmentID}>
+                                            {department.department_name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             <div style={formGroupStyle}>
@@ -115,6 +188,8 @@ export default function CreateAnnouncements() {
                                     id="title"
                                     style={inputStyle}
                                     placeholder="Write title here..."
+                                    value={title}
+                                    onChange={handleTitleChange}
                                 />
                             </div>
                             <div style={formGroupStyle}>
@@ -128,35 +203,22 @@ export default function CreateAnnouncements() {
                                         height: '80px',
                                     }}
                                     placeholder="Write description here..."
+                                    value={description}
+                                    onChange={handleDescriptionChange}
                                 ></textarea>
-                            </div>
-                            <div style={formGroupStyle}>
-                                <label htmlFor="fileUpload" style={labelStyle}>
-                                    Upload Announcement
-                                </label>
-                                <label htmlFor="fileUpload" style={fileUploadStyle}>
-                                    <span>Browse to upload</span>
-                                </label>
-                                <input
-                                    type="file"
-                                    id="fileUpload"
-                                    style={{ display: 'none' }}
-                                />
                             </div>
 
                             <button
                                 type="submit"
-                                style={{
-                                    ...sendButtonStyle, // Updated to always have blue background and white text
-                                    marginTop: '10px',
-                                }}
+                                style={sendButtonStyle}
                             >
-                                Send
+                                Create Announcement
                             </button>
                         </form>
                     </div>
                 </main>
             </div>
+            <ToastContainer />
         </div>
     );
 }
@@ -226,13 +288,4 @@ const inputStyle = {
     border: '1px solid #ced4da',
     fontSize: '14px',
     boxSizing: 'border-box',
-};
-
-const fileUploadStyle = {
-    display: 'inline-block',
-    padding: '10px 20px',
-    border: '1px dashed #ced4da',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    textAlign: 'center',
 };

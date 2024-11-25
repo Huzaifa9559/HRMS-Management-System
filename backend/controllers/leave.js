@@ -43,15 +43,7 @@ exports.createLeaveRequest = async (req, res) => {
 };
 
 exports.getAllEmployeesLeaveDetails = async (req, res) => {
-    const token = extractToken(req, res); // Use the utility function
-    if (!token) return; // Exit if token extraction failed
-
-    try {
-        const payload = getUser(token);
-        if (!payload) {
-            return sendResponse(res, httpStatus.FORBIDDEN, null, 'Unauthorized access');
-        }
-        
+    try {        
         const leaveDetails = await Leave.getAllLeaveDetails(); // Fetch all leave details
         if (!leaveDetails || leaveDetails.length === 0) {
             return sendResponse(res, httpStatus.NOT_FOUND, null, 'No leave details found');
@@ -61,5 +53,80 @@ exports.getAllEmployeesLeaveDetails = async (req, res) => {
     } catch (error) {
         console.error('Error fetching all employees leave details:', error);
         return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching leave details', error.message);
+    }
+};
+
+exports.getLeaveDetail = async (req, res) => {
+    const leaveId = req.params.id; // Get the leaveId from query parameters
+    if (!leaveId) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Leave ID is required');
+    }
+
+    try {
+        const leaveDetail = await Leave.getLeaveDetailsByLeaveId(leaveId); // Fetch the leave details using the leaveId
+        if (!leaveDetail) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'Leave details not found');
+        }
+        return sendResponse(res, httpStatus.OK, leaveDetail, 'Leave details retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching leave details by ID:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching leave details', error.message);
+    }
+};
+
+exports.getLeaveStats = async (req, res) => {
+    const employeeId = req.params.id; // Get the employeeId from query parameters
+    if (!employeeId) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Employee ID is required');
+    }
+
+    try {
+        // Fetch leave statistics for the specific employee using the employeeId
+        const stats = await Leave.getEmployeeLeaveStatistics(employeeId); 
+
+        if (!stats) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'Leave statistics not found for the given employee');
+        }
+        
+        return sendResponse(res, httpStatus.OK, stats, 'Employee leave statistics retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching employee leave statistics:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching leave statistics', error.message);
+    }
+};
+
+exports.acceptLeave = async (req, res) => {
+    const leaveId = req.params.id; // Get the leaveId from query parameters
+    if (!leaveId) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Leave ID is required');
+    }
+
+    try {
+        const updatedRows = await Leave.updateLeaveStatus(leaveId, 1); // Update status to "Accepted" (1)
+        if (updatedRows === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'Leave request not found');
+        }
+        return sendResponse(res, httpStatus.OK, null, 'Leave request accepted successfully');
+    } catch (error) {
+        console.error('Error accepting leave request:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error accepting leave request', error.message);
+    }
+};
+
+exports.rejectLeave = async (req, res) => {
+    const leaveId = req.params.id; // Get the leaveId from query parameters
+    if (!leaveId) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Leave ID is required');
+    }
+
+    try {
+        const updatedRows = await Leave.updateLeaveStatus(leaveId, 2); // Update status to "Rejected" (2)
+        if (updatedRows === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'Leave request not found');
+        }
+        return sendResponse(res, httpStatus.OK, null, 'Leave request rejected successfully');
+    } catch (error) {
+        console.error('Error rejecting leave request:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error rejecting leave request', error.message);
     }
 };

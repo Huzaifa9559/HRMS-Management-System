@@ -8,7 +8,7 @@ dotenv.config({ path: `${process.cwd()}/.env` });
 const employeeRoutes = require('./routes/employee/index'); // Import employee routes
 const employeeAuthRoutes = require('./routes/employee/auth'); // Import auth routes
 const adminAuthRoutes = require('./routes/admin/auth'); // Import admin routes
-const publicRoutes = require('./routes/employee/public');
+const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin/index'); // Import admin routes
 
 const app = express();

@@ -1,49 +1,104 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import { Eye } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import Loader from '../Loader';
 
 const LeaveManagement = () => {
-  const [leaveData] = useState([
-    { employee: 'Randy Aminoff', department: 'Mobile App', from: '04 Sep 2021 to 05 Sep 2021', type: 'Unpaid Leave', reason: 'Lorem ipsum is a placeholder text commonly used to ...', status: 'Pending' },
-    { employee: 'Jane Doe', department: 'Web Development', from: '06 Sep 2021 to 07 Sep 2021', type: 'Paid Leave', reason: 'For personal matters.', status: 'Approved' },
-    { employee: 'John Smith', department: 'Marketing', from: '08 Sep 2021 to 09 Sep 2021', type: 'Sick Leave', reason: 'Medical reasons.', status: 'Rejected' },
-    { employee: 'Alice Johnson', department: 'Mobile App', from: '10 Sep 2021 to 12 Sep 2021', type: 'Unpaid Leave', reason: 'Family emergency.', status: 'Approved' },
-    { employee: 'Bob Brown', department: 'Design', from: '13 Sep 2021 to 15 Sep 2021', type: 'Paid Leave', reason: 'Vacation.', status: 'Pending' },
-  ]);
-
+  const [leaveData, setLeaveData] = useState([]); // State for leave data
   const [filter, setFilter] = useState('All'); // Tracks the current filter
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true); // Loading state
+  const [currentPage, setCurrentPage] = useState(1); // Pagination current page
+  const itemsPerPage = 5; // Number of items per page
+  const navigate = useNavigate();
+
+  // Fetch leave data from API
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
-    return () => clearTimeout(timer);
+    const fetchLeaveData = async () => {
+      try {
+        const response = await axios.get('/api/admin/leave'); // Replace with your API endpoint
+        setLeaveData(response.data.data); // Set the fetched data
+      } catch (error) {
+        console.error('Error fetching leave data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaveData();
   }, []);
 
+  // Map numeric leave_status to meaningful labels
+  const mapLeaveStatus = (status) => {
+    switch (status) {
+      case 1:
+        return 'Approved';
+      case 2:
+        return 'Rejected';
+      case 0:
+      default:
+        return 'Pending';
+    }
+  };
+
+  // Add a mapped status to leave data for easy filtering
+  const processedLeaveData = leaveData.map((leave) => ({
+    ...leave,
+    leave_status_label: mapLeaveStatus(leave.leave_status),
+  }));
+
   // Filtered leave data based on the selected filter
-  const filteredLeaveData = leaveData.filter((leave) => {
+  const filteredLeaveData = processedLeaveData.filter((leave) => {
     if (filter === 'All') return true;
-    return leave.status === filter;
+    return leave.leave_status_label === filter;
   });
+
+  // Paginated data
+  const totalPages = Math.ceil(filteredLeaveData.length / itemsPerPage);
+  const paginatedData = filteredLeaveData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
 
   if (loading) {
     return <Loader />;
   }
-  
+
+  // Function to apply Bootstrap classes based on the status
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Approved':
+        return 'bg-success text-white'; // Green for Approved
+      case 'Rejected':
+        return 'bg-danger text-white'; // Red for Rejected
+      case 'Pending':
+      default:
+        return 'bg-warning text-dark'; // Yellow for Pending
+    }
+  };
+
   return (
     <>
       <style>
         {`
           .leave-management-table tr.hoverable-row {
             transition: background-color 0.3s ease;
-            }
+          }
 
-            .leave-management-table tr.hoverable-row:hover {
-            background-color: #f8f9fa !important; /* Ensure the background color is applied */
+          .leave-management-table tr.hoverable-row:hover {
+            background-color: #f8f9fa !important;
             cursor: pointer;
-            }
+          }
 
           .leave-button {
             padding: 8px 16px;
@@ -70,7 +125,7 @@ const LeaveManagement = () => {
         <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
           <Header title="Leave Management" />
           <main style={{ padding: '20px' }}>
-            {/* Button Group at the top-left under the header */}
+            {/* Button Group */}
             <div className="d-flex justify-content-start align-items-center mb-4" style={{ gap: '15px' }}>
               <button
                 className={`leave-button ${filter === 'All' ? 'active' : ''}`}
@@ -90,6 +145,12 @@ const LeaveManagement = () => {
               >
                 Rejected
               </button>
+              <button
+                className={`leave-button ${filter === 'Pending' ? 'active' : ''}`}
+                onClick={() => setFilter('Pending')}
+              >
+                Pending
+              </button>
             </div>
 
             {/* Table */}
@@ -97,35 +158,55 @@ const LeaveManagement = () => {
               <table className="table leave-management-table">
                 <thead className="table-light">
                   <tr>
-                    <th className="px-4 py-3">Employee</th>
-                    <th className="px-4 py-3">Departments</th>
-                    <th className="px-4 py-3">From</th>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Reason</th>
-                    <th className="px-4 py-3">View</th>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Applied On</th>
+                    <th>View</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredLeaveData.map((leave, index) => (
+                  {paginatedData.map((leave, index) => (
                     <tr key={index} className="hoverable-row">
-                      <td className="px-4 py-3">{leave.employee}</td>
-                      <td className="px-4 py-3">{leave.department}</td>
-                      <td className="px-4 py-3">{leave.from}</td>
-                      <td className="px-4 py-3">{leave.type}</td>
-                      <td className="px-4 py-3">{leave.reason}</td>
-                      <td className="px-4 py-3">
-                      <button
-                        className="btn btn-link"
-                        onClick={() => navigate("/admin/view-employee-leave")}
-                      >
-                        <Eye className="h-5 w-5" />
-                      </button>
-
+                      <td>{leave.employee_name}</td>
+                      <td>{leave.department_name}</td>
+                      <td>
+                        <span className={`px-3 py-1 rounded ${getStatusColor(leave.leave_status_label)}`}>
+                          {leave.leave_status_label}
+                        </span>
+                      </td>
+                      <td>{leave.leave_from}</td>
+                      <td>
+                        <button
+                          className="btn btn-link"
+                          onClick={() => navigate(`/admin/view-employee-leave/${leave.leaveID}/${leave.employeeID}`)}
+                        >
+                          <Eye className="h-5 w-5" />
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              {/* Pagination */}
+              <div className="d-flex justify-content-center align-items-center mt-4" style={{ gap: '15px' }}>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <span className="text-muted">Page {currentPage} of {totalPages}</span>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </main>
         </div>

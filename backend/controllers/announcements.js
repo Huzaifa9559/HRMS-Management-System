@@ -38,3 +38,45 @@ exports.getAnnouncmentDetails = async (req, res) => {
         return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching announcement details', error.message);
     }
 };
+
+exports.deleteAnnouncement = async (req, res) => {
+    const id = req.body; 
+    if (!id) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Announcement ID is required');
+    }
+
+    try {
+        const deleteResult = await Announcement.deleteAnnouncementById(id); // Delete the announcement by ID
+        return sendResponse(res, httpStatus.OK, null, 'Announcement deleted successfully');
+    } catch (error) {
+        console.error('Error deleting announcement:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error deleting announcement', error.message);
+    }
+};
+
+exports.createAnnouncement = async (req, res) => {
+    const { departmentID, title, description } = req.body; // Destructure data from request body
+
+    // Validation: Check if required fields are provided
+    if (!departmentID || !title || !description) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'All fields (departmentID, title, description) are required');
+    }
+
+    try {
+        const newAnnouncement = await Announcement.createNewAnnouncement({
+            departmentID,
+            title,
+            description,
+        });
+
+        // If creation is successful, send a success response
+        if (newAnnouncement) {
+            return sendResponse(res, httpStatus.CREATED, newAnnouncement, 'Announcement created successfully');
+        } else {
+            return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error creating announcement');
+        }
+    } catch (error) {
+        console.error('Error creating announcement:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error creating announcement', error.message);
+    }
+};

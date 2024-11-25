@@ -7,6 +7,7 @@ const Employee = {};
 Employee.getEmployeeDetails = async function (employeeId) {
     const query = `
     SELECT e.employeeID,e.employee_first_name, e.employee_last_name, e.employee_email,
+    CONCAT(e.employee_first_name, ' ', e.employee_last_name) AS name,
     e.employee_DOB, e.employee_phonenumber, d.department_name,
     des.designation_name,a.street_address, a.city,a.state,a.country,
     a.zip_code,e.employee_status,e.employee_joining_date
@@ -73,7 +74,7 @@ Employee.updatePassword = async function (id, hashedPassword) {
 
 Employee.getTotalNumberofEmployees = async function () {
     const query = `
-    SELECT COUNT(*) AS total_count FROM Employee;`;
+    SELECT COUNT(*) AS total_count FROM Employee WHERE employee_status=1;`;
 
     try {
         const [row] = await sequelize.query(query, {
@@ -88,11 +89,15 @@ Employee.getTotalNumberofEmployees = async function () {
 
 Employee.getAllEmployees = async function () {
     const query = `
-    SELECT e.employeeID, CONCAT(e.employee_first_name, ' ', e.employee_last_name) AS employee_name,
-    d.department_name, des.designation_name,e.employee_status, e.employee_joining_date
+    SELECT e.employeeID AS id, CONCAT(e.employee_first_name, ' ', e.employee_last_name) AS name,
+    d.department_name AS department, des.designation_name AS designation,e.employee_status AS status,
+    e.employee_joining_date AS joiningDate,e.employee_email AS email,e.employee_last_name AS lastName,
+    e.employee_first_name AS firstName,e.employee_phonenumber,e.employee_DOB,a.street_address,a.city,a.state,a.country,
+    a.zip_code
     FROM Employee e
     JOIN Department d ON e.departmentID = d.departmentID
     JOIN Designation des ON e.designationID = des.designationID
+    JOIN Address a ON e.address_ID = a.address_ID
     ORDER BY e.employeeID ASC;`;
 
     try {
@@ -105,6 +110,50 @@ Employee.getAllEmployees = async function () {
         throw error; // Rethrow the error to be handled in the controller
     }
 };
+
+Employee.updateEmployeeStatus=async function (id) {
+    const query = `
+    UPDATE Employee
+    SET employee_status = CASE
+        WHEN employee_status = 1 THEN 0
+        ELSE 1
+    END
+    WHERE employeeID = ?`;
+
+
+    try {
+        const [row] = await sequelize.query(query, {
+            replacements: [id]
+        });
+        return row; 
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};
+
+Employee.deleteEmployeeById = async function (employeeId) {
+    const query = `
+    DELETE FROM Employee 
+    WHERE employeeID = ?;
+    `;
+    
+    try {
+        const [result] = await sequelize.query(query, {
+            replacements: [employeeId]
+        });
+        
+        if (result.affectedRows === 0) {
+            return null; // Return null if no rows were deleted (i.e., employee not found)
+        }
+        
+        return true; // Return true if the employee was deleted successfully
+    } catch (error) {
+        console.error('Error deleting employee:', error);
+        throw error; // Rethrow the error to be handled in the controller
+    }
+};
+
 
 module.exports = Employee;
 

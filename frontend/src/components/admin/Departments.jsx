@@ -7,30 +7,42 @@ import 'react-toastify/dist/ReactToastify.css';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default function Departments() {
   const navigate = useNavigate();
 
-  const initialDepartments = [
-    { id: 1, name: 'Design Department', designations: 4, employees: 15 },
-    { id: 2, name: 'Android Development', designations: 4, employees: 15 },
-    { id: 3, name: 'HR', designations: 4, employees: 15 },
-    { id: 4, name: 'Web Development', designations: 4, employees: 15 },
-    { id: 5, name: 'Account Development', designations: 4, employees: 15 },
-  ];
-
-  const [departmentData, setDepartmentData] = useState(initialDepartments); // State for departments
+  const [departmentData, setDepartmentData] = useState([]); // State for departments
   const [loading, setLoading] = useState(true); // Loading state
   const [showModal, setShowModal] = useState(false); // Modal for adding departments
   const [deleteModal, setDeleteModal] = useState(false); // Modal for delete confirmation
   const [departmentName, setDepartmentName] = useState(''); // New department name
   const [selectedDepartment, setSelectedDepartment] = useState(null); // Selected department for deletion
   const [popupPosition, setPopupPosition] = useState(null); // Popup position
-
+  
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const token = Cookies.get('token');
+        const response = await axios.get('/api/admin/department/all', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        })
+        setDepartmentData(response.data.data);
+      }
+      catch (error) {
+        console.error(error);
+      }
+    }
+    run();
+  }, [departmentName]);
 
   const handleMenuToggle = (index, e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -55,12 +67,18 @@ export default function Departments() {
   };
 
   const handleEditClick = (department) => {
-    navigate('/admin/organization/view-departments', { state: { department } });
+    navigate(`/admin/organization/view-departments/${department.id}`, { state: { department } });
     closePopup();
   };
 
-  const handleDeleteClick = (department) => {
+  const handleDeleteClick = async(department) => {
     setSelectedDepartment(department);
+    try {
+      await axios.post('/api/admin/department/delete', { name: department.name });
+      }
+    catch (error) {
+        console.error(error);
+    }
     setDeleteModal(true); // Show delete confirmation modal
   };
 
@@ -75,19 +93,28 @@ export default function Departments() {
     }
   };
 
-  const handleCreateDepartment = (e) => {
+  const handleCreateDepartment = async(e) => {
     e.preventDefault();
     if (departmentName.trim() === '') {
       toast.error('Failed to create department. Please provide a valid name.');
       return;
     }
-    const newDepartment = {
-      id: departmentData.length + 1,
-      name: departmentName,
-      designations: 0,
-      employees: 0,
-    };
-    setDepartmentData([...departmentData, newDepartment]); // Add new department to state
+    else {
+      const departmentExists = departmentData.find(
+        (department) => department.name === departmentName);
+      if (departmentExists) {
+        toast.error('Department already exists!');
+        setShowModal(false);
+        return;
+        }
+    }
+    try {
+      await axios.post('/api/admin/department/create', { name: departmentName });
+    }
+    catch (error) {
+        console.error(error);
+    }
+
     toast.success(`Department "${departmentName}" created successfully!`);
     setShowModal(false); // Close modal
     setDepartmentName(''); // Reset input field

@@ -10,7 +10,9 @@ module.exports = {
     announcement_date DATE,
     departmentID INT,
     CONSTRAINT AnDK FOREIGN KEY (departmentID) REFERENCES Department(departmentID)
-  );
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+    );
 `);
   },
 

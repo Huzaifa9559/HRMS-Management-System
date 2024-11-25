@@ -6,6 +6,5 @@ const { getEmployeePayslipDetails, downloadPayslip } =
 
 payslip.get('/:year', getEmployeePayslipDetails);
 payslip.get('/download/:payslipId', downloadPayslip);
-//router.post('/my-documents/upload', upload.single('document'), uploadDocument);
 
 module.exports = payslip; // Export the router

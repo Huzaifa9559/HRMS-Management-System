@@ -8,7 +8,7 @@ myDocuments.getDocumentsByEmployeeId = async function (employeeId) {
     const query = `
     SELECT d.document_ID,d.document_type,d.document_receiveDate,s.signature_signedAt,
     d.signature_status FROM Documents d LEFT JOIN Signatures s ON d.document_ID=s.document_ID
-    WHERE employeeID = ?;`;
+    WHERE employeeID = ? ORDER BY d.document_receiveDate DESC;`;
 
     try {
         const rows = await sequelize.query(query, {
