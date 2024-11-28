@@ -11,7 +11,7 @@ module.exports = {
         payslip_receiveDate: new Date(2023, i - 1, 15), // 15th of each month
         payslip_year: 2024,
         payslip_fileName: `doc${i}.pdf`,
-        employeeID: (i % 3) + 1
+        employeeID: (i % 6) + 1
       });
     }
     await queryInterface.bulkInsert('Payslip', payslips, {});

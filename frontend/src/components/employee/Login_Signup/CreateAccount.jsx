@@ -3,6 +3,8 @@ import PhoneInput from 'react-phone-input-2';
 import axios from 'axios';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import 'react-phone-input-2/lib/style.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const phoneUtil = PhoneNumberUtil.getInstance();
 
@@ -261,31 +263,38 @@ export default function CreateAccount() {
                                 >
                                     <option value="">Select Designation</option>
                                     {designations.map((designation) => (
-                                        <option key={designation.designation_name} value={designation.designation_name}>
+                                        <option>
                                             {designation.designation_name}
                                         </option>
                                     ))}
                                 </select>
                             </div>
 
-                            <div className="mb-2">
-                                <label htmlFor="department" className="form-label">Department</label>
-                                <select
-                                    className="form-select form-select-sm"
-                                    id="department"
-                                    name="department"
-                                    value={formData.department}
-                                    onChange={handleChange}
-                                    required
-                                >
-                                    <option value="">Select Department</option>
-                                    {departments.map((d) => (
-                                        <option key={d.department_name} value={d.department_name}>
-                                            {d.department_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                           <div className="mb-2">
+    <label htmlFor="department" className="form-label">Department</label>
+    <select
+        className="form-select form-select-sm"
+        id="department"
+        name="department"
+        value={formData.department || ''}
+        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+        required
+    >
+        <option value="">Select Department</option>
+        {Array.isArray(departments) && departments.length > 0 ? (
+            departments.map((department) => (
+                <option key={department.departmentID} value={department.department_name}>
+                    {department.department_name}
+                </option>
+            ))
+        ) : (
+            <option value="" disabled>
+                No Departments Available
+            </option>
+        )}
+    </select>
+</div>
+
 
                             <br />
                             <button
@@ -321,6 +330,9 @@ export default function CreateAccount() {
                     margin-right: 5px;
                     color: red;
                 }
+                    .form-select {
+    z-index: 5; /* Higher z-index to bring dropdown to the front */
+}
 
                 .alert-text {
                     font-size: 0.9rem;

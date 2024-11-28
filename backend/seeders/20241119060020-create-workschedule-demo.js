@@ -12,7 +12,7 @@ module.exports = {
       const workType = workTypes[i % workTypes.length]; // Cycle through work types
       const startHour = 9 + (i % 3); // Vary start time between 9 AM and 11 AM
       const endHour = startHour + 8; // 8-hour workday
-      const weekNumber = Math.floor(i / 7) + 1; // Calculate week number (1-5 for 30 days)
+      //const weekNumber = Math.floor(i / 7) + 1; // Calculate week number (1-5 for 30 days)
 
       workSchedules.push({
         schedule_day: day,
@@ -20,8 +20,8 @@ module.exports = {
         schedule_startTime: `${startHour.toString().padStart(2, '0')}:00:00`,
         schedule_endTime: `${endHour.toString().padStart(2, '0')}:00:00`,
         schedule_worktype: workType,
-        employeeID: (i % 3) + 1, // Random employee ID between 1 and 100
-        schedule_week: weekNumber, // Add week number for better testing
+        employeeID: (i % 6) + 1, // Random employee ID between 1 and 100
+
       });
     }
 

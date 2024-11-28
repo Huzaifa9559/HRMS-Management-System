@@ -12,7 +12,7 @@ module.exports = {
         leave_reason: `Reason for leave ${i + 1}`,
         leave_type: i % 2 === 0 ? 'Medical' : 'Unpaid',
         leave_status: i % 2 === 0 ? 0 : 1,
-        employeeID: (i % 3), // Assuming employeeID is a foreign key and there are at least 5 employees
+        employeeID: (i % 6)+1, // Assuming employeeID is a foreign key and there are at least 5 employees
         leave_filedOn: new Date(2024, i % 12, (i % 28) + 1)
       };
       leaveRecords.push(leaveRecord);

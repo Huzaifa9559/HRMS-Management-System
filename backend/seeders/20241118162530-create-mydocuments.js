@@ -17,7 +17,7 @@ module.exports = {
         document_type: documentTypes[i],
         document_receiveDate: new Date(),
         document_fileName: `doc${i}.pdf`,
-        employeeID: (i % 3) + 1, // Cycle through employee IDs 1, 2, 3
+        employeeID: (i % 6) + 1, // Cycle through employee IDs 1, 2, 3
       });
     }
 

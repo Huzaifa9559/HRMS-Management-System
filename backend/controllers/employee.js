@@ -89,4 +89,60 @@ exports.getEmployeeDetailByID = async (req, res) => {
     }
 };
 
+exports.getEmployeeImageFileName = async (req, res) => {
+    const token = extractToken(req, res); // Use the utility function
+    if (!token) return; // Get the employeeId from query parameters
+    const payload = getUser(token);
+    const employeeId = payload._id;
+    if (!employeeId) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Employee ID is required');
+    }
 
+    try {
+        const employeeImageFileName = await Employee.getEmployeeImageFileNameById(employeeId); // Fetch employee's image file name
+        if (!employeeImageFileName) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'Employee image not found');
+        }
+        return sendResponse(res, httpStatus.OK, employeeImageFileName, 'Employee image file name retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching employee image file name:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching employee image file name', error.message);
+    }
+};
+
+exports.addEmployee = async (req, res) => {
+    
+    try {
+        const employees = await Employee.createNewEmployee(req.body); 
+        //sath me invite link bhi bhejna employee ku yaha 
+        if (!employees || employees.length === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'No employees found');
+        }
+        return sendResponse(res, httpStatus.OK, null, 'Added successfully');
+    } catch (error) {
+        console.error(error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error:', error.message);
+    }
+}
+
+exports.editEmployee = async (req, res) => {
+    const { employeeId, updatedData } = req.body; // Get employeeId and updated data from request body
+    const file = req.file;
+    if (!employeeId || !updatedData) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Employee ID and updated data are required');
+    }
+
+    try {
+        if (file) {
+        updatedData.employee_image = file.filename;
+        }
+        const employee = await Employee.updateEmployeeById(employeeId, updatedData); // Update employee details
+        if (!employee) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'Employee not found');
+        }
+        return sendResponse(res, httpStatus.OK, employee, 'Employee details updated successfully');
+    } catch (error) {
+        console.error('Error updating employee details:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error updating employee details', error.message);
+    }
+};

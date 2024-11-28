@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../Loader';
+
 const EmpAccount = () => {
   const navigate = useNavigate();
   const [employeeData, setEmployeeData] = useState();
@@ -24,7 +25,7 @@ const EmpAccount = () => {
         const token = Cookies.get('token');
         const response = await axios.get(`/api/employees/employee`, {
           headers: {
-            'Authorization': `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
+            Authorization: `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
           }
         });
         setEmployeeData(response.data.data);
@@ -36,17 +37,17 @@ const EmpAccount = () => {
     };
 
     fetchEmployeeData();
-
   }, []);
-
 
   const {
     employeeID, employee_first_name, employee_last_name, employee_email,
     employee_DOB, employee_phonenumber, department_name, designation_name,
     street_address, city, state, country, zip_code, employee_status,
-    employee_joining_date
+    employee_joining_date, employee_image // Add employee_image key
   } = employeeData || {};
 
+  const backendURL = process.env.REACT_APP_BACKEND_URL;
+  const imageURL = employee_image ? `${backendURL}/uploads/employees/${employee_image}` : null;
 
   // Show loader if loading is true
   if (loading) {
@@ -75,19 +76,21 @@ const EmpAccount = () => {
                         height: '150px',
                       }}
                     ></div>
-                    <Image
-                      src="https://img.freepik.com/free-photo/human-face-expressions-emotions-positive-joyful-young-beautiful-female-with-fair-straight-hair-casual-clothing_176420-15188.jpg"
-                      roundedCircle
-                      style={{
-                        width: '140px',
-                        height: '140px',
-                        border: '2px solid #ffffff',
-                        position: 'absolute',
-                        top: '80px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                      }}
-                    />
+                 
+                      <Image
+                        src={imageURL}
+                        roundedCircle
+                        style={{
+                          width: '140px',
+                          height: '140px',
+                          border: '2px solid #ffffff',
+                          position: 'absolute',
+                          top: '80px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                        }}
+                      />
+                    
                     <Card.Body style={{ marginTop: '60px' }}>
                       <Card.Title>{employee_first_name} {employee_last_name}</Card.Title>
                       <Card.Text>{designation_name}</Card.Text>

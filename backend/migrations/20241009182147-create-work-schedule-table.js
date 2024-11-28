@@ -9,7 +9,6 @@ module.exports = {
     schedule_startTime TIME,
     schedule_endTime TIME,
     schedule_month VARCHAR(20),
-    schedule_week INT,
     schedule_worktype VARCHAR(20) CHECK (schedule_worktype IN ('onsite', 'remote'))
     );
 `);

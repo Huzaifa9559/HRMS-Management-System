@@ -15,7 +15,7 @@ module.exports = {
         attendance_breakOut: '12:30:00',
         attendance_workingHours: 8,
         attendance_totalBreak: 30,
-        employeeID: (i % 3)
+        employeeID: (i % 6)+1
       });
     }
 

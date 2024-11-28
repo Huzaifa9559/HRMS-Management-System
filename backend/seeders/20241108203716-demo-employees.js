@@ -8,7 +8,7 @@ module.exports = {
     const employees = [];
     const saltRounds = 10;
 
-    for (let i = 0; i < 25; i++) {
+    for (let i = 1; i < 25; i++) {
 
       const hashedPassword = await bcrypt.hash(`Password@123`, 10);
       const employee = {

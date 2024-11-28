@@ -101,9 +101,9 @@ Leave.getEmployeeLeaveStatistics = async function (employeeId) {
     const query = `
     SELECT 
         COUNT(*) AS total_leave_requests,
-        SUM(CASE WHEN leave_status = 'Approved' THEN 1 ELSE 0 END) AS approved_leave,
-        SUM(CASE WHEN leave_status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_leave,
-        SUM(CASE WHEN leave_status = 'Pending' THEN 1 ELSE 0 END) AS pending_leave,
+        SUM(CASE WHEN leave_status = 1 THEN 1 ELSE 0 END) AS approved_leave,
+        SUM(CASE WHEN leave_status = 2 THEN 1 ELSE 0 END) AS rejected_leave,
+        SUM(CASE WHEN leave_status = 0 THEN 1 ELSE 0 END) AS pending_leave,
         DATEDIFF(CURDATE(), MAX(leave_filedOn)) AS days_since_last_leave,
         SUM(CASE WHEN MONTH(leave_fromDate) = MONTH(CURDATE()) THEN 1 ELSE 0 END) AS currentMonthLeave,
         SUM(CASE WHEN YEAR(leave_fromDate) = YEAR(CURDATE()) THEN 1 ELSE 0 END) AS currentYearLeave

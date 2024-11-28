@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Image, OverlayTrigger, Popover } from 'react-bootstrap';
 import { PersonCircle, Key, BoxArrowRight } from 'react-bootstrap-icons';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default function Header({ title }) {
     const navigate = useNavigate();
+     const [employeeData, setEmployeeData] = useState();
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      try {
+        const token = Cookies.get('token');
+        const response = await axios.get(`/api/employees/employee/image`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
+          }
+        });
+        setEmployeeData(response.data.data);
+      } catch (error) {
+        console.error('Error fetching employee data:', error);
+        navigate('/login');
+      }
+    };
+
+    fetchEmployeeData();
+  }, []);
+
+  const backendURL = process.env.REACT_APP_BACKEND_URL;
+  const imageURL = employeeData ? `${backendURL}/uploads/employees/${employeeData}` : null;
 
     const profileDetails = {
         name: 'Katya Schleifer',
         title: 'UI UX Designer',
-        imageUrl: 'https://img.freepik.com/free-photo/human-face-expressions-emotions-positive-joyful-young-beautiful-female-with-fair-straight-hair-casual-clothing_176420-15188.jpg',
+        imageUrl: imageURL,
     };
 
     const handleProfileClick = () => {

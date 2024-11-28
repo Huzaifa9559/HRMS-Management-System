@@ -6,10 +6,9 @@ const WorkSchedule = {};
 
 WorkSchedule.getWorkScheduleByEmployeeId = async function (employeeId, month) {
     const query = `
-    SELECT schedule_week,schedule_day,schedule_startTime,schedule_endTime,
+    SELECT schedule_day,schedule_startTime,schedule_endTime,
     schedule_worktype FROM Work_Schedule
-    WHERE employeeID = ? AND schedule_month=? 
-    ORDER BY schedule_week ASC;`;
+    WHERE employeeID = ? AND schedule_month=?;`;
 
     try {
         const rows = await sequelize.query(query, {

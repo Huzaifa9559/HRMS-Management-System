@@ -26,12 +26,11 @@ export default function LeaveManagement() {
     const fetchData = async () => {
       try {
         // Making the three API calls
-        const [employeeResponse, leaveResponse, leaveStatsResponse] = await Promise.all([
+        const [employeeResponse,leaveResponse, leaveStatsResponse] = await Promise.all([
           axios.get(`/api/admin/employee/${employeeId}`),
           axios.get(`/api/admin/leave/${leaveID}`),
           axios.get(`/api/admin/leave/stats/${employeeId}`),
         ]);
-
         // Set the state with the fetched data
         setEmployeeData(employeeResponse.data.data);
         setLeaveData(leaveResponse.data.data);
@@ -72,7 +71,8 @@ export default function LeaveManagement() {
         toast.error("Failed to reject leave request.", { position: "top-right" });
       }
     };
-
+const backendURL = process.env.REACT_APP_BACKEND_URL;
+const imageURL = employeeData.employee_image ? `${backendURL}/uploads/employees/${employeeData.employee_image}` : null;
   const isProcessed=()=>{
     if (leaveData.leave_status === 0) {
       return true;
@@ -124,7 +124,7 @@ export default function LeaveManagement() {
                     }}
                   >
                     <img
-                      src={employeeData.employeeImage}
+                      src={imageURL}
                       alt="Employee"
                       className="img-fluid mb-2" /* Reduced margin */
                       style={{

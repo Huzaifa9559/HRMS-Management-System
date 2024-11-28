@@ -36,6 +36,7 @@ import AAnnouncements from './components/admin/AAnnouncements.jsx';
 import Login from './components/admin/Login.jsx';
 import EditEmpAccount from './components/admin/EditEmpAccount.jsx';
 import AWorkSchedule from './components/admin/AWorkSchedule.jsx';
+import AddNewEmployee from './components/admin/AddNewEmployee.jsx';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -70,7 +71,9 @@ root.render(
           <Route path="/admin/view-employee-leave/:leaveID/:employeeId" element={<VEmpLeave />} />
           <Route path="/admin/edit-employee-account/:employeeId" element={<EditEmpAccount />} /> 
           <Route path="/admin/workschedule" element={<AWorkSchedule />} /> 
+          <Route path="/admin/add-new-employee" element={<AddNewEmployee />} />
 
+          
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />
           <Route path="/employee/documents/payslip" element={<PrivateRoute element={<Payslip />} requiredRole="employee" />} />

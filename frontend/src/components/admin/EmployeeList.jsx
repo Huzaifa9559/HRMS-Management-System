@@ -4,6 +4,8 @@ import Header from './Header';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
+
 import {
     Modal,
     Button,
@@ -121,7 +123,12 @@ export default function EmployeeList() {
         if (pageNumber < 1 || pageNumber > totalPages) return;
         setCurrentPage(pageNumber);
     };
+    const navigate = useNavigate();
 
+    const handleEditEmployee = (employee) => {
+        // Navigate to the edit employee page with the employee's ID
+        navigate(`/admin/edit-employee-account/${employee.id}`);
+    };
     const handleInviteClick = () => setShowInviteForm(true);
 
     const handleCloseInvite = () => {
@@ -176,10 +183,7 @@ export default function EmployeeList() {
         setShowEmployeeDetails(true);
     };
 
-    const handleEditEmployee = (employee) => {
-        setEditedEmployee(employee);
-        setShowEditForm(true);
-    };
+ 
 
     const handleDeleteEmployee = async (id) => {
         try {
@@ -209,67 +213,79 @@ export default function EmployeeList() {
                 <div className="col-md-10 p-4">
                     <Header title="Organization Management" />
 
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                        <div className="d-flex flex-wrap">
-                            <InputGroup className="me-2 mb-2" style={{ width: '250px' }}>
-                                <InputGroup.Text className="bg-white border-end-0">
-                                    <FaSearch color="#6c757d" />
-                                </InputGroup.Text>
-                                <FormControl
-                                    placeholder="Search Employee"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="border-start-0"
-                                />
-                            </InputGroup>
+<div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="d-flex flex-wrap">
+        {/* Search and Filters */}
+        <InputGroup className="me-2 mb-2" style={{ width: '250px' }}>
+            <InputGroup.Text className="bg-white border-end-0">
+                <FaSearch color="#6c757d" />
+            </InputGroup.Text>
+            <FormControl
+                placeholder="Search Employee"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border-start-0"
+            />
+        </InputGroup>
 
-                            <Dropdown className="me-2 mb-2">
-                                <Dropdown.Toggle variant="outline-secondary">
-                                    {selectedDepartment || 'Select by Department'}
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => setSelectedDepartment('')}>
-                                        All Departments
-                                    </Dropdown.Item>
-                                    {departments.map((department, index) => (
-                                        <Dropdown.Item
-                                            key={index}
-                                            onClick={() =>
-                                                setSelectedDepartment(department.department_name)
-                                            }
-                                        >
-                                            {department.department_name}
-                                        </Dropdown.Item>
-                                    ))}
-                                </Dropdown.Menu>
-                            </Dropdown>
+        <Dropdown className="me-2 mb-2">
+            <Dropdown.Toggle variant="outline-secondary">
+                {selectedDepartment || 'Select by Department'}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+                <Dropdown.Item onClick={() => setSelectedDepartment('')}>
+                    All Departments
+                </Dropdown.Item>
+                {departments.map((department, index) => (
+                    <Dropdown.Item
+                        key={index}
+                        onClick={() =>
+                            setSelectedDepartment(department.department_name)
+                        }
+                    >
+                        {department.department_name}
+                    </Dropdown.Item>
+                ))}
+            </Dropdown.Menu>
+        </Dropdown>
 
-                            <Dropdown className="me-2 mb-2">
-                                <Dropdown.Toggle variant="outline-secondary">
-                                    {selectedDesignation || 'Select by Designation'}
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => setSelectedDesignation('')}>
-                                        All Designations
-                                    </Dropdown.Item>
-                                    {designations.map((designation, index) => (
-                                        <Dropdown.Item
-                                            key={index}
-                                            onClick={() =>
-                                                setSelectedDesignation(designation.designation_name)
-                                            }
-                                        >
-                                            {designation.designation_name}
-                                        </Dropdown.Item>
-                                    ))}
-                                </Dropdown.Menu>
-                            </Dropdown>
-                        </div>
+        <Dropdown className="me-2 mb-2">
+            <Dropdown.Toggle variant="outline-secondary">
+                {selectedDesignation || 'Select by Designation'}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+                <Dropdown.Item onClick={() => setSelectedDesignation('')}>
+                    All Designations
+                </Dropdown.Item>
+                {designations.map((designation, index) => (
+                    <Dropdown.Item
+                        key={index}
+                        onClick={() =>
+                            setSelectedDesignation(designation.designation_name)
+                        }
+                    >
+                        {designation.designation_name}
+                    </Dropdown.Item>
+                ))}
+            </Dropdown.Menu>
+        </Dropdown>
+    </div>
 
-                        <Button variant="primary" onClick={handleInviteClick}>
-                            Invite Employee
-                        </Button>
-                    </div>
+    {/* Action Buttons */}
+    <div>
+        <Button
+            variant="success"
+            className="me-2"
+            onClick={() => navigate('/admin/add-new-employee')}
+        >
+            Add New Employee
+        </Button>
+        <Button variant="primary" onClick={handleInviteClick}>
+            Invite Employee
+        </Button>
+    </div>
+</div>
+
 
                     <Table responsive hover>
                         <thead>
@@ -401,309 +417,8 @@ export default function EmployeeList() {
                     </Modal>
 
                  {/* Edit Employee Modal */}
-<Modal show={showEditForm} onHide={() => setShowEditForm(false)} size="lg">
-    <Modal.Header closeButton>
-        <Modal.Title>Edit Employee</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-        {editedEmployee && (
-            <form>
-                <div className="row">
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="firstName" className="form-label">
-                            First Name
-                        </label>
-                        <input
-                            type="text"
-                            id="firstName"
-                            className="form-control"
-                            value={editedEmployee.name}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    name: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="lastName" className="form-label">
-                            Last Name
-                        </label>
-                        <input
-                            type="text"
-                            id="lastName"
-                            className="form-control"
-                            value={editedEmployee.lastName}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    lastName: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                </div>
 
-                <div className="row">
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="email" className="form-label">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            className="form-control"
-                            value={editedEmployee.email}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                   email: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="phoneNumber" className="form-label">
-                            Phone Number
-                        </label>
-                        <input
-                            type="text"
-                            id="phoneNumber"
-                            className="form-control"
-                            value={editedEmployee.employee_phonenumber}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    employee_phonenumber: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="department" className="form-label">
-                            Department
-                        </label>
-                        <select
-                            id="department"
-                            className="form-select"
-                            value={editedEmployee.department || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    department: e.target.value,
-                                })
-                            }
-                        >
-                            <option value="">Select Department</option>
-                            {departments.map((department) => (
-                                <option key={department.id} value={department.id}>
-                                    {department.department_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="designation" className="form-label">
-                            Designation
-                        </label>
-                        <select
-                            id="designation"
-                            className="form-select"
-                            value={editedEmployee.designation || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    designation: e.target.value,
-                                })
-                            }
-                        >
-                            <option value="">Select Designation</option>
-                            {designations.map((designation) => (
-                                <option key={designation.id} value={designation.id}>
-                                    {designation.designation_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="dob" className="form-label">
-                            Date of Birth
-                        </label>
-                        <input
-                            type="date"
-                            id="dob"
-                            className="form-control"
-                            value={editedEmployee.employee_DOB || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    employee_DOB: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="joiningDate" className="form-label">
-                            Joining Date
-                        </label>
-                        <input
-                            type="date"
-                            id="joiningDate"
-                            className="form-control"
-                            value={editedEmployee.joiningDate || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    joiningDate: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="streetAddress" className="form-label">
-                            Street Address
-                        </label>
-                        <input
-                            type="text"
-                            id="streetAddress"
-                            className="form-control"
-                            value={editedEmployee.street_address || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    street_address: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="city" className="form-label">
-                            City
-                        </label>
-                        <input
-                            type="text"
-                            id="city"
-                            className="form-control"
-                            value={editedEmployee.city || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    city: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="state" className="form-label">
-                            State
-                        </label>
-                        <input
-                            type="text"
-                            id="state"
-                            className="form-control"
-                            value={editedEmployee.state || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    state: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="country" className="form-label">
-                            Country
-                        </label>
-                        <input
-                            type="text"
-                            id="country"
-                            className="form-control"
-                            value={editedEmployee.country || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    country: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="zipCode" className="form-label">
-                            ZIP Code
-                        </label>
-                        <input
-                            type="text"
-                            id="zipCode"
-                            className="form-control"
-                            value={editedEmployee.zip_code || ""}
-                            onChange={(e) =>
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    zip_code: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        <label htmlFor="profileImage" className="form-label">
-                            Profile Image
-                        </label>
-                        <input
-                            type="file"
-                            id="profileImage"
-                            className="form-control"
-                            accept="image/*"
-                            onChange={(e) => {
-                                const file = e.target.files[0];
-                                setEditedEmployee({
-                                    ...editedEmployee,
-                                    profile_image: file,
-                                });
-                            }}
-                        />
-                        {editedEmployee.profile_image_url && (
-                            <img
-                                src={editedEmployee.profile_image_url}
-                                alt="Profile"
-                                className="img-thumbnail mt-2"
-                                style={{ maxWidth: "100px" }}
-                            />
-                        )}
-                    </div>
-                </div>
-            </form>
-        )}
-    </Modal.Body>
-    <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShowEditForm(false)}>
-            Cancel
-        </Button>
-        <Button
-            variant="primary"
-            onClick={() => {
-                /* Save Changes logic here */
-            }}
-        >
-            Save Changes
-        </Button>
-    </Modal.Footer>
-</Modal>
+        
 
 
                 </div>
