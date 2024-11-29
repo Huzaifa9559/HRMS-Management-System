@@ -5,6 +5,8 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from '../Loader';
+import { PlusCircle } from 'react-bootstrap-icons';
+import CreateScheduleModal from './CreateScheduleModal';
 
 const WorkSchedule = () => {
   const [scheduleData, setScheduleData] = useState([
@@ -111,12 +113,13 @@ const WorkSchedule = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editedSchedule, setEditedSchedule] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
  
-    const [loading, setLoading] = useState(true); // Loading state
-    useEffect(() => {
+  const [loading, setLoading] = useState(true); // Loading state
+  useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
     return () => clearTimeout(timer);
-    }, []);
+  }, []);
     
 
   const departments = ['All Departments', 'Design', 'Development', 'Marketing'];
@@ -175,12 +178,21 @@ const WorkSchedule = () => {
   
     // Updated Toast
     toast.success('Schedule updated successfully!', {
-      position: "top-right", // Use string instead of toast.POSITION.TOP_RIGHT
+      position: "top-right",
     });
   };
+
+  const handleCreateNewSchedule = (newSchedule) => {
+    setScheduleData([...scheduleData, { id: scheduleData.length + 1, ...newSchedule }]);
+    setShowCreateModal(false);
+    toast.success('New work schedule created successfully!', {
+      position: "top-right",
+    });
+  };
+
   if (loading) {
     return <Loader />;
-    }
+  }
 
   return (
     <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
@@ -215,6 +227,10 @@ const WorkSchedule = () => {
                   </option>
                 ))}
               </select>
+              <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+                <PlusCircle className="me-2" />
+                Create New WorkSchedule
+              </Button>
             </div>
           </div>
 
@@ -333,6 +349,12 @@ const WorkSchedule = () => {
         </Modal.Footer>
       </Modal>
 
+      <CreateScheduleModal
+        show={showCreateModal}
+        onHide={() => setShowCreateModal(false)}
+        onSave={handleCreateNewSchedule}
+      />
+
       {/* Toast container */}
       <ToastContainer />
     </div>
@@ -340,3 +362,4 @@ const WorkSchedule = () => {
 };
 
 export default WorkSchedule;
+

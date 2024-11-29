@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaBuilding, FaUsers, FaCalendarAlt, FaUserCheck, FaBullhorn, FaBusinessTime, FaFileAlt,FaSitemap } from 'react-icons/fa'; 
+import { FaBuilding, FaUsers, FaCalendarAlt, FaFileInvoice, FaUserCheck, FaBullhorn, FaBusinessTime, FaFileAlt,FaSitemap } from 'react-icons/fa'; 
 import { ChevronLeft, ChevronRight } from 'lucide-react'; 
 import { MdDashboard } from 'react-icons/md';
 import { HiOutlineDocumentText } from "react-icons/hi";
@@ -16,7 +16,6 @@ export default function SideMenu() {
     };
 
     const sidebarStyles = {
-        height: '100vh',
         width: isCollapsed ? '80px' : '250px',
         backgroundColor: '#007bff', // Primary blue background
         borderRight: '1px solid #e0e0e0',
@@ -25,6 +24,7 @@ export default function SideMenu() {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        height: 'auto',
     };
 
     const logoSectionStyles = {
@@ -208,6 +208,21 @@ export default function SideMenu() {
                         >
                             <HiOutlineDocumentText className="me-2" />
                             <span style={menuTextStyles}>All Documents</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/all-payslips"
+                            className="nav-link d-flex align-items-center text-white mb-2"
+                            activeClassName="active"
+                            style={navLinkStyles}
+                            activeStyle={{
+                                backgroundColor: '#0056b3',
+                                color: '#ffffff',
+                            }}
+                            onMouseEnter={(e) => e.target.style.boxShadow = '0px 4px 15px rgba(0, 0, 0, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+                        >
+                            <FaFileInvoice className="me-2" />
+                            <span style={menuTextStyles}>Payslips</span>
                         </NavLink>
                         <NavLink
                             to="/admin/documents/upload-document"

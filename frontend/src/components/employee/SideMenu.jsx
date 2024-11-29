@@ -13,7 +13,7 @@ export default function SideMenu() {
     };
 
     const sidebarStyles = {
-        height: '100vh',
+        height: 'auto',
         width: isCollapsed ? '80px' : '250px',
         backgroundColor: '#007bff', // Primary blue background
         borderRight: '1px solid #e0e0e0',

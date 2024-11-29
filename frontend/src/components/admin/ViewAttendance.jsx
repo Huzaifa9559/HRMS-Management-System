@@ -92,16 +92,6 @@ const ViewAttendance = () => {
     rowHoverActive: {
       backgroundColor: '#f1f1f1',
     },
-    viewDetailsButton: {
-        backgroundColor: '#0d6efd',
-        color: '#ffffff',
-        border: 'none',
-        padding: '6px 12px', // Balanced padding
-        borderRadius: '4px',
-        fontSize: '0.875rem', // Slightly smaller font size for elegance
-        cursor: 'pointer',
-    },      
-      
   };
 
   if (loading) {
@@ -144,7 +134,6 @@ const ViewAttendance = () => {
                 <th style={styles.th}>Employee</th>
                 <th style={styles.th}>Designation</th>
                 <th style={styles.th}>Status</th>
-                <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -169,16 +158,6 @@ const ViewAttendance = () => {
                       {employee.status}
                     </span>
                   </td>
-                  <td style={styles.td}>
-                    <button
-                        style={styles.viewDetailsButton}
-                        onClick={() => alert(`Viewing details for ${employee.name}`)}
-                    >
-                        View Details
-                    </button>
-                    </td>
-
-
                 </tr>
               ))}
             </tbody>
