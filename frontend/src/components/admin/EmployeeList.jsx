@@ -280,9 +280,6 @@ export default function EmployeeList() {
         >
             Add New Employee
         </Button>
-        <Button variant="primary" onClick={handleInviteClick}>
-            Invite Employee
-        </Button>
     </div>
 </div>
 

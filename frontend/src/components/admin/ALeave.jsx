@@ -14,6 +14,10 @@ const LeaveManagement = () => {
   const itemsPerPage = 5; // Number of items per page
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
+    return () => clearTimeout(timer);
+  }, []);
   // Fetch leave data from API
   useEffect(() => {
     const fetchLeaveData = async () => {

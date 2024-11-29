@@ -9,7 +9,6 @@ dotenv.config({ path: `${process.cwd()}/.env` });
 const employeeRoutes = require('./routes/employee/index'); // Import employee routes
 const employeeAuthRoutes = require('./routes/employee/auth'); // Import auth routes
 const adminAuthRoutes = require('./routes/admin/auth'); // Import admin routes
-const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin/index'); // Import admin routes
 
 const app = express();
@@ -18,6 +17,7 @@ const app = express();
 app.use('/uploads/employees', express.static(path.join(__dirname, 'uploads/employees')));
 app.use(cors({
   origin: `${process.env.domain}`, // Frontend address
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,// Allow credentials (cookies) to be sent
   allowedHeaders: ['Authorization', 'Content-Type'],
 }));
@@ -37,9 +37,6 @@ app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/employees', authenticateToken, employeeRoutes);
 //admin protected routes
 app.use('/api/admin', adminRoutes);
-
-//other public route
-app.use('/api/public', publicRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

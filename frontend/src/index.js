@@ -37,6 +37,7 @@ import Login from './components/admin/Login.jsx';
 import EditEmpAccount from './components/admin/EditEmpAccount.jsx';
 import AWorkSchedule from './components/admin/AWorkSchedule.jsx';
 import AddNewEmployee from './components/admin/AddNewEmployee.jsx';
+import AllPayslips from './components/admin/APayslips.jsx';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -72,7 +73,7 @@ root.render(
           <Route path="/admin/edit-employee-account/:employeeId" element={<EditEmpAccount />} /> 
           <Route path="/admin/workschedule" element={<AWorkSchedule />} /> 
           <Route path="/admin/add-new-employee" element={<AddNewEmployee />} />
-
+          <Route path="/admin/all-payslips" element={<AllPayslips />} />
           
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />

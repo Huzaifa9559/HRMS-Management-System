@@ -11,7 +11,7 @@ employee.get('/all', getEmployeesDetails);
 employee.get('/:id', getEmployeeDetailByID);
 employee.post('/update-status',updateStatus);
 employee.delete('/delete/:id', deleteEmployee);
-employee.post('/create', addEmployee);
+employee.post('/create',upload.single('file'), addEmployee);
 employee.post('/edit',upload.single('file'), editEmployee);
 
 module.exports = employee;

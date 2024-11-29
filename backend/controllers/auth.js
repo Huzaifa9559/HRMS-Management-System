@@ -24,22 +24,6 @@ exports.loginAdmin = async (req, res) => {
         }
 };
 
-
-exports.createAccount = async (req, res) => {
-    const { employeeName, phoneNumber, address, designation, department } = req.body;
-    if (!employeeName || !phoneNumber || !address || !designation || !department) {
-        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'All fields are required');
-    }
-    try {
-        const newEmployee = await Employee.insertEmployee({
-            employeeName, phoneNumber, address, designation, department
-        });
-        return sendResponse(res, httpStatus.CREATED, { Employee: newEmployee }, 'Submit request sent successfully!');
-    } catch (error) {
-        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error submitting request', error.message);
-    }
-};
-
 exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
 

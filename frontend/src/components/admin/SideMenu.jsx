@@ -207,7 +207,7 @@ export default function SideMenu() {
                             onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
                         >
                             <HiOutlineDocumentText className="me-2" />
-                            <span style={menuTextStyles}>All Received</span>
+                            <span style={menuTextStyles}>All Documents</span>
                         </NavLink>
                         <NavLink
                             to="/admin/documents/upload-document"

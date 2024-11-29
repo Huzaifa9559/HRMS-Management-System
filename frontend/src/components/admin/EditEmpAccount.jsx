@@ -25,7 +25,7 @@ const [employeeDetails, setEmployeeDetails] = useState({
   department_name: '',
   designation_name: '',
   street_address: '',
-  employee_status: '',
+  employee_status: 1,
   state: '',
   city: '',
   country: '',
@@ -201,13 +201,16 @@ const [employeeDetails, setEmployeeDetails] = useState({
    <div className="mt-3">
   {/* Email Field */}
   <label htmlFor="employee_email" className="form-label">Email</label>
-  <input
-    type="email"
-    className="form-control"
-    id="employee_email"
-    value={employeeDetails.employee_email}
-    onChange={handleChange}
-  />
+<input
+  type="email"
+  className="form-control"
+  id="employee_email"
+  value={employeeDetails.employee_email}
+  onChange={handleChange}
+  pattern="[a-zA-Z0-9._%+-]+@nu\.nu\.pk" 
+                      title="Please enter an email in the format: username@nu.edu.pk"
+                      required
+/>
 </div>
 
 <div className="mt-3">

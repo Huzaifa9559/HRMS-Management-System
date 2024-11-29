@@ -126,3 +126,19 @@ exports.saveDocumentSignature = async (req, res) => {
         return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching documents', error.message);
     }
 };
+
+exports.getAllEmployeesDocuments = async (req, res) => {
+    try {
+        // Fetch all documents from the database
+        const allDocuments = await myDocuments.getAllDocuments();
+        
+        if (!allDocuments || allDocuments.length === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'No documents found');
+        }
+
+        return sendResponse(res, httpStatus.OK, allDocuments, 'All documents retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching all documents:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching all documents', error.message);
+    }
+};

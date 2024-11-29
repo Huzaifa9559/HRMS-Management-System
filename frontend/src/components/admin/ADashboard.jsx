@@ -5,10 +5,12 @@ import SideMenu from './SideMenu';
 import Header from './Header';
 import axios from 'axios';
 import Loader from '../Loader';
+import { useNavigate } from 'react-router-dom';
 
 export default function ADashboard() {
   const [loading, setLoading] = useState(true);
   const [showLeaveTable, setShowLeaveTable] = useState(false); 
+  const navigate = useNavigate();
 
   // States for toggling card collapsibility
   const [showDepartments, setShowDepartments] = useState(false);
@@ -135,9 +137,10 @@ export default function ADashboard() {
                 <button
                     className="btn btn-outline-primary btn-sm"
                     style={{
-                    fontSize: '0.85rem',
-                    padding: '5px 12px', // Adjust padding for better spacing
+                      fontSize: '0.85rem',
+                      padding: '5px 12px', // Adjust padding for better spacing
                     }}
+                    onClick={() => navigate('/admin/leave')}
                 >
                     View All
                 </button>

@@ -1,5 +1,6 @@
 const { sequelize } = require("../config/sequelizeConfig");
 const Sequelize = require('sequelize');
+const bcrypt = require('bcrypt'); 
 //creating our own custom model without the use of sequelize ORM 
 const Employee = {};
 // no need to define attributes in sequelize since using Raw SQL queries for DML operations
@@ -25,37 +26,6 @@ Employee.getEmployeeDetails = async function (employeeId) {
         return row; 
     } catch (error) {
         console.error('Error fetching details:', error);
-        throw error; // Rethrow the error to be handled in the controller
-    }
-};
-
-Employee.insertEmployee = async function (employeeData) {
-    const query = `
-    INSERT INTO employee (employee_name, employee_phoneNumber, designationID, departmentID,employee_status)
-    VALUES (?, ?, ?, 
-        (SELECT designationID FROM designation WHERE designation_name = ?), 
-        (SELECT departmentID FROM department WHERE department_name = ?),1
-    )`;
-    try {
-        await sequelize.query(query, {
-            replacements: [employeeData.employeeName, employeeData.phoneNumber, employeeData.address,
-            employeeData.designation, employeeData.department]
-        });
-    } catch (error) {
-        console.error('Error inserting employee:', error);
-        throw error;
-    }
-};
-
-Employee.findEmployeeByField = async function (field, value) {
-    const query = `SELECT * FROM Employee WHERE ${field} = ?`;
-    try {
-        const [results] = await sequelize.query(query, {
-            replacements: [value]
-        });
-        return results[0] || null; // Return the first result or null if not found
-    } catch (error) {
-        console.error(`Error finding employee by ${field}:`, error);
         throw error; // Rethrow the error to be handled in the controller
     }
 };
@@ -175,21 +145,128 @@ Employee.getEmployeeImageFileNameById = async function (employeeId) {
     }
 };
 
-Employee.createNewEmployee = async function () {
-    const query = `
-    Insert INTO Employee()`;
-
-
+Employee.createNewEmployee = async function (newEmployeeData,filename) {
+    const t = await sequelize.transaction(); // Start a transaction
+    
     try {
-        const [row] = await sequelize.query(query, {
-            type: Sequelize.QueryTypes.INSERT
+        // Step 1: Insert Address if provided
+        let addressID = null;
+        if (newEmployeeData.street_address || newEmployeeData.city || newEmployeeData.state || newEmployeeData.zipCode) {
+            const [addressResult] = await sequelize.query(
+                `INSERT INTO Address (street_address, city, state, country, zip_code)
+                 VALUES (?, ?, ?, ?, ?)`,
+                {
+                    replacements: [
+                        newEmployeeData.street_address || '', 
+                        newEmployeeData.city || '', 
+                        newEmployeeData.state || '', 
+                        newEmployeeData.country || '', 
+                        newEmployeeData.zipCode || ''
+                    ],
+                    type: Sequelize.QueryTypes.INSERT,
+                    transaction: t
+                }
+            );
+
+            addressID = addressResult // Get the inserted address ID
+        }
+
+        // Step 2: Get Department ID if provided
+        let departmentID = null;
+        if (newEmployeeData.department_name) {
+            const [departmentResult] = await sequelize.query(
+                `SELECT departmentID FROM Department WHERE department_name = ?`,
+                {
+                    replacements: [newEmployeeData.department_name],
+                    type: Sequelize.QueryTypes.SELECT,
+                    transaction: t
+                }
+            );
+            departmentID = departmentResult ? departmentResult.departmentID : null;
+        }
+
+        // Step 3: Get Designation ID if provided
+        let designationID = null;
+        if (newEmployeeData.designation_name) {
+            const [designationResult] = await sequelize.query(
+                `SELECT designationID FROM Designation WHERE designation_name = ?`,
+                {
+                    replacements: [newEmployeeData.designation_name],
+                    type: Sequelize.QueryTypes.SELECT,
+                    transaction: t
+                }
+            );
+            designationID = designationResult ? designationResult.designationID : null;
+        }
+
+
+        const hashedPassword = await bcrypt.hash(newEmployeeData.password, 10);
+    
+        // Step 4: Insert into Employee table
+        const employeeInsertQuery = `
+            INSERT INTO Employee (
+                employee_first_name, 
+                employee_last_name, 
+                employee_email, 
+                employee_phonenumber, 
+                employee_status, 
+                employee_joining_date, 
+                departmentID, 
+                designationID, 
+                address_ID,
+                employee_DOB,
+                employee_password
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?);
+        `;
+
+        const employeeValues = [
+            newEmployeeData.employee_first_name || '',
+            newEmployeeData.employee_last_name || '',
+            newEmployeeData.email || '',
+            newEmployeeData.phoneNumber || '',
+            newEmployeeData.employee_status || 1, // Default status to 'Active'
+            new Date(),
+            departmentID || null,
+            designationID || null,
+            addressID || null,
+            newEmployeeData.dob,
+            hashedPassword
+        ];
+
+        const [employeeResult] = await sequelize.query(employeeInsertQuery, {
+            replacements: employeeValues,
+            type: Sequelize.QueryTypes.INSERT,
+            transaction: t
         });
-        return row; 
+
+        const employeeID = employeeResult; // Get the inserted employee ID
+
+        // Step 5: Insert employee image if provided
+        if (filename) {
+            await sequelize.query(
+                `INSERT INTO employee_images (employeeID, employee_image_fileName)
+                 VALUES (?, ?)`,
+                {
+                    replacements: [employeeID, filename],
+                    type: Sequelize.QueryTypes.INSERT,
+                    transaction: t
+                }
+            );
+        }
+
+        // Commit the transaction if everything is successful
+        await t.commit();
+        
+        // Return success with the new employee ID
+        return { success: true, employeeID };
     } catch (error) {
-        console.error(error);
+        // Rollback the transaction in case of an error
+        console.error('Error adding new employee:', error);
+        await t.rollback();
         throw error;
     }
-}
+};
+
 
 Employee.updateEmployeeById = async function (employeeId, updatedData) {
     // Start the transaction
@@ -275,12 +352,13 @@ Employee.updateEmployeeById = async function (employeeId, updatedData) {
                 employee_first_name = ?, 
                 employee_last_name = ?, 
                 employee_email = ?, 
-                employee_phonenumber = ?, 
+                employee_phonenumber = ?,
                 employee_status = ?, 
                 employee_joining_date = ?, 
                 departmentID = ?, 
                 designationID = ?, 
-                address_ID = ?
+                address_ID = ?,
+                employee_DOB=?
             WHERE employeeID = ?;
         `;
 
@@ -294,6 +372,7 @@ Employee.updateEmployeeById = async function (employeeId, updatedData) {
             departmentID || null, 
             designationID || null, 
             addressID, // Use the existing or updated addressID
+            updatedData.employee_DOB,
             employeeId
         ];
 

@@ -7,7 +7,8 @@ import Cookies from 'js-cookie';
 
 export default function Header({ title }) {
     const navigate = useNavigate();
-     const [employeeData, setEmployeeData] = useState();
+    const [employeeData, setEmployeeData] = useState();
+    const [profileData, setProfileData] = useState([]);
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
@@ -17,7 +18,15 @@ export default function Header({ title }) {
             Authorization: `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
           }
         });
-        setEmployeeData(response.data.data);
+          setEmployeeData(response.data.data);
+          
+          const response2 = await axios.get(`/api/employees/employee`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
+              }
+              
+          });
+          setProfileData(response2.data.data);
       } catch (error) {
         console.error('Error fetching employee data:', error);
         navigate('/login');
@@ -31,8 +40,8 @@ export default function Header({ title }) {
   const imageURL = employeeData ? `${backendURL}/uploads/employees/${employeeData}` : null;
 
     const profileDetails = {
-        name: 'Katya Schleifer',
-        title: 'UI UX Designer',
+        name: profileData.name,
+        title: profileData.designation_name,
         imageUrl: imageURL,
     };
 

@@ -1,222 +1,229 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Table, Card, Form, Dropdown, Modal, Button } from 'react-bootstrap';
 import Header from './Header';
 import SideMenu from './SideMenu';
-import { Eye, ChevronDown } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
 import Loader from '../Loader';
+import { ToastContainer, toast } from 'react-toastify';
+import { BsThreeDotsVertical } from 'react-icons/bs';
+import { AiOutlineDownload } from 'react-icons/ai';
+import { ChevronDown } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import 'react-toastify/dist/ReactToastify.css';
+
+const ITEMS_PER_PAGE = 6;
 
 const ADocuments = () => {
-  // Mock Data with relevant fields
-  const [documentData] = useState([
-    { employee: 'Randy Aminoff', title: 'ID Card', department: 'Design', month: 'September', year: '2021' },
-    { employee: 'Nolan Franci', title: 'Picture', department: 'Mobile Departments', month: 'September', year: '2021' },
-    { employee: 'Nolan Franci', title: 'Picture', department: 'Website', month: 'August', year: '2021' },
-    { employee: 'Alice Johnson', title: 'Contract', department: 'Marketing', month: 'July', year: '2021' },
-    { employee: 'Jane Doe', title: 'Payslip', department: 'Finance', month: 'July', year: '2022' },
-    { employee: 'Bob Brown', title: 'Picture', department: 'Mobile Departments', month: 'September', year: '2021' },
-  ]);
-
-  const [filters, setFilters] = useState({ department: 'Department', month: 'Month', year: 'Year' });
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState('Month');
+  const [selectedDepartment, setSelectedDepartment] = useState('HR');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState([]);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true); // Loading state
-    useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
-    return () => clearTimeout(timer);
-    }, []);
 
+  // Fetch documents on mount
+  const fetchDocuments = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/admin/my-documents');
+      setDocuments(response.data.data || []);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to load documents.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
 
-  // Filtered data based on the selected filters
-  const filteredDocumentData = documentData.filter((doc) => {
-    const departmentFilter = filters.department === 'Department' || doc.department === filters.department;
-    const monthFilter = filters.month === 'Month' || doc.month === filters.month;
-    const yearFilter = filters.year === 'Year' || doc.year === filters.year;
+  // Filter documents based on filters
+  const filteredDocuments = documents.filter(doc => {
+    const documentYear = new Date(doc.document_receiveDate).getFullYear();
+    const departmentFilter = selectedDepartment === 'Department' || doc.department === selectedDepartment;
+    const monthFilter = selectedMonth === 'Month' || doc.month === selectedMonth;
+    const yearFilter = documentYear === parseInt(selectedYear, 10);
     return departmentFilter && monthFilter && yearFilter;
   });
 
-  // Unique options for filters
-  const departments = ['Department', ...new Set(documentData.map((doc) => doc.department))];
-  const months = ['Month', ...new Set(documentData.map((doc) => doc.month))];
-  const years = ['Year', ...new Set(documentData.map((doc) => doc.year))];
+  const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE);
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedYear, selectedMonth, selectedDepartment]);
+
+  const downloadDocument = async (documentId) => {
+    try {
+      const response = await axios.get(`/api/admin/my-documents/download/${documentId}`,{
+        responseType: 'blob',
+      });
+
+       const contentType = response.headers['content-type']; // MIME type
+        const contentDisposition = response.headers['content-disposition']; // File name info
+        const fileName = contentDisposition
+            ? contentDisposition.split('filename=')[1]?.replace(/['"]/g, '') // Extract file name
+            : 'downloaded-document';
+
+        // Create a Blob with the appropriate type
+      const blob = new Blob([response.data], { type: contentType });
+      //const blob = new Blob([response.data], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      link.remove();
+      toast.success('Document downloaded successfully.');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to download the document.');
+    }
+  };
 
   if (loading) {
     return <Loader />;
   }
+
+  const departments = ['Department', ...new Set(documents.map(doc => doc.department))];
+  const months = ['Month', ...new Set(documents.map(doc => doc.month))];
+
   return (
-    <>
-      <style>
-        {`
-          .documents-management-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 12px;
-          }
-
-          .documents-management-table th,
-          .documents-management-table td {
-            padding: 12px 12px; /* Add consistent padding */
-            text-align: left; /* Align text to the left */
-          }
-
-          .documents-management-table th {
-            font-weight: 600; /* Bold header text */
-            font-size: 16px;
-            color: black;
-            background-color: #f9f9f9; /* Light background for header */
-          }
-
-          .documents-management-table td {
-            font-size: 16px;
-            color: black; /* Darker text for table data */
-            border-bottom: 1px solid #e5e7eb; /* Subtle bottom border for rows */
-          }
-
-          .documents-management-table tbody tr:last-child td {
-            border-bottom: none; /* Remove border from the last row */
-          }
-
-          .documents-management-table tbody tr {
-            transition: background-color 0.3s ease;
-          }
-
-          .documents-management-table tbody tr:hover {
-            background-color: #f9fafb; /* Light gray hover effect */
-            cursor: pointer; /* Pointer cursor on hover */
-          }
-
-          .filter-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-          }
-
-          .dropdown {
-            display: inline-flex; /* Align text and chevron inline */
-            align-items: center; /* Vertically align the chevron with text */
-            padding: 8px 12px; /* Add consistent padding for compact spacing */
-            border: 1px solid #ddd;
-            border-radius: 8px; /* Smooth rounded edges */
-            background-color: #ffffff; /* Ensure white background for visibility */
-            cursor: pointer;
-            margin-right: 10px; /* Spacing between dropdowns */
-            font-size: 14px; /* Adjust font size for compact look */
-            width: 125px; /* Set a specific width */
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Light shadow for better contrast */
-            transition: all 0.3s ease; /* Smooth hover effect */
-            }
-
-            .dropdown svg {
-            margin-left: 4px; /* Reduce spacing between text and chevron */
-            flex-shrink: 0; /* Prevent chevron from resizing */
-            color: #6b7280; /* Subtle color for chevron */
-            }
-
-
-                .dropdown:hover {
-                border-color: #3b82f6; /* Add hover effect with blue border */
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Enhanced hover shadow */
-                }
-
-                .dropdown:focus-within {
-                outline: none;
-                border-color: #2563eb; /* Focus state border color */
-                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); /* Focus ring for accessibility */
-                }
-
-
-          .btn-view {
-            padding: 8px 16px;
-            border: none;
-            background-color: #3b82f6;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-          }
-        `}
-      </style>
-      <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
-        <SideMenu />
-        <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
-          <Header title="Documents" />
-          <main style={{ padding: '20px' }}>
-            {/* Filters Section */}
-            <div className="filter-section">
-              <h4 style={{ marginBottom: '5px' }}>All Received</h4>
-              <div className="d-flex">
-              <select
+    <div className="d-flex" style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <SideMenu />
+      <div className="flex-grow-1" style={{ padding: '20px' }}>
+        <Header title="Documents Management" />
+        <div className="mt-4">
+          {/* Filters Section */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h5>All Documents</h5>
+            <div className="d-flex">
+              <Form.Select
                 className="dropdown"
-                value={filters.department}
-                onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-                >
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                style={{ marginRight: '10px' }}
+              >
                 {departments.map((department, index) => (
-                    <option key={index} value={department}>
+                  <option key={index} value={department}>
                     {department}
-                    </option>
+                  </option>
                 ))}
-                <ChevronDown size={16} />
-                </select>
-
-                <select
-                  className="dropdown"
-                  value={filters.month}
-                  onChange={(e) => setFilters({ ...filters, month: e.target.value })}
-                >
-                  {months.map((month, index) => (
-                    <option key={index} value={month}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="dropdown"
-                  value={filters.year}
-                  onChange={(e) => setFilters({ ...filters, year: e.target.value })}
-                >
-                  {years.map((year, index) => (
-                    <option key={index} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              </Form.Select>
+              <Form.Select
+                className="dropdown"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                style={{ marginRight: '10px' }}
+              >
+                {months.map((month, index) => (
+                  <option key={index} value={month}>
+                    {month}
+                  </option>
+                ))}
+              </Form.Select>
+              <Form.Select
+                className="dropdown"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+              >
+                {Array.from({ length: 10 }, (_, i) => currentYear - i).map(year => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </Form.Select>
             </div>
+          </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-lg p-3">
-              <table className="documents-management-table">
+          {/* Table Section */}
+          <Card>
+            <Card.Body>
+              <Table hover>
                 <thead>
                   <tr>
                     <th>Employee</th>
-                    <th>Title</th>
-                    <th>Departments</th>
-                    <th>Action</th>
+                    <th>Document Type</th>
+                    <th>Uploaded At Date</th>
+                    <th>Signature Status</th>
+                    <th>Department</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDocumentData.map((doc, index) => (
-                    <tr key={index}>
-                      <td>{doc.employee}</td>
-                      <td>{doc.title}</td>
-                      <td>{doc.department}</td>
+                  {currentItems.map(doc => (
+                    <tr key={doc.document_ID}>
+                      <td>{doc.name}</td>
+                      <td>{doc.document_type}</td>
                       <td>
-                        <button
-                          className="btn btn-link"
-                          onClick={() => navigate("/admin/view-employee-leave")}
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
+                        {new Date(doc.document_receiveDate).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </td>
+                <td>
+                <OverlayTrigger
+                  placement="top"
+                  overlay={
+                    <Tooltip>
+                      {doc.signature_signedAt
+                        ? `Signed At: ${new Date(doc.signature_signedAt).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}`
+                        : 'Not signed yet'}
+                    </Tooltip>
+                  }
+                >
+                  <span className={`status ${doc.signature_status.toLowerCase()}`}>
+                    {doc.signature_status}
+                  </span>
+                </OverlayTrigger>
+              </td>
+                     
+                      <td>{doc.department}</td>
+                      <td className="text-center align-middle">
+                        <Dropdown align="end">
+                          <Dropdown.Toggle variant="link" className="p-0">
+                            <BsThreeDotsVertical />
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu className="dropdown-menu-end">
+                            <Dropdown.Item onClick={() => downloadDocument(doc.document_ID)}>
+                              <AiOutlineDownload /> Download
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
-          </main>
+              </Table>
+            </Card.Body>
+          </Card>
+
+          {/* Pagination */}
+          <div className="pagination-container mt-3">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </>
+      <ToastContainer />
+    </div>
   );
 };
 

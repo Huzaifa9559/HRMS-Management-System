@@ -21,7 +21,6 @@ export default function MyDocuments() {
   const [loading, setLoading] = useState(true);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
-  const [feedbackMessage, setFeedbackMessage] = useState({ type: '', message: '' });
   const [myDocuments, setMyDocuments] = useState([]);
 
   const sigCanvas = useRef(null);
@@ -95,7 +94,6 @@ export default function MyDocuments() {
       sigCanvas.current.clear();
     }
   };
-
   const downloadDocument = async (documentId) => {
     try {
       const token = Cookies.get('token');

@@ -30,7 +30,6 @@ const Account = () => {
     const [countryList, setCountryList] = useState([]);
     const [phoneCountryCode, setPhoneCountryCode] = useState('');
   const [employeeDetails, setEmployeeDetails] = useState({
-    name: '',
     email: '',
     password: '',
     dob: '',
@@ -42,7 +41,9 @@ const Account = () => {
     state: '',
     country: '',
     zipCode: '',
-    status: 'Active',
+    status: 1,
+    file: null,
+    phoneNumber: '',
   });
 
   const [departments, setDepartments] = useState([]);
@@ -139,7 +140,7 @@ const Account = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfileImage(e.target.result);
-         setFile(event.target.files[0]);
+        setFile(event.target.files[0]);
         toast.success('Profile picture uploaded!');
       };
       reader.readAsDataURL(file);
@@ -153,15 +154,59 @@ const Account = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('/api/admin/employee/create', employeeDetails);
-      toast.success('New employee added successfully.');
-    } catch (error) {
-      toast.error('Failed to add new employee.');
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+
+  // Check required fields
+  const requiredFields = [
+    'employee_first_name',
+    'employee_last_name',
+    'email',
+    'password',
+    'dob',
+    'phoneNumber',
+    'department_name',
+    'designation_name',
+    'street_address',
+    'city',
+    'state',
+    'country',
+    'zipCode',
+  ];
+
+  const emptyFields = requiredFields.filter((field) => !employeeDetails[field]);
+
+  // If there are empty fields, show error toast
+  if (emptyFields.length > 0) {
+    toast.error(`Please fill out the following fields: ${emptyFields.join(', ')}`);
+    return;
+  }
+
+  // Check email format
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@nu\.edu\.pk$/;
+  if (!emailPattern.test(employeeDetails.email)) {
+    toast.error('Please enter a valid email address (e.g., username@nu.edu.pk)');
+    return;
+  }
+
+  // Check phone number validation
+  if (!isValidPhone) {
+    toast.error('Please enter a valid phone number');
+    return;
+  }
+
+  // Submit form if all validations pass
+  try {
+    employeeDetails.file = file;
+    await axios.post('/api/admin/employee/create', employeeDetails,
+      { headers: { 'Content-Type': 'multipart/form-data' } });
+    toast.success('New employee added successfully.');
+  } catch (error) {
+    toast.error('Failed to add new employee.');
+  }
+};
+
 
   return (
     <div
@@ -236,7 +281,7 @@ const Account = () => {
                   {/* Email */}
                   <div className="mb-3 text-start">
                     <label htmlFor="email" className="form-label">Email</label>
-                    <input
+                   <input
                       type="email"
                       className="form-control"
                       id="email"
@@ -244,6 +289,8 @@ const Account = () => {
                       onChange={handleChange}
                       required
                     />
+
+      
                   </div>
 
                   {/* Password */}
@@ -342,8 +389,8 @@ const Account = () => {
     <input
       type="date"
       className="form-control"
-      id="employee_DOB"
-      value={employeeDetails.employee_DOB}
+      id="dob"
+      value={employeeDetails.dob}
       onChange={handleChange}
     />
   </div>
@@ -351,13 +398,15 @@ const Account = () => {
     <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
     <PhoneInput
       country={'us'} // Default country
-      value={formData.phoneNumber}
+      value={employeeDetails.phoneNumber}
       onChange={(phoneNumber, country) => {
         setFormData((prevData) => ({ ...prevData, phoneNumber }));
         setPhoneCountryCode(country.countryCode); // Set the country code
         validatePhoneNumber(phoneNumber, country.countryCode); // Validate with country code
+        employeeDetails.phoneNumber=phoneNumber; //
       }}
       inputClass="form-control form-control-sm"
+      id="phoneNumber"
       disableDropdown={false} // Allow the dropdown for country selection
       enableSearch={true} // Allow search in the country dropdown
       disableCountryCode={false} // Make sure the country code is editable
@@ -471,8 +520,8 @@ const Account = () => {
                           value={employeeDetails.status}
                           onChange={handleChange}
                         >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
+                          <option value="1">Active</option>
+                          <option value="0">Inactive</option>
                         </select>
                       </div>
                     </div>

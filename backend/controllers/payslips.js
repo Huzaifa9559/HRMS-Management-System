@@ -90,4 +90,46 @@ exports.uploadPayslip = async (req, res) => {
     }
 };
 
+exports.getAllEmployeesPayslips = async (req, res) => {
+    // Get the year from request parameters
+
+    try {
+        // Query the database to fetch all payslips for the specified year
+        const payslips = await sequelize.query(
+            `SELECT
+                p.payslipID,
+                p.payslip_monthName AS month,
+                p.payslip_receiveDate AS receiveDate,
+                CONCAT(e.employee_first_name, ' ', e.employee_last_name) AS name,
+                p.payslip_fileName AS fileName,
+                d.department_name AS department,
+                p.payslip_year
+            FROM 
+                Payslip p
+            JOIN 
+                Employee e ON p.employeeID = e.employeeID
+            JOIN
+                Department d ON e.departmentID = d.departmentID
+    
+            ORDER BY 
+                name ASC, p.payslip_monthName ASC;`,
+            {
+
+                type: sequelize.QueryTypes.SELECT,
+            }
+        );
+  
+
+        if (!payslips || payslips.length === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, `No payslips found for the year ${year}`);
+        }
+
+        return sendResponse(res, httpStatus.OK, payslips, 'All employees payslips retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching all employees payslips:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching all employees payslips', error.message);
+    }
+};
+
+
 

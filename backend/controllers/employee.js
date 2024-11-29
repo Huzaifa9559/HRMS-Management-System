@@ -111,13 +111,16 @@ exports.getEmployeeImageFileName = async (req, res) => {
 };
 
 exports.addEmployee = async (req, res) => {
-    
     try {
-        const employees = await Employee.createNewEmployee(req.body); 
-        //sath me invite link bhi bhejna employee ku yaha 
+        const file = req.file;
+        const employees = await Employee.createNewEmployee(req.body,file.filename); 
+         //sath me invite link bhi bhejna employee ku yaha 
+        //await sendCreateAccountLink(email);
+
         if (!employees || employees.length === 0) {
             return sendResponse(res, httpStatus.NOT_FOUND, null, 'No employees found');
         }
+        
         return sendResponse(res, httpStatus.OK, null, 'Added successfully');
     } catch (error) {
         console.error(error);
