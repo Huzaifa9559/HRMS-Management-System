@@ -201,19 +201,14 @@ export default function EmployeeList() {
     }
 
     return (
-        <div
-            className="container-fluid"
-            style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}
-        >
-            <div className="row">
-                <div className="col-md-2 p-0 d-none d-md-block">
-                    <SideMenu />
-                </div>
+     
+        <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
+        <SideMenu />
+        <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+        <div className="col-md-10 p-4">
+             <Header title="Organization Management" />
 
-                <div className="col-md-10 p-4">
-                    <Header title="Organization Management" />
-
-<div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="d-flex justify-content-between align-items-center mb-4">
     <div className="d-flex flex-wrap">
         {/* Search and Filters */}
         <InputGroup className="me-2 mb-2" style={{ width: '250px' }}>
