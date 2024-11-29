@@ -201,84 +201,88 @@ export default function EmployeeList() {
     }
 
     return (
-     
         <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
         <SideMenu />
-        <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
-        <div className="col-md-10 p-4">
-             <Header title="Organization Management" />
-
-    <div className="d-flex justify-content-between align-items-center mb-4">
-    <div className="d-flex flex-wrap">
-        {/* Search and Filters */}
-        <InputGroup className="me-2 mb-2" style={{ width: '250px' }}>
-            <InputGroup.Text className="bg-white border-end-0">
-                <FaSearch color="#6c757d" />
-            </InputGroup.Text>
-            <FormControl
-                placeholder="Search Employee"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="border-start-0"
-            />
-        </InputGroup>
-
-        <Dropdown className="me-2 mb-2">
-            <Dropdown.Toggle variant="outline-secondary">
-                {selectedDepartment || 'Select by Department'}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-                <Dropdown.Item onClick={() => setSelectedDepartment('')}>
-                    All Departments
-                </Dropdown.Item>
-                {departments.map((department, index) => (
-                    <Dropdown.Item
-                        key={index}
-                        onClick={() =>
-                            setSelectedDepartment(department.department_name)
-                        }
-                    >
-                        {department.department_name}
-                    </Dropdown.Item>
-                ))}
-            </Dropdown.Menu>
-        </Dropdown>
-
-        <Dropdown className="me-2 mb-2">
-            <Dropdown.Toggle variant="outline-secondary">
-                {selectedDesignation || 'Select by Designation'}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-                <Dropdown.Item onClick={() => setSelectedDesignation('')}>
-                    All Designations
-                </Dropdown.Item>
-                {designations.map((designation, index) => (
-                    <Dropdown.Item
-                        key={index}
-                        onClick={() =>
-                            setSelectedDesignation(designation.designation_name)
-                        }
-                    >
-                        {designation.designation_name}
-                    </Dropdown.Item>
-                ))}
-            </Dropdown.Menu>
-        </Dropdown>
-    </div>
-
-    {/* Action Buttons */}
-    <div>
-        <Button
-            variant="success"
-            className="me-2"
-            onClick={() => navigate('/admin/add-new-employee')}
-        >
-            Add New Employee
-        </Button>
-    </div>
-</div>
-
-
+    
+            {/* Main Content Area */}
+            <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+                <Header title="Organization Management" />
+    
+                <main style={{ padding: '20px' }}>
+                    {/* Search and Filters Section */}
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <div className="d-flex flex-wrap">
+                            {/* Search Input */}
+                            <InputGroup className="me-2 mb-2" style={{ width: '250px' }}>
+                                <InputGroup.Text className="bg-white border-end-0">
+                                    <FaSearch color="#6c757d" />
+                                </InputGroup.Text>
+                                <FormControl
+                                    placeholder="Search Employee"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="border-start-0"
+                                />
+                            </InputGroup>
+    
+                            {/* Department Dropdown */}
+                            <Dropdown className="me-2 mb-2">
+                                <Dropdown.Toggle variant="outline-secondary">
+                                    {selectedDepartment || 'Select by Department'}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                    <Dropdown.Item onClick={() => setSelectedDepartment('')}>
+                                        All Departments
+                                    </Dropdown.Item>
+                                    {departments.map((department, index) => (
+                                        <Dropdown.Item
+                                            key={index}
+                                            onClick={() =>
+                                                setSelectedDepartment(department.department_name)
+                                            }
+                                        >
+                                            {department.department_name}
+                                        </Dropdown.Item>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
+    
+                            {/* Designation Dropdown */}
+                            <Dropdown className="me-2 mb-2">
+                                <Dropdown.Toggle variant="outline-secondary">
+                                    {selectedDesignation || 'Select by Designation'}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                    <Dropdown.Item onClick={() => setSelectedDesignation('')}>
+                                        All Designations
+                                    </Dropdown.Item>
+                                    {designations.map((designation, index) => (
+                                        <Dropdown.Item
+                                            key={index}
+                                            onClick={() =>
+                                                setSelectedDesignation(designation.designation_name)
+                                            }
+                                        >
+                                            {designation.designation_name}
+                                        </Dropdown.Item>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+    
+                        {/* Action Buttons */}
+                        <div>
+                            <Button
+                                variant="success"
+                                className="me-2"
+                                onClick={() => navigate('/admin/add-new-employee')}
+                            >
+                                Add New Employee
+                            </Button>
+                        </div>
+                    </div>
+    
+                    {/* Employee Table */}
                     <Table responsive hover>
                         <thead>
                             <tr>
@@ -299,9 +303,8 @@ export default function EmployeeList() {
                                     <td>{employee.designation}</td>
                                     <td>
                                         <Dropdown>
-                                            <Dropdown.Toggle variant="outline-secondary"  style={{ color: employee.status === 1 ? 'green' : 'red' }}>
-                                                
-                                                {employee.status===1?'Active':'Disabled'}
+                                            <Dropdown.Toggle variant="outline-secondary" style={{ color: employee.status === 1 ? 'green' : 'red' }}>
+                                                {employee.status === 1 ? 'Active' : 'Disabled'}
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
                                                 <Dropdown.Item
@@ -343,7 +346,8 @@ export default function EmployeeList() {
                             ))}
                         </tbody>
                     </Table>
-
+    
+                    {/* Pagination Controls */}
                     <div className="d-flex justify-content-between">
                         <button
                             className="btn btn-secondary"
@@ -363,7 +367,7 @@ export default function EmployeeList() {
                             Next
                         </button>
                     </div>
-
+    
                     {/* Invite Employee Modal */}
                     <Modal show={showInviteForm} onHide={handleCloseInvite}>
                         <Modal.Header closeButton>
@@ -389,7 +393,7 @@ export default function EmployeeList() {
                             </form>
                         </Modal.Body>
                     </Modal>
-
+    
                     {/* Employee Details Modal */}
                     <Modal show={showEmployeeDetails} onHide={() => setShowEmployeeDetails(false)}>
                         <Modal.Header closeButton>
@@ -402,20 +406,14 @@ export default function EmployeeList() {
                                     <p>Email: {employeeDetails.email}</p>
                                     <p>Department: {employeeDetails.department}</p>
                                     <p>Designation: {employeeDetails.designation}</p>
-                                    <p>Status: {employeeDetails.status===1? 'Active':'Disabled'}</p>
+                                    <p>Status: {employeeDetails.status === 1 ? 'Active' : 'Disabled'}</p>
                                 </>
                             )}
                         </Modal.Body>
                     </Modal>
-
-                 {/* Edit Employee Modal */}
-
-        
-
-
-                </div>
+                </main>
             </div>
-            <ToastContainer />
         </div>
     );
+    
 }
