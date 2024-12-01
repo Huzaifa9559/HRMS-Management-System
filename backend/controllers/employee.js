@@ -3,6 +3,7 @@ const { getUser } = require('../service/auth'); // Import setUser function
 const sendResponse = require('../utils/responseUtil');
 const httpStatus = require('../utils/httpStatus');
 const { extractToken } = require('../utils/authUtil');
+const { sendCreateAccountLink } = require('../service/emailService');
 
 exports.EmployeeDetailsById = async (req, res) => {
     const token = extractToken(req, res); // Use the utility function
@@ -114,8 +115,8 @@ exports.addEmployee = async (req, res) => {
     try {
         const file = req.file;
         const employees = await Employee.createNewEmployee(req.body,file.filename); 
-         //sath me invite link bhi bhejna employee ku yaha 
-        //await sendCreateAccountLink(email);
+        //sath me invite link bhi bhejna employee ku yaha 
+        await sendCreateAccountLink(req.body.email,req.body.password);
 
         if (!employees || employees.length === 0) {
             return sendResponse(res, httpStatus.NOT_FOUND, null, 'No employees found');

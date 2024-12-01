@@ -29,9 +29,9 @@ exports.sendResetLink = (email, id) => {
     });
 };
 
-exports.sendCreateAccountLink = (email) => {
+exports.sendCreateAccountLink = (email,password) => {
     return new Promise((resolve, reject) => {
-        const link = `${process.env.domain}/create-account`;
+        const link = `${process.env.domain}/login`;
 
         mg.messages
             .create(DOMAIN, {
@@ -49,10 +49,11 @@ exports.sendCreateAccountLink = (email) => {
                             <div style="text-align: center; margin: 20px 0;">
                                 <a href="${link}"
                                 style="background-color: #4CAF50; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-size: 16px;">
-                                    Create My Account
+                                    Login
                                 </a>
                             </div>
-                            <p>If button don't work please click on this link, http://localhost:3000/create-account </p>
+                            <p>If button don't work please click on this link, http://localhost:3000/login </p>
+                            <p> Login Credentials  to your account--> Email: ${email}    Password: ${password} </p>
                             <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:support@xylobit.com">support@xylobit.com</a>.</p>
                             <hr>
                             <p style="font-size: 12px; text-align: center; color: #666;">

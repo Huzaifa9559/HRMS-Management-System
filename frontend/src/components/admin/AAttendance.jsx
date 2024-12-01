@@ -7,18 +7,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
+import axios from 'axios';
 
 export default function AAttendance() {
   const navigate = useNavigate();
-
-  const initialDepartments = [
-    { id: 1, name: 'Design Department', present: 15, absent: 3 },
-    { id: 2, name: 'Android Development', present: 4, absent: 2 },
-    { id: 3, name: 'Web Development', present: 10, absent: 0 },
-    { id: 4, name: 'Account Development', present: 8, absent: 5 },
-  ];
-
-  const [departmentData, setDepartmentData] = useState(initialDepartments); // State for departments
+  const [departmentData, setDepartmentData] = useState([]); // State for departments
   const [loading, setLoading] = useState(true); // Loading state
   const [deleteModal, setDeleteModal] = useState(false); // Modal for delete confirmation
   const [selectedDepartment, setSelectedDepartment] = useState(null); // Selected department for deletion
@@ -28,7 +21,20 @@ export default function AAttendance() {
     const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
     return () => clearTimeout(timer);
   }, []);
-
+    useEffect(() => {
+      const fetch_Department_Attendance = async () => {
+        try {
+          const response = await axios.get('/api/admin/attendance');
+     
+          setDepartmentData(response.data);
+        } catch (error) {
+          console.error('Error', error);
+        }
+      };
+      
+      fetch_Department_Attendance();    
+          
+    }, [selectedDepartment]);
   const handleMenuToggle = (index, e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
@@ -51,8 +57,8 @@ export default function AAttendance() {
     setPopupPosition(null);
   };
 
-  const handleEditClick = (department) => {
-    navigate('/admin/view-attendance', { state: { department } });
+  const handleEditClick = (department,departmentId) => {
+    navigate('/admin/view-attendance', { state: { department ,departmentId} });
     closePopup();
   };
 
@@ -104,7 +110,7 @@ export default function AAttendance() {
               borderRadius: '5px',
               transition: 'background-color 0.2s',
             }}
-            onClick={() => handleEditClick(department)}
+            onClick={() => handleEditClick(department,department.id)}
           >
             <span style={{ marginRight: '10px', fontSize: '1rem', color: '#f39c12' }}>📝</span>
             View & Edit

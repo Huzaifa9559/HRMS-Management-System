@@ -81,6 +81,24 @@ Employee.getAllEmployees = async function () {
         throw error; // Rethrow the error to be handled in the controller
     }
 };
+Employee.findEmployeeByField = async function (field, value) {
+    const query = `
+    SELECT * FROM Employee
+    WHERE ${field} = ?;
+    `;
+
+    try {
+        const [row] = await sequelize.query(query, {
+            replacements: [value],
+            type: Sequelize.QueryTypes.SELECT
+        });
+
+        return row;  // Return employee details if found
+    } catch (error) {
+        console.error('Error finding employee by field:', error);
+        throw error;  // Rethrow the error to be handled in the controller
+    }
+};
 
 Employee.updateEmployeeStatus=async function (id) {
     const query = `

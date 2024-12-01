@@ -55,25 +55,24 @@ root.render(
           <Route path="/set-new-password" element={<SetNewPassword />} />
           <Route path="/admin/login" element={<Login />} />
 
-          {/*Admin Protected Route*/}
-          {/*<Route path="/admin_main_dashboard" element={<PrivateRoute element={<Dashboard />} requiredRole="admin" />} />*/}
-          <Route path="/admin/dashboard" element={<ADashboard />} />
-          <Route path="/admin/organization/employee-list" element={<EmployeeList />} />
-          <Route path="/admin/organization/departments" element={<Departments />} />
-          <Route path="/admin/organization/view-departments/:id" element={<ViewDepartments />} />
-          <Route path="/admin/attendance" element={<AAttendance />} />
-          <Route path="/admin/view-attendance" element={<ViewAttendance />} />
-          <Route path="/admin/view-employee-attendance" element={<VEmpAttendance />} />
-          <Route path="/admin/create-announcements" element={<CreateAnnouncements />} />
-          <Route path="/admin/announcements" element={<AAnnouncements />} />
-          <Route path="/admin/documents/upload-document" element={<CreateNewDoc />} />
-          <Route path="/admin/documents/all-received" element={<ADocuments />} />
-          <Route path="/admin/leave" element={<ALeave />} />
-          <Route path="/admin/view-employee-leave/:leaveID/:employeeId" element={<VEmpLeave />} />
-          <Route path="/admin/edit-employee-account/:employeeId" element={<EditEmpAccount />} /> 
-          <Route path="/admin/workschedule" element={<AWorkSchedule />} /> 
-          <Route path="/admin/add-new-employee" element={<AddNewEmployee />} />
-          <Route path="/admin/all-payslips" element={<AllPayslips />} />
+          {/* Admin Protected Routes */}
+          <Route path="/admin/dashboard" element={<PrivateRoute element={<ADashboard />} requiredRole="admin" />} />
+          <Route path="/admin/organization/employee-list" element={<PrivateRoute element={<EmployeeList />} requiredRole="admin" />} />
+          <Route path="/admin/organization/departments" element={<PrivateRoute element={<Departments />} requiredRole="admin" />} />
+          <Route path="/admin/organization/view-departments/:id" element={<PrivateRoute element={<ViewDepartments />} requiredRole="admin" />} />
+          <Route path="/admin/attendance" element={<PrivateRoute element={<AAttendance />} requiredRole="admin" />} />
+          <Route path="/admin/view-attendance" element={<PrivateRoute element={<ViewAttendance />} requiredRole="admin" />} />
+          <Route path="/admin/view-employee-attendance" element={<PrivateRoute element={<VEmpAttendance />} requiredRole="admin" />} />
+          <Route path="/admin/create-announcements" element={<PrivateRoute element={<CreateAnnouncements />} requiredRole="admin" />} />
+          <Route path="/admin/announcements" element={<PrivateRoute element={<AAnnouncements />} requiredRole="admin" />} />
+          <Route path="/admin/documents/upload-document" element={<PrivateRoute element={<CreateNewDoc />} requiredRole="admin" />} />
+          <Route path="/admin/documents/all-received" element={<PrivateRoute element={<ADocuments />} requiredRole="admin" />} />
+          <Route path="/admin/leave" element={<PrivateRoute element={<ALeave />} requiredRole="admin" />} />
+          <Route path="/admin/view-employee-leave/:leaveID/:employeeId" element={<PrivateRoute element={<VEmpLeave />} requiredRole="admin" />} />
+          <Route path="/admin/edit-employee-account/:employeeId" element={<PrivateRoute element={<EditEmpAccount />} requiredRole="admin" />} />
+          <Route path="/admin/workschedule" element={<PrivateRoute element={<AWorkSchedule />} requiredRole="admin" />} />
+          <Route path="/admin/add-new-employee" element={<PrivateRoute element={<AddNewEmployee />} requiredRole="admin" />} />
+          <Route path="/admin/all-payslips" element={<PrivateRoute element={<AllPayslips />} requiredRole="admin" />} />
           
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />

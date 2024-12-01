@@ -6,31 +6,52 @@ import { BiChevronLeft } from 'react-icons/bi';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../Loader';
+import axios from 'axios';
 
 const ViewAttendance = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Fallback for department if undefined
-  const department = location.state?.department || { name: 'Unknown', present: 0, absent: 0 };
-  const [loading, setLoading] = useState(true); // Loading state
+  const { department, departmentId } = location.state;
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
-    return () => clearTimeout(timer);
-}, []);
+  const [employees, setEmployees] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 5;
 
-  const employees = [
-    { id: 'EM13464', name: 'Nolan Press', designation: 'Product Design', status: 'Present' },
-    { id: 'EM13465', name: 'Cristofer Stanton', designation: 'Graphic Designer', status: 'Absent' },
-    { id: 'EM13466', name: 'Davis Aminoff', designation: 'UI/UX Design', status: 'Present' },
-    { id: 'EM13467', name: 'James Lubin', designation: 'Advertising Designer', status: 'Present' },
-  ];
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1250);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchDepartmentAttendance = async () => {
+      try {
+        const response = await axios.get(`/api/admin/attendance/view-attendance/${departmentId}`);
+        setEmployees(response.data.data[0]);
+      } catch (error) {
+        console.error('Error fetching department attendance:', error);
+      }
+    };
+
+    fetchDepartmentAttendance();
+  }, [departmentId]);
 
   const filteredEmployees = employees.filter((employee) =>
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase())
+    employee.employeeName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredEmployees.length / recordsPerPage);
+
+  const paginate = (employees, page) => {
+    const startIndex = (page - 1) * recordsPerPage;
+    return employees.slice(startIndex, startIndex + recordsPerPage);
+  };
+
+  const displayedEmployees = paginate(filteredEmployees, currentPage);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
 
   const styles = {
     header: {
@@ -79,24 +100,37 @@ const ViewAttendance = () => {
       border: '1px solid #ddd',
       textAlign: 'left',
     },
-    presentText: {
-      color: '#28a745',
-    },
-    absentText: {
-      color: '#e74c3c',
-    },
-    rowHover: {
+    button: {
+      backgroundColor: '#007bff',
+      color: '#ffffff',
+      border: 'none',
+      padding: '8px 12px',
+      borderRadius: '4px',
       cursor: 'pointer',
-      transition: 'background-color 0.2s',
     },
-    rowHoverActive: {
-      backgroundColor: '#f1f1f1',
+    pagination: {
+      display: 'flex',
+      justifyContent: 'center',
+      marginTop: '20px',
+    },
+    pageButton: {
+      margin: '0 5px',
+      padding: '5px 10px',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      backgroundColor: '#ffffff',
+    },
+    activePageButton: {
+      backgroundColor: '#007bff',
+      color: '#ffffff',
+      border: '1px solid #007bff',
     },
   };
 
   if (loading) {
     return <Loader />;
-}
+  }
 
   return (
     <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
@@ -108,7 +142,7 @@ const ViewAttendance = () => {
             <h4 style={styles.title}>{department.name}</h4>
             <button
               style={styles.backButton}
-              onClick={() => navigate('/admin/attendance')} // Redirect to /admin/attendance
+              onClick={() => navigate('/admin/attendance')}
             >
               <BiChevronLeft size={20} color="#ffffff" />
               Back
@@ -133,35 +167,53 @@ const ViewAttendance = () => {
                 <th style={styles.th}>Employee ID</th>
                 <th style={styles.th}>Employee</th>
                 <th style={styles.th}>Designation</th>
-                <th style={styles.th}>Status</th>
+                <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.map((employee, index) => (
-                <tr
-                  key={index}
-                  style={styles.rowHover}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = styles.rowHoverActive.backgroundColor)}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
-                >
-                  <td style={styles.td}>{employee.id}</td>
-                  <td style={styles.td}>{employee.name}</td>
+              {displayedEmployees.map((employee, index) => (
+                <tr key={index}>
+                  <td style={styles.td}>{employee.employeeId}</td>
+                  <td style={styles.td}>{employee.employeeName}</td>
                   <td style={styles.td}>{employee.designation}</td>
                   <td style={styles.td}>
-                    <span
-                      style={
-                        employee.status === 'Present'
-                          ? styles.presentText
-                          : styles.absentText
-                      }
+                    <button
+                      style={styles.button}
+                      onClick={() => navigate('/admin/view-employee-attendance', { state: { employeeId: employee.employeeId } })}
                     >
-                      {employee.status}
-                    </span>
+                      Show Details
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          <div style={styles.pagination}>
+            <button
+              style={currentPage === 1 ? { ...styles.pageButton, cursor: 'not-allowed', opacity: 0.6 } : styles.pageButton}
+              onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index}
+                style={currentPage === index + 1 ? { ...styles.pageButton, ...styles.activePageButton } : styles.pageButton}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              style={currentPage === totalPages ? { ...styles.pageButton, cursor: 'not-allowed', opacity: 0.6 } : styles.pageButton}
+              onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

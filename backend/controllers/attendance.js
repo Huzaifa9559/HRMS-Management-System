@@ -86,3 +86,97 @@ exports.getEmployeeAttendanceRecord = async (req, res) => {
         return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching attendance record', error.message);
     }
 };
+
+
+exports.Attendance_Main_Dashboard = async (req, res) => {
+    try {
+            const attendanceSummary = await Attendance.Attendance_Dashboard();
+
+        if (attendanceSummary.length === 0) {
+            return res.status(404).json({ message: 'No attendance data found' });
+        }
+
+      // Return the formatted data
+        const formattedData = attendanceSummary.map((record) => ({
+        id: record.departmentId,
+        name: record.departmentName,
+        present: record.presentCount || 0,
+        absent: record.absentCount || 0,
+    }));
+
+        res.status(200).json(formattedData);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.viewAttendance = async (req, res) => {
+    const departmentId = req.params.departmentId; 
+    if (!departmentId) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Department ID is required');
+    }
+
+    try {
+        // Fetch attendance records for the specific department
+        const employeeAttendanceRecords = await Attendance.getAttendanceByDepartmentId(departmentId);
+
+        if (!employeeAttendanceRecords || employeeAttendanceRecords.length === 0) {
+            return sendResponse(
+                res,
+                httpStatus.NOT_FOUND,
+                null,
+                'No attendance records found for this department'
+            );
+        }
+
+        // Format the response data
+        // const formattedData = employeeAttendanceRecords.map((record) => ({
+        //     employeeId: record.employeeId,
+        //     employeeName: record.employeeName,
+        //     designation: record.designation,
+        //     status: record.status,
+            
+        // }));
+        // console.log(employeeAttendanceRecords);
+        return sendResponse(res,httpStatus.OK,employeeAttendanceRecords,
+            'Employee attendance records retrieved successfully'
+        );
+    } catch (error) {
+        console.error('Error fetching attendance records for department:', error);
+        return sendResponse(
+            res,
+            httpStatus.INTERNAL_SERVER_ERROR,
+            null,
+            'Error fetching attendance records',
+            error.message
+        );
+    }
+};
+
+exports.viewEmployeeAttendanceRecords = async (req, res) => {
+    const id = req.params.employeeId;
+    try {
+        const attendanceRecords = await Attendance.getAttendanceByEmployeeId(id); // Fetch attendance records
+        if (!attendanceRecords || attendanceRecords.length === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'No attendance records found for this Attendance');
+        }
+        return sendResponse(res, httpStatus.OK, attendanceRecords, 'Attendance records retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching attendance records:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching attendance records', error.message);
+    }
+};
+
+exports.viewAttendanceStats = async (req, res) => {
+     const id = req.params.employeeId;
+    try {
+        const attendanceRecords = await Attendance.getAttendanceStats(id); // Fetch attendance records
+        if (!attendanceRecords || attendanceRecords.length === 0) {
+            return sendResponse(res, httpStatus.NOT_FOUND, null, 'No attendance records found for this Attendance');
+        }
+        return sendResponse(res, httpStatus.OK, attendanceRecords, 'Attendance records retrieved successfully');
+    } catch (error) {
+        console.error('Error fetching attendance records:', error);
+        return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error fetching attendance records', error.message);
+    }
+};

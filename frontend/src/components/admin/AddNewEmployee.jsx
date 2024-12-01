@@ -202,6 +202,24 @@ const handleSubmit = async (e) => {
     await axios.post('/api/admin/employee/create', employeeDetails,
       { headers: { 'Content-Type': 'multipart/form-data' } });
     toast.success('New employee added successfully.');
+    // Clear all fields after successful submission
+    setEmployeeDetails({
+       email: '',
+    password: '',
+    dob: '',
+    phone: '',
+    department_name: '',
+    designation_name: '',
+    street_address: '',
+    city: '',
+    state: '',
+    country: '',
+    zipCode: '',
+    status: 1,
+    file: null,
+    phoneNumber: '',// or '' if you're using a file input
+    });
+    
   } catch (error) {
     toast.error('Failed to add new employee.');
   }

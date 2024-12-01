@@ -1,54 +1,110 @@
 import React, { useState } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Modal, Button, Form, Col, Row } from 'react-bootstrap';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const CreateScheduleModal = ({ show, onHide, onSave }) => {
   const [newSchedule, setNewSchedule] = useState({
-    name: '',
-    role: '',
-    department: '',
-    image: '',
+    employeeId: '',
     months: [],
-    schedule: [
-      { day: "Mon", time: "", location: "" },
-      { day: "Tue", time: "", location: "" },
-      { day: "Wed", time: "", location: "" },
-      { day: "Thu", time: "", location: "" },
-      { day: "Fri", time: "", location: "" },
-      { day: "Sat", time: "", location: "" },
-    ]
+    schedule: [],
   });
 
+  // Handle input change for fields like employeeId
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewSchedule({ ...newSchedule, [name]: value });
+    setNewSchedule((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
+  // Handle month selection
+  const handleMonthChange = (e) => {
+    const value = Array.from(e.target.selectedOptions, (option) => option.value);
+    setNewSchedule((prevState) => ({
+      ...prevState,
+      months: value,
+    }));
+  };
+
+  // Handle adding a new schedule entry (day, time, location)
+  const handleAddSchedule = () => {
+    setNewSchedule((prevState) => ({
+      ...prevState,
+      schedule: [...prevState.schedule, { day: '', time: '', location: '' }],
+    }));
+  };
+
+  // Handle removing a schedule entry
+  const handleRemoveSchedule = (index) => {
+    const updatedSchedule = [...newSchedule.schedule];
+    updatedSchedule.splice(index, 1);
+    setNewSchedule((prevState) => ({
+      ...prevState,
+      schedule: updatedSchedule,
+    }));
+  };
+
+  // Handle schedule change for each day
   const handleScheduleChange = (index, field, value) => {
     const updatedSchedule = [...newSchedule.schedule];
     updatedSchedule[index][field] = value;
-    setNewSchedule({ ...newSchedule, schedule: updatedSchedule });
+    setNewSchedule((prevState) => ({
+      ...prevState,
+      schedule: updatedSchedule,
+    }));
   };
 
-  const handleMonthChange = (e) => {
-    const value = Array.from(e.target.selectedOptions, option => option.value);
-    setNewSchedule({ ...newSchedule, months: value });
-  };
+  // Handle form submission
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewSchedule({ ...newSchedule, image: reader.result });
+  // Validate input
+  if (!newSchedule.employeeId || newSchedule.months.length === 0 || newSchedule.schedule.length === 0) {
+    toast.error('Please fill in all required fields.');
+    return;
+  }
+
+  // Format the time to the standard format (e.g., "HH:mm") before sending
+  const formattedSchedule = newSchedule.schedule.map((day) => {
+    const { time } = day;
+    
+    if (time) {
+      // Normalize the time input (remove any spaces around the hyphen)
+      const normalizedTime = time.replace(/\s*-\s*/, '-'); // Replaces spaces around the hyphen
+      
+      const [startTime, endTime] = normalizedTime.split('-'); // Split based on the hyphen
+
+      // Function to ensure proper time format (HH:mm)
+      const formatTime = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':');
+        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
       };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(newSchedule);
-  };
+      return {
+        ...day,
+        time: `${formatTime(startTime)} - ${formatTime(endTime)}`,
+      };
+    }
+
+    return day;
+  });
+
+  // Update the schedule with formatted times
+  const updatedSchedule = { ...newSchedule, schedule: formattedSchedule };
+
+  try {
+    await axios.post('/api/admin/work-schedule', updatedSchedule);
+    onSave(updatedSchedule); // Pass data back to parent component if needed
+    onHide(); // Close the modal
+  } catch (error) {
+    console.error('Error creating schedule:', error);
+    toast.error("Schedule already exists or error creating new work schedule");
+  }
+};
+
+
 
   return (
     <Modal show={show} onHide={onHide} size="lg">
@@ -57,50 +113,21 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Employee Name</Form.Label>
-            <Form.Control
-              type="text"
-              name="name"
-              value={newSchedule.name}
-              onChange={handleInputChange}
-              required
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Role</Form.Label>
-            <Form.Control
-              type="text"
-              name="role"
-              value={newSchedule.role}
-              onChange={handleInputChange}
-              required
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Department</Form.Label>
-            <Form.Control
-              as="select"
-              name="department"
-              value={newSchedule.department}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Select department</option>
-              <option value="Design">Design</option>
-              <option value="Development">Development</option>
-              <option value="Marketing">Marketing</option>
-            </Form.Control>
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Employee Image</Form.Label>
-            <Form.Control
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              required
-            />
-          </Form.Group>
+          {/* Employee Information */}
+          <Row className="mb-3">
+            <Form.Group as={Col} controlId="formEmployeeId">
+              <Form.Label>Employee ID</Form.Label>
+              <Form.Control
+                type="text"
+                name="employeeId"
+                value={newSchedule.employeeId}
+                onChange={handleInputChange}
+                required
+              />
+            </Form.Group>
+          </Row>
+
+          {/* Month Selection */}
           <Form.Group className="mb-3">
             <Form.Label>Applicable Months</Form.Label>
             <Form.Control
@@ -111,7 +138,6 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
               onChange={handleMonthChange}
               required
             >
-              <option value="All">All Months</option>
               <option value="January">January</option>
               <option value="February">February</option>
               <option value="March">March</option>
@@ -129,34 +155,72 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
               Hold Ctrl (Windows) or Command (Mac) to select multiple months
             </Form.Text>
           </Form.Group>
-          {newSchedule.schedule.map((day, index) => (
-            <div key={day.day} className="mb-3">
-              <h6>{day.day}</h6>
-              <Form.Group>
-                <Form.Label>Time</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="e.g., 9:00 - 18:00"
-                  value={day.time}
-                  onChange={(e) => handleScheduleChange(index, 'time', e.target.value)}
-                  required
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Location</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={day.location}
-                  onChange={(e) => handleScheduleChange(index, 'location', e.target.value)}
-                  required
-                >
-                  <option value="">Select location</option>
-                  <option value="Office">Office</option>
-                  <option value="Work from home">Work from home</option>
-                </Form.Control>
-              </Form.Group>
+
+          {/* Schedule Inputs */}
+          {newSchedule.schedule.map((entry, index) => (
+            <div key={index} className="mb-3">
+              <Row>
+                <Form.Group as={Col} controlId={`formDay${index}`} className="mb-3">
+                  <Form.Label>Day</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={entry.day}
+                    onChange={(e) => handleScheduleChange(index, 'day', e.target.value)}
+                    required
+                  >
+                    <option value="">Select Day</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                  </Form.Control>
+                </Form.Group>
+
+                <Form.Group as={Col} controlId={`formScheduleTime${index}`} className="mb-3">
+                  <Form.Label>Time</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="e.g., 9:00 - 18:00"
+                    value={entry.time}
+                    onChange={(e) => handleScheduleChange(index, 'time', e.target.value)}
+                    required
+                  />
+                </Form.Group>
+
+                <Form.Group as={Col} controlId={`formScheduleLocation${index}`} className="mb-3">
+                  <Form.Label>Location</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={entry.location}
+                    onChange={(e) => handleScheduleChange(index, 'location', e.target.value)}
+                    required
+                  >
+                    <option value="">Select location</option>
+                    <option value="Onsite">Onsite</option>
+                    <option value="Remote">Remote</option>
+                  </Form.Control>
+                </Form.Group>
+
+                <Col className="d-flex align-items-end">
+                  <Button
+                    variant="danger"
+                    onClick={() => handleRemoveSchedule(index)}
+                    disabled={newSchedule.schedule.length === 1}
+                  >
+                    Remove Day
+                  </Button>
+                </Col>
+              </Row>
             </div>
           ))}
+
+          <Button variant="secondary" onClick={handleAddSchedule}>
+            Add Another Day
+          </Button>
+
           <div className="mt-4">
             <Button variant="primary" type="submit">
               Create Schedule

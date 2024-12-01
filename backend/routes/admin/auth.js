@@ -6,7 +6,6 @@ const {inviteNewEmployee } = require('../../controllers/auth');
 
 
 auth.post('/login', loginAdmin);
-auth.post('/invite-new-employee', inviteNewEmployee);
 
 
 module.exports = auth;

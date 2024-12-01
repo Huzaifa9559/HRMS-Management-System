@@ -7,122 +7,57 @@ import 'react-toastify/dist/ReactToastify.css';
 import Loader from '../Loader';
 import { PlusCircle } from 'react-bootstrap-icons';
 import CreateScheduleModal from './CreateScheduleModal';
+import axios from 'axios';
+
+const backendURL = process.env.REACT_APP_BACKEND_URL;
 
 const WorkSchedule = () => {
-  const [scheduleData, setScheduleData] = useState([
-    {
-        id: 1,
-        name: "Allah Ditta",
-        role: "UI/UX Designer",
-        department: "Design",
-        image: 'https://i.pinimg.com/originals/01/f7/29/01f72913cc3ca15094bdb505b4a55dfe.jpg',
-        months: "All", // This employee's schedule applies to all months
-        schedule: [
-          { day: "Mon", time: "9:00 - 18:00", location: "Office" },
-          { day: "Tue", time: "9:00 - 18:00", location: "Work from home" },
-          { day: "Wed", time: "9:00 - 18:00", location: "Office" },
-          { day: "Thu", time: "9:00 - 18:00", location: "Work from home" },
-          { day: "Fri", time: "9:00 - 18:00", location: "Office" },
-          { day: "Sat", time: "9:00 - 18:00", location: "Work from home" },
-        ]
-      },
-      {
-        id: 2,
-        name: "Dildar Hussain",
-        role: "Frontend Developer",
-        department: "Development",
-        image: 'https://tse3.mm.bing.net/th?id=OIP.GqlTASML6WlXY-sp0vab7QHaHa&pid=Api&P=0&h=220',
-        months: ["June"], // Schedule specific to June
-        schedule: [
-          { day: "Mon", time: "10:00 - 19:00", location: "Office" },
-          { day: "Tue", time: "10:00 - 19:00", location: "Work from home" },
-          { day: "Wed", time: "10:00 - 19:00", location: "Office" },
-          { day: "Thu", time: "10:00 - 19:00", location: "Work from home" },
-          { day: "Fri", time: "10:00 - 19:00", location: "Office" },
-          { day: "Sat", time: "10:00 - 19:00", location: "Work from home" },
-        ]
-      },
-      {
-        id: 3,
-        name: "Ghulam Nabibaksh",
-        role: "Backend Developer",
-        department: "Development",
-        image: 'https://tse2.mm.bing.net/th?id=OIP.2sbd_31J0jrz0QuxmV7W3wHaKt&pid=Api&P=0&h=220',
-        months: "All", // Schedule applies to all months
-        schedule: [
-          { day: "Mon", time: "9:00 - 18:00", location: "Work from home" },
-          { day: "Tue", time: "9:00 - 18:00", location: "Office" },
-          { day: "Wed", time: "9:00 - 18:00", location: "Office" },
-          { day: "Thu", time: "9:00 - 18:00", location: "Work from home" },
-          { day: "Fri", time: "9:00 - 18:00", location: "Office" },
-          { day: "Sat", time: "9:00 - 18:00", location: "Work from home" },
-        ]
-      },
-      {
-        id: 4,
-        name: "Alice Chandio",
-        role: "Marketing Specialist",
-        department: "Marketing",
-        image: 'https://tse4.mm.bing.net/th?id=OIP.N_3IEEiprvNN-ZZQCdbZ1gAAAA&pid=Api&P=0&h=220',
-        months: ["April", "May"], // Specific to April and May
-        schedule: [
-          { day: "Mon", time: "8:00 - 17:00", location: "Office" },
-          { day: "Tue", time: "8:00 - 17:00", location: "Office" },
-          { day: "Wed", time: "8:00 - 17:00", location: "Office" },
-          { day: "Thu", time: "8:00 - 17:00", location: "Work from home" },
-          { day: "Fri", time: "8:00 - 17:00", location: "Work from home" },
-          { day: "Sat", time: "8:00 - 17:00", location: "Work from home" },
-        ]
-      },
-      {
-        id: 5,
-        name: "Rayyan Stokes",
-        role: "Content Creator",
-        department: "Marketing",
-        image: 'https://image.shutterstock.com/image-photo/average-looking-young-adult-smiles-260nw-51397285.jpg',
-        months: ["June", "July"], // Specific to June and July
-        schedule: [
-          { day: "Mon", time: "9:00 - 18:00", location: "Office" },
-          { day: "Tue", time: "9:00 - 18:00", location: "Work from home" },
-          { day: "Wed", time: "9:00 - 18:00", location: "Office" },
-          { day: "Thu", time: "9:00 - 18:00", location: "Work from home" },
-          { day: "Fri", time: "9:00 - 18:00", location: "Office" },
-          { day: "Sat", time: "9:00 - 18:00", location: "Work from home" },
-        ]
-      },
-      {
-        id: 6,
-        name: "Alyssa Rana",
-        role: "Project Manager",
-        department: "Design",
-        image: 'https://tse1.mm.bing.net/th?id=OIP.89SMvpiHE4bD4o3cmriGMwHaEc&pid=Api&P=0&h=220',
-        months: "All", // Applies to all months
-        schedule: [
-          { day: "Mon", time: "10:00 - 19:00", location: "Office" },
-          { day: "Tue", time: "10:00 - 19:00", location: "Work from home" },
-          { day: "Wed", time: "10:00 - 19:00", location: "Office" },
-          { day: "Thu", time: "10:00 - 19:00", location: "Work from home" },
-          { day: "Fri", time: "10:00 - 19:00", location: "Office" },
-          { day: "Sat", time: "10:00 - 19:00", location: "Work from home" },
-        ]
-      }
-    ]);
-
+  const [scheduleData, setScheduleData] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
   const [selectedMonth, setSelectedMonth] = useState('All Months');
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editedSchedule, setEditedSchedule] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
- 
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
     return () => clearTimeout(timer);
   }, []);
-    
 
-  const departments = ['All Departments', 'Design', 'Development', 'Marketing'];
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get(`/api/admin/department`);
+        setDepartments(response.data.data);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        toast.error('Error fetching departments.');
+      }
+    };
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      if (selectedMonth === 'All Months') {
+        setScheduleData([]); // Clear schedule data if "All Months" is selected
+        return;
+      }
+      try {
+        const response = await axios.get(`/api/admin/work-schedule/${selectedMonth}`);
+        setScheduleData(response.data.data);
+      } catch (error) {
+        console.error('Error fetching schedule data:', error);
+        toast.error('Error fetching schedule data.');
+      }
+    };
+
+    fetchScheduleData();
+  }, [selectedMonth]);
+
   const months = [
     'All Months',
     'January',
@@ -138,18 +73,13 @@ const WorkSchedule = () => {
     'November',
     'December',
   ];
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const filteredData = scheduleData.filter((employee) => {
     const departmentMatch =
-      selectedDepartment === 'All Departments' || employee.department === selectedDepartment;
-
-    const monthMatch =
-      selectedMonth === 'All Months' ||
-      employee.months === 'All' ||
-      (Array.isArray(employee.months) && employee.months.includes(selectedMonth));
-
-    return departmentMatch && monthMatch;
+      selectedDepartment === 'All Departments' || employee.department_name === selectedDepartment;
+    return departmentMatch;
   });
 
   const handleProfileClick = (employee) => {
@@ -164,30 +94,47 @@ const WorkSchedule = () => {
     setEditedSchedule({ ...editedSchedule, schedule: updatedSchedule });
   };
 
-  const handleMonthChange = (value) => {
-    setEditedSchedule({ ...editedSchedule, months: value });
-  };
+  const handleSave = async () => {
+    try {
+      // Update the schedule on the backend
+      await axios.put(`/api/admin/work-schedule/${selectedEmployee.id}/${selectedMonth}`, editedSchedule);
 
-  const handleSave = () => {
-    setScheduleData((prevData) =>
-      prevData.map((employee) =>
-        employee.id === selectedEmployee.id ? editedSchedule : employee
-      )
-    );
-    setShowModal(false);
-  
-    // Updated Toast
-    toast.success('Schedule updated successfully!', {
-      position: "top-right",
-    });
+      // Update the local state
+      setScheduleData((prevData) =>
+        prevData.map((employee) =>
+          employee.id === selectedEmployee.id ? editedSchedule : employee
+        )
+      );
+
+      setShowModal(false);
+      toast.success('Schedule updated successfully!', {
+        position: 'top-right',
+      });
+    } catch (error) {
+      console.error('Error saving schedule:', error);
+      toast.error('Failed to save changes.');
+    }
   };
 
   const handleCreateNewSchedule = (newSchedule) => {
-    setScheduleData([...scheduleData, { id: scheduleData.length + 1, ...newSchedule }]);
+    // Update state with the newly created schedule
+    setScheduleData((prevData) => [...prevData, { id: prevData.length + 1, ...newSchedule }]);
     setShowCreateModal(false);
     toast.success('New work schedule created successfully!', {
-      position: "top-right",
+      position: 'top-right',
     });
+  };
+
+  const formatTimeTo12Hour = (time) => {
+    const [startTime, endTime] = time.split(' - ');
+
+    const format12Hour = (timeString) => {
+      const [hours, minutes, seconds] = timeString.split(':');
+      const date = new Date(0, 0, 0, hours, minutes, seconds);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    return `${format12Hour(startTime)} - ${format12Hour(endTime)}`;
   };
 
   if (loading) {
@@ -210,8 +157,8 @@ const WorkSchedule = () => {
                 onChange={(e) => setSelectedDepartment(e.target.value)}
               >
                 {departments.map((department) => (
-                  <option key={department} value={department}>
-                    {department}
+                  <option key={department.department_name} value={department.department_name}>
+                    {department.department_name}
                   </option>
                 ))}
               </select>
@@ -259,7 +206,7 @@ const WorkSchedule = () => {
                           <td>
                             <div className="d-flex align-items-center gap-2">
                               <img
-                                src={employee.image}
+                                src={employee.image ? `${backendURL}/uploads/employees/${employee.image}` : null}
                                 alt={employee.name}
                                 className="rounded-circle"
                                 width="40"
@@ -271,12 +218,23 @@ const WorkSchedule = () => {
                               </div>
                             </div>
                           </td>
-                          {employee.schedule.map((day, index) => (
-                            <td key={index} className="text-center">
-                              <div className="fw-medium">{day.time}</div>
-                              <div className="text-muted small">{day.location}</div>
-                            </td>
-                          ))}
+                          {days.map((day) => {
+                            const daySchedule = employee.schedule.find((s) => s.day === day);
+                            return (
+                              <td key={day} className="text-center">
+                                {daySchedule ? (
+                                  <>
+                                    <div className="fw-medium" style={{ fontSize: '0.8rem' }}>
+                                      {formatTimeTo12Hour(daySchedule.time)}
+                                    </div>
+                                    <div className="text-muted small">{daySchedule.location}</div>
+                                  </>
+                                ) : (
+                                  <div className="text-muted small">No Schedule</div>
+                                )}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))
                     ) : (
@@ -294,48 +252,45 @@ const WorkSchedule = () => {
         </div>
       </div>
 
+      {/* Edit Work Schedule Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Edit Work Schedule</Modal.Title>
+          <Modal.Title>Update Work Schedule</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {editedSchedule && (
             <>
-              <Form.Group className="mb-3">
-                <Form.Label>Months</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={editedSchedule.months}
-                  onChange={(e) => handleMonthChange(e.target.value)}
-                >
-                  {months.map((month) => (
-                    <option key={month} value={month}>
-                      {month}
-                    </option>
+              <h5>Editing {editedSchedule.name}'s schedule</h5>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {editedSchedule.schedule.map((s, index) => (
+                    <tr key={index}>
+                      <td>{s.day}</td>
+                      <td>
+                        <Form.Control
+                          type="text"
+                          value={s.time}
+                          onChange={(e) => handleScheduleChange(index, 'time', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Form.Control
+                          type="text"
+                          value={s.location}
+                          onChange={(e) => handleScheduleChange(index, 'location', e.target.value)}
+                        />
+                      </td>
+                    </tr>
                   ))}
-                </Form.Control>
-              </Form.Group>
-              {editedSchedule.schedule.map((day, index) => (
-                <div key={index} className="mb-3">
-                  <h6>{day.day}</h6>
-                  <Form.Group>
-                    <Form.Label>Time</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={day.time}
-                      onChange={(e) => handleScheduleChange(index, 'time', e.target.value)}
-                    />
-                  </Form.Group>
-                  <Form.Group>
-                    <Form.Label>Location</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={day.location}
-                      onChange={(e) => handleScheduleChange(index, 'location', e.target.value)}
-                    />
-                  </Form.Group>
-                </div>
-              ))}
+                </tbody>
+              </table>
             </>
           )}
         </Modal.Body>
@@ -349,17 +304,16 @@ const WorkSchedule = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* Create Schedule Modal */}
       <CreateScheduleModal
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         onSave={handleCreateNewSchedule}
       />
 
-      {/* Toast container */}
       <ToastContainer />
     </div>
   );
 };
 
 export default WorkSchedule;
-

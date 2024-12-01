@@ -34,8 +34,6 @@ export default function EmployeeList() {
     const [loading, setLoading] = useState(true);
     const [showEmployeeDetails, setShowEmployeeDetails] = useState(false);
     const [employeeDetails, setEmployeeDetails] = useState(null);
-    const [showEditForm, setShowEditForm] = useState(false);
-    const [editedEmployee, setEditedEmployee] = useState(null);
 
     const debouncedChangeHandler = useMemo(
         () => debounce((value) => setDebouncedSearchTerm(value), 300),
@@ -60,10 +58,10 @@ export default function EmployeeList() {
     useEffect(() => {
         const fetchDesignationsAndDepartments = async () => {
             try {
-                const response = await axios.get('/api/public/designation');
+                const response = await axios.get('/api/admin/designation');
                 setDesignations(response.data.data);
 
-                const response2 = await axios.get('/api/public/department');
+                const response2 = await axios.get('/api/admin/department');
                 setDepartments(response2.data.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -129,7 +127,7 @@ export default function EmployeeList() {
         // Navigate to the edit employee page with the employee's ID
         navigate(`/admin/edit-employee-account/${employee.id}`);
     };
-    const handleInviteClick = () => setShowInviteForm(true);
+    
 
     const handleCloseInvite = () => {
         setShowInviteForm(false);

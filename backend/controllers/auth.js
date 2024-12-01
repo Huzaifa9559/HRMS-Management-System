@@ -1,10 +1,9 @@
 const bcrypt = require('bcrypt'); 
 const Employee = require('../models/employee'); 
 const { setUser,getUser } = require('../service/auth');
-const { sendResetLink,sendCreateAccountLink } = require('../service/emailService');
+const { sendResetLink } = require('../service/emailService');
 const sendResponse = require('../utils/responseUtil');
 const httpStatus = require('../utils/httpStatus');
-const { extractToken } = require('../utils/authUtil');
 
 exports.loginAdmin = async (req, res) => {
     const { email, password } = req.body;
@@ -75,30 +74,5 @@ exports.resetPassword = async (req, res) => {
     } catch (error) {
         console.error('Error resetting password:', error);
         return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error resetting password', error.message);
-    }
-};
-
-exports.inviteNewEmployee = async (req, res) => {
-    const token = extractToken(req, res);
-    if (!token) return res.sendStatus(httpStatus.UNAUTHORIZED); // 401 Unauthorized
-
-    try {
-        const payload = getUser(token);
-        if (!payload) return res.sendStatus(httpStatus.UNAUTHORIZED); // 401 Unauthorized
-
-        // Extract email from request body
-        const { email } = req.body;
-        if (!email) {
-            return sendResponse(res,httpStatus.BAD_REQUEST,null,'Invalid request','Email is required to invite a new employee'); // 400 Bad Request
-        }
-
-        // Send the invite email
-        const response = await sendCreateAccountLink(email);
-
-        // Return success response
-        return sendResponse(res,httpStatus.OK,{ message: 'Invite sent successfully', mailgunResponse: response },'Invite sent successfully');
-    } catch (error) {
-        console.error('Error sending invite:', error);
-        return sendResponse( res,httpStatus.INTERNAL_SERVER_ERROR,null,'Error sending invite',error.message); // 500 Internal Server Error
     }
 };

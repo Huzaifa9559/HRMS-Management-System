@@ -2,14 +2,24 @@ import React, { useState, useEffect } from 'react';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
+import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 export default function DashboardLayout() {
-    const [year, setYear] = useState('Select Year');
-    const [month, setMonth] = useState('Select Month');
+    const [year, setYear] = useState('Year');
+
+    // Generate years dynamically
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 11 }, (_, i) => currentYear - i);
+    const [month, setMonth] = useState('Month');
     const [loading, setLoading] = useState(true); // Loading state
     const [filteredAttendanceData, setFilteredAttendanceData] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(5); // Show 5 items per page
+    const [attendanceData, setAttendanceData] = useState([]);
+    const [employeeData,setemployeeData]=useState([]);
+    const location = useLocation();
+    const { employeeId } = location.state;
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
@@ -21,46 +31,70 @@ export default function DashboardLayout() {
         filterAttendanceData();
     }, [year, month]);
 
-    const filterAttendanceData = () => {
-        let filtered = [...attendanceData];
-
-        if (year !== 'Select Year') {
-            filtered = filtered.filter(item => {
-                const itemYear = item.date.split('-')[2];
-                return itemYear === year;
-            });
+useEffect(() => {
+      const fetch_Attendance = async () => {
+        try {
+          const response = await axios.get(`/api/admin/attendance/employee-attendance/${employeeId}`);
+            setAttendanceData(response.data.data);
+             const response2 = await axios.get(`/api/admin/attendance/stats/${employeeId}`);
+          setemployeeData(response2.data.data[0]);
+        } catch (error) {
+          console.error('Error', error);
         }
+      };
+      
+    fetch_Attendance();
+    filterAttendanceData();
+          
+}, []);
+    
 
-        if (month !== 'Select Month') {
-            filtered = filtered.filter(item => {
-                const itemMonth = parseInt(item.date.split('-')[1]);
-                const selectedMonthIndex = new Date(`${month} 1, 2000`).getMonth() + 1;
-                return itemMonth === selectedMonthIndex;
-            });
-        }
+const filterAttendanceData = () => {
+    let filtered = [...attendanceData];
 
-        setFilteredAttendanceData(filtered);
-    };
+    // Filter by year
+    if (year !== 'Year') {
+        filtered = filtered.filter(item => {
+            const itemYear = item.attendance_date.split('-')[0]; // Year is at index 0
+            return itemYear === year;
+        });
+    }
 
-    const employeeData = {
-        name: 'Kaiya Schleifer',
-        role: 'UI UX Designer',
-        avatar: 'https://www.lensmen.ie/wp-content/uploads/2015/02/Profile-Portrait-Photographer-in-Dublin-Ireland..jpg',
-        present: '04 Days',
-        absent: '04 Days',
-        totalWorkedHours: '256 hours',
-    };
+    // Filter by month
+    if (month !== 'Month') {
+        filtered = filtered.filter(item => {
+            const itemMonth = parseInt(item.attendance_date.split('-')[1], 10); // Month is at index 1
+            const selectedMonthIndex = new Date(`${month} 1, 2000`).getMonth() + 1; // Convert month name to index
+            return itemMonth === selectedMonthIndex;
+        });
+    }
 
-    const attendanceData = [
-        { date: '01-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08h 30min', totalBreak: '00:30 min' },
-        { date: '02-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '04h 30min', totalBreak: '2h 30min' },
-        { date: '03-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '1h 20min' },
-        { date: '04-08-2021', day: 'Monday', status: 'Absent', clockIn: '-', clockOut: '-', workingHrs: '-', totalBreak: '-' },
-        { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
-        { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
-        { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
-        { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
-    ];
+    setFilteredAttendanceData(filtered);
+};
+
+    const backendURL = process.env.REACT_APP_BACKEND_URL;
+const imageURL = employeeData.employee_image ? `${backendURL}/uploads/employees/${employeeData.employee_image}` : null;
+
+   
+    // const employeeData = {
+    //     name: 'Kaiya Schleifer',
+    //     role: 'UI UX Designer',
+    //     avatar: 'https://www.lensmen.ie/wp-content/uploads/2015/02/Profile-Portrait-Photographer-in-Dublin-Ireland..jpg',
+    //     present: '04 Days',
+    //     absent: '04 Days',
+    //     totalWorkedHours: '256 hours',
+    // };
+
+    // const attendanceData = [
+    //     { date: '01-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08h 30min', totalBreak: '00:30 min' },
+    //     { date: '02-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '04h 30min', totalBreak: '2h 30min' },
+    //     { date: '03-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '1h 20min' },
+    //     { date: '04-08-2021', day: 'Monday', status: 'Absent', clockIn: '-', clockOut: '-', workingHrs: '-', totalBreak: '-' },
+    //     { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
+    //     { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
+    //     { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
+    //     { date: '05-08-2021', day: 'Monday', status: 'Present', clockIn: '10:00 AM', clockOut: '06:30 PM', workingHrs: '08:30 PM', totalBreak: '0h 30min' },
+    // ];
 
     // Pagination logic
     const totalPages = Math.ceil(filteredAttendanceData.length / itemsPerPage);
@@ -101,20 +135,22 @@ export default function DashboardLayout() {
                                 <select
                                     className="form-select"
                                     value={year}
-                                    onChange={(e) => setYear(e.target.value)}
-                                    style={{
-                                        width: '100px',
-                                        borderRadius: '8px',
-                                        border: '1px solid #d1d5db',
-                                        padding: '4px 8px',
-                                        fontSize: '14px',
-                                    }}
-                                >
-                                    <option value="Select Year">Year</option>
-                                    <option value="2021">2021</option>
-                                    <option value="2022">2022</option>
-                                    <option value="2023">2023</option>
-                                </select>
+                                   onChange={(e) => setYear(e.target.value)}
+                style={{
+                    width: '100px',
+                    borderRadius: '8px',
+                    border: '1px solid #d1d5db',
+                    padding: '4px 8px',
+                    fontSize: '14px',
+                }}
+            >
+                <option value="">Select Year</option>
+                {years.map((y) => (
+                    <option key={y} value={y}>
+                        {y}
+                    </option>
+                ))}
+            </select>
                                 <select
                                     className="form-select"
                                     value={month}
@@ -151,8 +187,9 @@ export default function DashboardLayout() {
                             {/* Employee Avatar and Details */}
                             <div className="d-flex align-items-center">
                                 <img
-                                    src={employeeData.avatar}
+                                    src={imageURL}
                                     alt={employeeData.name}
+                                    
                                     className="rounded-circle me-3"
                                     style={{ width: '70px', height: '70px', objectFit: 'cover' }}
                                 />
@@ -194,7 +231,7 @@ export default function DashboardLayout() {
                                     },
                                     {
                                         label: 'Total Worked Hours',
-                                        value: employeeData.totalWorkedHours,
+                                        value: Math.floor(employeeData.totalWorkedHours/60),
                                         color: 'rgba(173, 216, 230, 0.2)', // Blue
                                     },
                                 ].map((card, index) => (
@@ -270,7 +307,7 @@ export default function DashboardLayout() {
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Day</th>
+                                     
                                         <th>Status</th>
                                         <th>Clock In</th>
                                         <th>Clock Out</th>
@@ -282,25 +319,25 @@ export default function DashboardLayout() {
                                     {currentItems.length > 0 ? (
                                         currentItems.map((row, index) => (
                                             <tr key={index}>
-                                                <td>{row.date}</td>
-                                                <td>{row.day}</td>
+                                                <td>{row.attendance_date}</td>
+                        
                                                 <td>
                                                     <span
                                                         className={`badge ${
-                                                            row.status === 'Present' ? 'bg-success' : 'bg-danger'
+                                                            row.attendance_status === 1 ? 'bg-success' : 'bg-danger'
                                                         }`}
                                                         style={{
                                                             padding: '5px 10px',
                                                             fontWeight: 'normal',
                                                         }}
                                                     >
-                                                        {row.status}
+                                                        {row.attendance_status===1?'Present':'Absent'}
                                                     </span>
                                                 </td>
-                                                <td>{row.clockIn}</td>
-                                                <td>{row.clockOut}</td>
-                                                <td>{row.workingHrs}</td>
-                                                <td>{row.totalBreak}</td>
+                                                <td>{row.attendance_clockIn}</td>
+                                                <td>{row.attendance_clockOut}</td>
+                                                <td>{Math.floor(row.attendance_workingHours/60)}</td>
+                                                <td>{row.attendance_totalBreak}</td>
                                             </tr>
                                         ))
                                     ) : (

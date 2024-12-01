@@ -24,7 +24,7 @@ export default function SideMenu() {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        height: 'auto',
+        height: '150 vh',
     };
 
     const logoSectionStyles = {
