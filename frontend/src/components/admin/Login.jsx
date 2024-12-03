@@ -145,7 +145,7 @@ export default function Login() {
         {/* Right side */}
         <div className="col-lg-6 d-flex justify-content-center align-items-center">
           <div className="w-100 p-5">
-            <h2 className="mb-4 text-center">Login to HRMS</h2>
+            <h2 className="mb-4 text-center">ADMIN LOGIN</h2>
             <form onSubmit={handleLogin}>
               <div className="mb-3">
                 <label htmlFor="email" className="form-label">Email</label>
