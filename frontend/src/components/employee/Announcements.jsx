@@ -11,7 +11,7 @@ import axios from 'axios';
 const ITEMS_PER_PAGE = 6;
 
 export default function Announcements() {
-  const [selectedDepartment, setSelectedDepartment] = useState("HR");
+  const [selectedDepartment, setSelectedDepartment] = useState("Human Resources (HR)");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [myAnnouncements, setMyAnnouncements] = useState([]);
@@ -33,6 +33,7 @@ export default function Announcements() {
       const response = await axios.get('/api/employees/department');
       setDepartments(response.data.data);
     } catch (error) {
+      
       console.error("Error fetching departments:", error);
     }
   };
@@ -43,6 +44,7 @@ export default function Announcements() {
 
       setMyAnnouncements(response.data.data);
     } catch (error) {
+setMyAnnouncements([]);
       console.error("Error fetching announcements:", error);
     }
   };

@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt'); 
 const Employee = require('../models/employee'); 
-const { setUser,getUser } = require('../service/auth');
+const { setUser } = require('../service/auth');
 const { sendResetLink } = require('../service/emailService');
 const sendResponse = require('../utils/responseUtil');
 const httpStatus = require('../utils/httpStatus');

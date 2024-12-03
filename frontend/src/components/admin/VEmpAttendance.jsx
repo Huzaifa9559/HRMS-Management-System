@@ -336,8 +336,24 @@ const imageURL = employeeData.employee_image ? `${backendURL}/uploads/employees/
                                                 </td>
                                                 <td>{row.attendance_clockIn}</td>
                                                 <td>{row.attendance_clockOut}</td>
-                                                <td>{Math.floor(row.attendance_workingHours/60)}</td>
-                                                <td>{row.attendance_totalBreak}</td>
+                                                <td>{(() => {
+    const workingSeconds = row.attendance_workingHours;
+
+    // Convert seconds to hours and minutes
+    const hours = Math.floor(workingSeconds / 3600);
+    const minutes = Math.floor((workingSeconds % 3600) / 60);
+
+    return `${hours}h ${minutes}m`;
+})()}</td>
+                                                <td>{(() => {
+    const workingSeconds = row.attendance_totalBreak;
+
+    // Convert seconds to hours and minutes
+    const hours = Math.floor(workingSeconds / 3600);
+    const minutes = Math.floor((workingSeconds % 3600) / 60);
+
+    return `${hours}h ${minutes}m`;
+})()}</td>
                                             </tr>
                                         ))
                                     ) : (

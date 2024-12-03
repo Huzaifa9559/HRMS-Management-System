@@ -116,7 +116,11 @@ exports.addEmployee = async (req, res) => {
         const file = req.file;
         const employees = await Employee.createNewEmployee(req.body,file.filename); 
         //sath me invite link bhi bhejna employee ku yaha 
-        await sendCreateAccountLink(req.body.email,req.body.password);
+        try {
+            await sendCreateAccountLink(req.body.email, req.body.password);
+        } catch (error) {
+            return sendResponse(res, httpStatus.OK, null, 'Added successfully');
+        }
 
         if (!employees || employees.length === 0) {
             return sendResponse(res, httpStatus.NOT_FOUND, null, 'No employees found');
