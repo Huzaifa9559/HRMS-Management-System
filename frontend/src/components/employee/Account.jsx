@@ -46,7 +46,6 @@ const EmpAccount = () => {
     employee_joining_date, employee_image // Add employee_image key
   } = employeeData || {};
 
-
   const imageURL = employee_image ? `${backendURL}/uploads/employees/${employee_image}` : null;
 
   // Show loader if loading is true

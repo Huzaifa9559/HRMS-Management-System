@@ -33,8 +33,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+<<<<<<< HEAD
   // Set a session expiration time (e.g., some minutes)
   const SESSION_DURATION = 7200000; // some minutes in milliseconds
+=======
+  // Set a session expiration time (e.g., 30 minutes)
+  const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+>>>>>>> 836b01c3a2d2da0c3182e38f6c4cbd18edb93b12
 
   const setSessionTimer = () => {
     const expiryTime = new Date().getTime() + SESSION_DURATION;

@@ -3,7 +3,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser'); 
 const dotenv = require('dotenv');
 const db = require('./db'); 
-const path=require('path');
+const path = require('path');
 dotenv.config({ path: `${process.cwd()}/.env` });
 
 const employeeRoutes = require('./routes/employee/index'); // Import employee routes

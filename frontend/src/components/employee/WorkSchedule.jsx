@@ -22,9 +22,6 @@ export default function WorkSchedule() {
           }
         });
 
-        // Log backend data for debugging
-        console.log('Backend Data:', response.data);
-
         // Process the schedule data
         const transformedData = processScheduleData(response.data.data);
 

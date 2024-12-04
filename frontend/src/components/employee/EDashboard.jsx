@@ -219,3 +219,18 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// Add this CSS for styling
+const cardHoverCSS = document.createElement('style');
+cardHoverCSS.innerHTML = `
+  .hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  .hover-card:hover {
+    transform: scale(1.001); /* Scales evenly from all sides */
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  }
+`;
+document.head.appendChild(cardHoverCSS);
+
