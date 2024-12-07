@@ -148,7 +148,7 @@ export default function AAttendance() {
         <Header title="Attendance" />
         <Container fluid>
           <div>
-              <h4 style={{ marginBottom: '5px' }}>Attendance Report</h4>
+              <h4 style={{ marginBottom: '5px' }}>Today's Attendance Report</h4>
               <p style={{ color: '#6c757d', fontSize: '0.9rem' }}>
                 Manage all the department attendance in your organization.
               </p>

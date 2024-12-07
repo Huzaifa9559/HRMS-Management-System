@@ -39,6 +39,7 @@ import AWorkSchedule from './components/admin/AWorkSchedule.jsx';
 import AddNewEmployee from './components/admin/AddNewEmployee.jsx';
 import AllPayslips from './components/admin/APayslips.jsx';
 import AAnnouncementView from './components/admin/AAnnouncementView.jsx';
+import AAccount from './components/admin/AAccount.jsx';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -75,6 +76,7 @@ root.render(
           <Route path="/admin/add-new-employee" element={<PrivateRoute element={<AddNewEmployee />} requiredRole="admin" />} />
           <Route path="/admin/all-payslips" element={<PrivateRoute element={<AllPayslips />} requiredRole="admin" />} />
           <Route path="/admin/announcements/view/:id" element={<PrivateRoute element={<AAnnouncementView />} requiredRole="admin" />} />
+          <Route path="admin/employee/account/:id" element={<PrivateRoute element={<AAccount />} requiredRole="admin" />} />
 
           {/* Employee Protected Routes */}
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />

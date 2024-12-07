@@ -344,19 +344,23 @@ const [employeeDetails, setEmployeeDetails] = useState({
                         />
                       </div>
                   
-                    <div className="col-md-6">
-                      <label htmlFor="status" className="form-label">Status</label>
-                      <select
-                        className="form-select"
-                        id="employee_status"
-                        value={employeeDetails.employee_status===1?'Active':'Disabled'}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Disabled">Disabled</option>
-                      </select>
-                    </div>
+                      <div className="col-md-6">
+  <label htmlFor="status" className="form-label">Status</label>
+  <select
+    className="form-select"
+    id="employee_status"
+    value={employeeDetails.employee_status}
+    onChange={(e) =>
+      setEmployeeDetails((prev) => ({
+        ...prev,
+        employee_status: parseInt(e.target.value, 10),
+      }))
+    }
+  >
+    <option value={1}>Active</option>
+    <option value={0}>Disabled</option>
+  </select>
+</div>
                 
 
                     </div>

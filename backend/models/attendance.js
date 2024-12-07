@@ -31,19 +31,35 @@ Attendance.getAttendanceByEmployeeId = async function (employeeId) {
 };
 
 Attendance.setClockIn = async function (employeeId) {
-    const query = `
+    const checkStatusQuery = `
+    SELECT employee_status
+    FROM Employee
+    WHERE employeeID = ?`;
+
+    const insertAttendanceQuery = `
     INSERT INTO Attendance (employeeID)
     VALUES (?)`;
 
     try {
-        await sequelize.query(query, {
-            replacements: [employeeId]
+        const [statusResult] = await sequelize.query(checkStatusQuery, {
+            replacements: [employeeId],
+            type: sequelize.QueryTypes.SELECT,
         });
+
+        if (!statusResult || statusResult.employee_status !== 1) {
+            throw new Error('Employee is not eligible to clock in.');
+        }
+
+        await sequelize.query(insertAttendanceQuery, {
+            replacements: [employeeId],
+        });
+
     } catch (error) {
         console.error('Error creating attendance record:', error);
         throw error;
     }
 };
+
 
 
 Attendance.setAttendanceAction = async function (action, data) {

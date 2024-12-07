@@ -110,14 +110,15 @@ export default function Attendance() {
         return; // Exit the function if already checked in
       }
       //else store check in
-      setIsCheckedIn(true);
-      localStorage.setItem('isCheckedIn', 'true'); // Store check-in status
+
       await axios.post('/api/employees/attendance/clockin', {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
       });
       toast.success(`Check-in successful!`); // Show success notification
+      setIsCheckedIn(true);
+      localStorage.setItem('isCheckedIn', 'true'); // Store check-in status
     } catch (error) {
       toast.error('Failed to check in. Please try again.'); // Show error notification
       console.error('Error checking in:', error);
@@ -126,8 +127,6 @@ export default function Attendance() {
 
   // Break-in logic
   const handleBreakIn = async () => {
-    setIsOnBreak(true)
-    localStorage.setItem('isOnBreak', 'true');
     // API call to store break-in time in the database
     try {
       const token = Cookies.get('token'); // Get the token for authorization
@@ -141,6 +140,8 @@ export default function Attendance() {
       });
 
       toast.success(`Break-in!`);
+      setIsOnBreak(true)
+      localStorage.setItem('isOnBreak', 'true');
     } catch (error) {
       toast.error('Failed to record break-in time. Please try again.'); // Show error notification
       console.error('Error recording break-in time:', error);

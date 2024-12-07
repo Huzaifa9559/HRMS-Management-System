@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 export default function DashboardLayout() {
-    const [year, setYear] = useState('Year');
+    const [year, setYear] = useState(`${new Date().getFullYear()}`);
 
     // Generate years dynamically
     const currentYear = new Date().getFullYear();
@@ -26,17 +26,15 @@ export default function DashboardLayout() {
         return () => clearTimeout(timer);
     }, []);
 
-    useEffect(() => {
-        setCurrentPage(1);
-        filterAttendanceData();
-    }, [year, month]);
+ 
 
 useEffect(() => {
       const fetch_Attendance = async () => {
         try {
           const response = await axios.get(`/api/admin/attendance/employee-attendance/${employeeId}`);
             setAttendanceData(response.data.data);
-             const response2 = await axios.get(`/api/admin/attendance/stats/${employeeId}`);
+         
+            const response2 = await axios.get(`/api/admin/attendance/stats/${employeeId}`);
           setemployeeData(response2.data.data[0]);
         } catch (error) {
           console.error('Error', error);
@@ -44,9 +42,13 @@ useEffect(() => {
       };
       
     fetch_Attendance();
-    filterAttendanceData();
           
 }, []);
+
+useEffect(() => {
+    setCurrentPage(1);
+    filterAttendanceData();
+}, [attendanceData,year, month]);
     
 
 const filterAttendanceData = () => {
@@ -144,7 +146,7 @@ const imageURL = employeeData.employee_image ? `${backendURL}/uploads/employees/
                     fontSize: '14px',
                 }}
             >
-                <option value="">Select Year</option>
+                <option value="year">Select Year</option>
                 {years.map((y) => (
                     <option key={y} value={y}>
                         {y}

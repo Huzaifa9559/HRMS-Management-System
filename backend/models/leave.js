@@ -23,20 +23,40 @@ Leave.getLeaveDetails = async function (employeeId) {
 };
 
 Leave.setLeaveRequest = async function (leaveData) {
-    const query = `
-    INSERT INTO \`Leave\` (employeeID, leave_fromDate, leave_toDate, leave_reason,
-    leave_type,leave_status,leave_filedOn)
-    VALUES (?, ?, ?, ?, ?,0,CURRENT_DATE());`;
+    const checkStatusQuery = `
+    SELECT employee_status
+    FROM Employee
+    WHERE employeeID = ?`;
+
+    const insertLeaveQuery = `
+    INSERT INTO \`Leave\` (employeeID, leave_fromDate, leave_toDate, leave_reason, leave_type, leave_status, leave_filedOn)
+    VALUES (?, ?, ?, ?, ?, 0, CURRENT_DATE());`;
+
     try {
-        await sequelize.query(query, {
-            replacements: [leaveData.employeeId, leaveData.fromDate,
-            leaveData.toDate, leaveData.leave_reason, leaveData.leavetype]
+        const [statusResult] = await sequelize.query(checkStatusQuery, {
+            replacements: [leaveData.employeeId],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        if (!statusResult || statusResult.employee_status !== 1) {
+            throw new Error('Employee is not eligible to apply for leave.');
+        }
+
+        await sequelize.query(insertLeaveQuery, {
+            replacements: [
+                leaveData.employeeId,
+                leaveData.fromDate,
+                leaveData.toDate,
+                leaveData.leave_reason,
+                leaveData.leavetype,
+            ],
         });
     } catch (error) {
         console.error('Error creating leave request:', error);
-        throw error; // Rethrow the error to be handled in the controller
+        throw error;
     }
 };
+
 
 Leave.getAllLeaveDetails = async function () {
     const query = `

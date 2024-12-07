@@ -18,7 +18,7 @@ const ADocuments = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState('Month');
-  const [selectedDepartment, setSelectedDepartment] = useState('HR');
+  const [selectedDepartment, setSelectedDepartment] = useState('Human Resources (HR)');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState([]);

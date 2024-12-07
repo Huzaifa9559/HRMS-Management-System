@@ -15,7 +15,7 @@ const WorkSchedule = () => {
   const [scheduleData, setScheduleData] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
-  const [selectedMonth, setSelectedMonth] = useState('All Months');
+  const [selectedMonth, setSelectedMonth] = useState('January');
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editedSchedule, setEditedSchedule] = useState(null);
@@ -42,10 +42,6 @@ const WorkSchedule = () => {
 
   useEffect(() => {
     const fetchScheduleData = async () => {
-      if (selectedMonth === 'All Months') {
-        setScheduleData([]); // Clear schedule data if "All Months" is selected
-        return;
-      }
       try {
         const response = await axios.get(`/api/admin/work-schedule/${selectedMonth}`);
         setScheduleData(response.data.data);
@@ -59,7 +55,6 @@ const WorkSchedule = () => {
   }, [selectedMonth]);
 
   const months = [
-    'All Months',
     'January',
     'February',
     'March',

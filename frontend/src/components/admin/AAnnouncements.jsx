@@ -12,7 +12,7 @@ export default function AnnouncementsDashboard() {
     const navigate = useNavigate(); 
     const [loading, setLoading] = useState(true); // Loading state
     const [announcements, setAnnouncements] = useState([]);
-    const [selectedDepartment, setSelectedDepartment] = useState('HR');
+    const [selectedDepartment, setSelectedDepartment] = useState('Human Resources (HR)');
 
 
     useEffect(() => {
