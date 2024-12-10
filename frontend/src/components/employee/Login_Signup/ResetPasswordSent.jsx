@@ -5,7 +5,7 @@ export default function ResetPasswordSent() {
   const navigate = useNavigate();
 
   const handleReturnToLogin = () => {
-    navigate('/login');
+    navigate('/login/employee');
   };
 
   return (
