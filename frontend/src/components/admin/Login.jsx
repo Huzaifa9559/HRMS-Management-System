@@ -65,7 +65,7 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch('/api/admin/auth/login', {
+      const response = await fetch('http://localhost:5000/api/admin/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export default function Login() {
 
       if (data.message == 'Login successful') {
         loginAsAdmin();
-        navigate('/admin/dashboard');
+        navigate('http://localhost:5000/admin/dashboard');
       } else {
         setError('Invalid credentials');
       }
