@@ -41,6 +41,9 @@ import AllPayslips from './components/admin/APayslips.jsx';
 import AAnnouncementView from './components/admin/AAnnouncementView.jsx';
 import AAccount from './components/admin/AAccount.jsx';
 
+
+import LoginComponent from './components/LoginComponent.jsx';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -50,12 +53,13 @@ root.render(
     <AuthProvider>
       <Router>
         <Routes>
+          <Route path="/login" element={<LoginComponent />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/create-account" element={<CreateAccount />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login/employee" element={<LoginPage />} />
           <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
           <Route path="/set-new-password" element={<SetNewPassword />} />
-          <Route path="/admin/login" element={<Login />} />
+          <Route path="/login/admin" element={<Login />} />
 
           {/* Admin Protected Routes */}
           <Route path="/admin/dashboard" element={<PrivateRoute element={<ADashboard />} requiredRole="admin" />} />

@@ -56,7 +56,7 @@ export default function Dashboard() {
         setStats({
           currentYearLeaves: data.currentYearLeaves || 0,
           currentMonthLeaves: data.currentMonthLeaves || 0,
-          yesterdayWorkingHours: data.yesterdayWorkingHours || '0 h 0 min',
+          yesterdayWorkingHours: data.yesterdayWorkingHours || '4 h 5 min',
         });
       } catch (error) {
         console.error('Error fetching employee stats:', error);
