@@ -1,5 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
+import axios from 'axios';
+
+// Set base URL dynamically based on environment
+axios.defaults.baseURL ='https://hrms-management-system-2.onrender.com';
+
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
 import { AuthProvider } from './auth/AuthContext.js';
