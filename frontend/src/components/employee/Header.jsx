@@ -2,7 +2,7 @@ import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Image, OverlayTrigger, Popover } from 'react-bootstrap';
 import { PersonCircle, Key, BoxArrowRight } from 'react-bootstrap-icons';
-//import axios from 'axios';
+import axios from 'axios';
 import Cookies from 'js-cookie';
 
 export default function Header({ title }) {

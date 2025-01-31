@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-  // For sending the POST request
+import axios from 'axios';  // For sending the POST request
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';

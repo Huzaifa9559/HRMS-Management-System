@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Loader from '../Loader';
 import { PlusCircle } from 'react-bootstrap-icons';
 import CreateScheduleModal from './CreateScheduleModal';
+import axios from 'axios';
 
 const backendURL = process.env.REACT_APP_BACKEND_URL;
 

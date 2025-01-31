@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
-
+import axios from 'axios';
 import Cookies from 'js-cookie';
 
 export default function Departments() {

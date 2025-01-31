@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
+import axios from 'axios'; // Import axios for making API requests
 import SideMenu from './SideMenu'; 
 import Header from './Header'; 
 import Loader from '../Loader';

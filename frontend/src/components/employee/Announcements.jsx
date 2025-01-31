@@ -6,7 +6,7 @@ import Loader from '../Loader';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { AiOutlineEye } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
-
+import axios from 'axios';
 
 const ITEMS_PER_PAGE = 6;
 

@@ -3,6 +3,8 @@ import { Container, Row, Col, Card, Table, Image, Badge } from 'react-bootstrap'
 import SideMenu from './SideMenu';
 import Header from './Header';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
+
 import { ToastContainer, toast } from 'react-toastify';
 import Loader from '../Loader';
 

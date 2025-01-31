@@ -7,7 +7,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS for the toaster
 import Header from './Header';
 import SideMenu from './SideMenu';
-
+import axios from 'axios';
 
 const ViewDepartments = () => {
   const navigate = useNavigate();
