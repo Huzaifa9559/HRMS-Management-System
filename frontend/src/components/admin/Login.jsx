@@ -65,7 +65,7 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch('admin/auth/login', {
+      const response = await fetch('https://hrms-management-system-2.onrender.com/api/admin/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export default function Login() {
 
       if (data.message == 'Login successful') {
         loginAsAdmin();
-        navigate('http://localhost:5000/admin/dashboard');
+        navigate('/admin/dashboard');
       } else {
         setError('Invalid credentials');
       }
