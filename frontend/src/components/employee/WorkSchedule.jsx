@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../Loader';
-import axios from 'axios';
+//import axios from 'axios';
 import Cookies from 'js-cookie';
 
 export default function WorkSchedule() {

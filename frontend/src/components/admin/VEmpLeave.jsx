@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import SideMenu from "./SideMenu";
 import Header from "./Header";
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+
 import { Bell, User } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";

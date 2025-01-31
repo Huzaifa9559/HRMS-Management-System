@@ -4,7 +4,6 @@ import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
 import { FaEye, FaTrashAlt } from 'react-icons/fa';
-import axios from 'axios';
 
 export default function AnnouncementsDashboard() {
     const [activeButton, setActiveButton] = useState(null); // To track which button is clicked

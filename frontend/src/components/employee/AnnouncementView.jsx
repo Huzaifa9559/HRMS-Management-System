@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+
 import Loader from '../Loader';
 // Assuming you have the UpperMenu and SideMenu components already
 import Header from './Header';

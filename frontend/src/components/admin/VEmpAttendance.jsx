@@ -3,7 +3,7 @@ import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
 import { useLocation } from 'react-router-dom';
-import axios from 'axios';
+;
 
 export default function DashboardLayout() {
     const [year, setYear] = useState(`${new Date().getFullYear()}`);

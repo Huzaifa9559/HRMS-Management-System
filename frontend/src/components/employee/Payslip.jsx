@@ -3,7 +3,7 @@ import { Table, Card, Form } from 'react-bootstrap';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../Loader';
-import axios from 'axios';
+//import axios from 'axios';
 import Cookies from 'js-cookie';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

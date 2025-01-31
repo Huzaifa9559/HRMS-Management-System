@@ -8,7 +8,7 @@ import { Box, Briefcase, Clock, Clipboard, Calendar as CalendarIcon } from 'luci
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
-import axios from 'axios';
+//import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const localizer = momentLocalizer(moment);

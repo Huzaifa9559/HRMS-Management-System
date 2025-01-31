@@ -3,7 +3,6 @@ import { Container, Row, Col, Card, Table } from 'react-bootstrap';
 import { Box, Briefcase, Users } from 'lucide-react';
 import SideMenu from './SideMenu';
 import Header from './Header';
-import axios from 'axios';
 import Loader from '../Loader';
 import { useNavigate } from 'react-router-dom';
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import { Eye } from 'lucide-react';
