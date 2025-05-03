@@ -25,6 +25,7 @@ exports.getDepartmentsDetails = async (req, res) => {
 
 exports.createDepartment = async (req, res) => {
     try {
+       
         const { name } = req.body; 
         await Department.createNewDepartment(name);
        return sendResponse(res, httpStatus.OK, null, 'Created Successfully');

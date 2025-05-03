@@ -16,6 +16,7 @@ exports.loginAdmin = async (req, res) => {
         };
         const token = setUser(user);
         res.cookie('token', token);
+        console.log(token);
         return sendResponse(res, httpStatus.OK, null, 'Login successful', null, true);
         }
         else {
@@ -58,7 +59,7 @@ exports.login = async (req, res) => {
         const token = setUser(user);
         res.cookie('token', token);
 
-        return sendResponse(res, httpStatus.OK, null, 'Login successful', null, true);
+        return sendResponse(res, httpStatus.OK, token, 'Login successful', null, true);
     } catch (error) {
         console.error('Error logging in:', error);
         return sendResponse(res, httpStatus.INTERNAL_SERVER_ERROR, null, 'Error logging in', error.message);

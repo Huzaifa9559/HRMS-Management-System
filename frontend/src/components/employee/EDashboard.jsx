@@ -45,7 +45,8 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = Cookies.get('token'); // Get the token for authorization
+        //const token = Cookies.get('token'); // Get the token for authorization
+        const token = localStorage.getItem('authToken');
         const response = await axios.get('/api/employees/employee/stats', {
           headers: {
             'Authorization': `Bearer ${token}`, // Include the token in the request headers

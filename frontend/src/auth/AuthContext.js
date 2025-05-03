@@ -56,8 +56,16 @@ export const AuthProvider = ({ children }) => {
     setUserRole('employee');
     localStorage.setItem('isAuthenticated', JSON.stringify(true));
     localStorage.setItem('userRole', 'employee');
+
     setSessionTimer();
+      // Debugging
+  console.log('Logged in as employee');
+  console.log('isAuthenticated:', isAuthenticated); // Check if the state updates correctly
+  console.log('userRole:', userRole);
+  
+
   };
+
 
   // Logout function to clear authentication
   const logout = () => {

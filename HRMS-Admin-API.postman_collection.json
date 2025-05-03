@@ -1,0 +1,536 @@
+{
+	"info": {
+		"_postman_id": "b2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
+		"name": "HRMS Admin API",
+		"description": "HR Management System Admin API Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Admin Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Employee Management",
+			"item": [
+				{
+					"name": "Get All Employees",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/employee",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "employee"]
+						}
+					}
+				},
+				{
+					"name": "Get Employee by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/employee/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "employee", ":id"]
+						}
+					}
+				},
+				{
+					"name": "Add New Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\",\n    \"department\": \"IT\",\n    \"designation\": \"Software Engineer\",\n    \"joiningDate\": \"2024-01-01\",\n    \"salary\": 50000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/employee",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "employee"]
+						}
+					}
+				},
+				{
+					"name": "Update Employee",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"department\": \"IT\",\n    \"designation\": \"Senior Software Engineer\",\n    \"salary\": 60000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/employee/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "employee", ":id"]
+						}
+					}
+				},
+				{
+					"name": "Delete Employee",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/employee/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "employee", ":id"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Department Management",
+			"item": [
+				{
+					"name": "Get All Departments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/department",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "department"]
+						}
+					}
+				},
+				{
+					"name": "Create Department",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"New Department\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/department",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "department"]
+						}
+					}
+				},
+				{
+					"name": "Delete Department",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/department/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "department", ":id"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Designation Management",
+			"item": [
+				{
+					"name": "Get All Designations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/designation",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "designation"]
+						}
+					}
+				},
+				{
+					"name": "Create Designation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"New Designation\",\n    \"departmentId\": \"department_id_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/designation",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "designation"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Leave Management",
+			"item": [
+				{
+					"name": "Get All Leave Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/leave",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "leave"]
+						}
+					}
+				},
+				{
+					"name": "Get Leave Request by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/leave/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "leave", ":id"]
+						}
+					}
+				},
+				{
+					"name": "Accept Leave Request",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/leave/:id/accept",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "leave", ":id", "accept"]
+						}
+					}
+				},
+				{
+					"name": "Reject Leave Request",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/leave/:id/reject",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "leave", ":id", "reject"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Attendance Management",
+			"item": [
+				{
+					"name": "Get Department Attendance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/attendance/:departmentId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "attendance", ":departmentId"]
+						}
+					}
+				},
+				{
+					"name": "Get Employee Attendance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/attendance/employee/:employeeId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "attendance", "employee", ":employeeId"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Announcements",
+			"item": [
+				{
+					"name": "Get All Announcements",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/announcements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "announcements"]
+						}
+					}
+				},
+				{
+					"name": "Create Announcement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Important Announcement\",\n    \"description\": \"This is an important announcement for all employees\",\n    \"departmentId\": \"department_id_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/announcements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "announcements"]
+						}
+					}
+				},
+				{
+					"name": "Delete Announcement",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/announcements/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "announcements", ":id"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Payslips",
+			"item": [
+				{
+					"name": "Upload Payslip",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "employeeId",
+									"value": "employee_id_here",
+									"type": "text"
+								},
+								{
+									"key": "month",
+									"value": "2024-03",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "path_to_payslip_file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/payslips/upload",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "payslips", "upload"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Work Schedule",
+			"item": [
+				{
+					"name": "Create Work Schedule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"employeeId\": \"employee_id_here\",\n    \"month\": \"2024-04\",\n    \"schedule\": [\n        {\n            \"date\": \"2024-04-01\",\n            \"startTime\": \"09:00\",\n            \"endTime\": \"17:00\"\n        },\n        {\n            \"date\": \"2024-04-02\",\n            \"startTime\": \"09:00\",\n            \"endTime\": \"17:00\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/work-schedule",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "work-schedule"]
+						}
+					}
+				},
+				{
+					"name": "Update Work Schedule",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"schedule\": [\n        {\n            \"date\": \"2024-04-01\",\n            \"startTime\": \"10:00\",\n            \"endTime\": \"18:00\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/work-schedule/:employeeId/:month",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "work-schedule", ":employeeId", ":month"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_token_here"
+		}
+	]
+} 

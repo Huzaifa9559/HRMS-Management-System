@@ -7,6 +7,6 @@ const {  getDepartment,getDepartmentsDetails, createDepartment,deleteDepartment 
 department.get('/', getDepartment);
 department.get('/all', getDepartmentsDetails);
 department.post('/create', createDepartment);
-department.post('/delete', deleteDepartment);
+department.delete('/delete', deleteDepartment);
 
 module.exports = department; // Export the router

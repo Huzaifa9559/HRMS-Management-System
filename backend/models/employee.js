@@ -68,8 +68,8 @@ Employee.getEmployeeStatsbyId = async function (employeeId) {
             ), '00:00:00'
         ) AS yesterdayWorkingHours
     FROM Employee e
-    LEFT JOIN \`leave\` l ON e.employeeID = l.employeeID
-    LEFT JOIN attendance a ON e.employeeID = a.employeeID
+    LEFT JOIN \`Leave\` l ON e.employeeID = l.employeeID
+    LEFT JOIN Attendance a ON e.employeeID = a.employeeID
     WHERE e.employeeID = ?;
     `;
 

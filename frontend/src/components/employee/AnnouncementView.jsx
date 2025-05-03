@@ -14,7 +14,12 @@ const AnnouncementView = () => {
     const fetchAnnouncement = async () => {
       const announcementId = window.location.pathname.split('/').pop();
       try {
-        const response = await axios.get(`/api/employees/announcements/view/${announcementId}`);
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`/api/employees/announcements/view/${announcementId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setAnnouncement(response.data.data);
       } catch (error) {
         console.error('Error fetching announcement:', error);

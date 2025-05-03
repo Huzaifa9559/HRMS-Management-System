@@ -48,7 +48,7 @@ import LoginComponent from './components/LoginComponent.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-axios.defaults.baseURL ='https://hrms-management-system-2.onrender.com';
+axios.defaults.baseURL ='http://localhost:8000';
 
 root.render(
   <React.StrictMode>
@@ -62,6 +62,7 @@ root.render(
           <Route path="/reset-password-sent" element={<ResetPasswordSent />} />
           <Route path="/set-new-password" element={<SetNewPassword />} />
           <Route path="/login/admin" element={<Login />} />
+        
 
           {/* Admin Protected Routes */}
           <Route path="/admin/dashboard" element={<PrivateRoute element={<ADashboard />} requiredRole="admin" />} />
@@ -85,6 +86,7 @@ root.render(
           <Route path="admin/employee/account/:id" element={<PrivateRoute element={<AAccount />} requiredRole="admin" />} />
 
           {/* Employee Protected Routes */}
+          
           <Route path="/employee/dashboard" element={<PrivateRoute element={<EDashboard />} requiredRole="employee" />} />
           <Route path="/employee/documents/payslip" element={<PrivateRoute element={<Payslip />} requiredRole="employee" />} />
           <Route path="/employee/documents/mydocuments" element={<PrivateRoute element={<MyDocuments />} requiredRole="employee" />} />

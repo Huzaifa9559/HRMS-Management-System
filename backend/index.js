@@ -16,11 +16,12 @@ const app = express();
 // Important Middlewares
 app.use('/uploads/employees', express.static(path.join(__dirname, 'uploads/employees')));
 app.use(cors({
-  origin: `https://hrms-management-system-ulrp.vercel.app`, // Frontend address
+  origin: `http://localhost:3000`, // Frontend address
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+//app.use(cors());
 app.use(express.json()); // Use express's built-in JSON parser
 app.use(cookieParser()); // Use cookie-parser middleware
 
@@ -35,8 +36,9 @@ app.use('/api/admin/auth', adminAuthRoutes);
 
 //protected employees routes
 app.use('/api/employees', authenticateToken, employeeRoutes);
-//admin protected routes
 app.use('/api/admin', adminRoutes);
+//admin protected routes
+
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {

@@ -28,7 +28,7 @@ export default function MyDocuments() {
   // Fetch documents on mount
   const fetchDocuments = useCallback(async () => {
     try {
-      const token = Cookies.get('token');
+      const token = localStorage.getItem('authToken');
       const response = await axios.get('/api/employees/my-documents', {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -73,7 +73,7 @@ export default function MyDocuments() {
     if (sigCanvas.current) {
       const signatureData = sigCanvas.current.toDataURL('image/png');
       try {
-        const token = Cookies.get('token');
+        const token = localStorage.getItem('authToken');
         await axios.post(
           '/api/employees/my-documents/save-signature',
           { documentId: selectedDocumentId, signature: signatureData },
@@ -96,7 +96,7 @@ export default function MyDocuments() {
   };
   const downloadDocument = async (documentId) => {
     try {
-      const token = Cookies.get('token');
+      const token = localStorage.getItem('authToken');
       const response = await axios.get(`/api/employees/my-documents/download/${documentId}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',

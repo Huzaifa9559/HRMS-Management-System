@@ -12,7 +12,7 @@ export default function Header({ title }) {
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        const token = Cookies.get('token');
+        const token = localStorage.getItem('authToken');
         const response = await axios.get(`/api/employees/employee/image`, {
           headers: {
             Authorization: `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
@@ -29,14 +29,14 @@ export default function Header({ title }) {
           setProfileData(response2.data.data);
       } catch (error) {
         console.error('Error fetching employee data:', error);
-        navigate('/login');
+        //navigate('/login');
       }
     };
 
     fetchEmployeeData();
   }, []);
 
-  const backendURL = process.env.REACT_APP_BACKEND_URL;
+  const backendURL = 'http://localhost:8000';
   const imageURL = employeeData ? `${backendURL}/uploads/employees/${employeeData}` : null;
 
     const profileDetails = {

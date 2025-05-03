@@ -21,6 +21,7 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { responsivePropType } from 'react-bootstrap/esm/createUtilityClasses';
 
 export default function EmployeeList() {
     // State Variables
@@ -40,7 +41,7 @@ export default function EmployeeList() {
     const [employeeDetails, setEmployeeDetails] = useState(null);
     const navigate = useNavigate();
 
-    const backendURL = process.env.REACT_APP_BACKEND_URL;
+    const backendURL = 'http://localhost:8000';
 
     const debouncedChangeHandler = useMemo(
         () => debounce((value) => setDebouncedSearchTerm(value), 300),
@@ -75,6 +76,7 @@ export default function EmployeeList() {
             try {
                 const response = await axios.get('/api/admin/employee/all');
                 setEmployees(response.data.data);
+                console.log(response.data.data);
             } catch (error) {
                 console.error('Error fetching employees:', error);
             } finally {

@@ -1,0 +1,401 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+		"name": "HRMS API",
+		"description": "HR Management System API Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Employee Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"employee@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/employees/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Admin Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Employee",
+			"item": [
+				{
+					"name": "Get Employee Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/employee",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "employee"]
+						}
+					}
+				},
+				{
+					"name": "Get Employee Image",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/employee/image",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "employee", "image"]
+						}
+					}
+				},
+				{
+					"name": "Get Employee Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/employee/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "employee", "stats"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Attendance",
+			"item": [
+				{
+					"name": "Get All Attendance Records",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/attendance",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "attendance"]
+						}
+					}
+				},
+				{
+					"name": "Get Specific Attendance Record",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/attendance/:date",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "attendance", ":date"]
+						}
+					}
+				},
+				{
+					"name": "Create Attendance Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2024-03-20\",\n    \"clockIn\": \"09:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/employees/attendance",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "attendance"]
+						}
+					}
+				},
+				{
+					"name": "Update Attendance (Clock Out)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"clockOut\",\n    \"time\": \"17:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/employees/attendance/:date",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "attendance", ":date"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Leave",
+			"item": [
+				{
+					"name": "Get Leave Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/leave",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "leave"]
+						}
+					}
+				},
+				{
+					"name": "Create Leave Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"startDate\": \"2024-04-01\",\n    \"endDate\": \"2024-04-05\",\n    \"leaveType\": \"Annual\",\n    \"reason\": \"Family vacation\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/employees/leave",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "leave"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "My Documents",
+			"item": [
+				{
+					"name": "Get My Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/my-documents",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "my-documents"]
+						}
+					}
+				},
+				{
+					"name": "Download Document",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/my-documents/download/:documentId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "my-documents", "download", ":documentId"]
+						}
+					}
+				},
+				{
+					"name": "Get Document Signature",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/my-documents/signature/:documentId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "my-documents", "signature", ":documentId"]
+						}
+					}
+				},
+				{
+					"name": "Save Document Signature",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"documentId\": \"123\",\n    \"signature\": \"base64_encoded_signature\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/employees/my-documents/save-signature",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "my-documents", "save-signature"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Work Schedule",
+			"item": [
+				{
+					"name": "Get Work Schedule",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/work-schedule/:month",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "work-schedule", ":month"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Payslips",
+			"item": [
+				{
+					"name": "Get Payslip Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/payslips/:year",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "payslips", ":year"]
+						}
+					}
+				},
+				{
+					"name": "Download Payslip",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/employees/payslips/download/:payslipId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "employees", "payslips", "download", ":payslipId"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_token_here"
+		}
+	]
+} 

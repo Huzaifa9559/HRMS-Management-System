@@ -65,7 +65,7 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch('/api/employees/auth/login', {
+      const response = await fetch('http://localhost:8000/api/employees/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,10 +73,13 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
-
+      console.log(data);
+      const token=data.data;
       if (data.message == 'Login successful') {
-        // Call loginAsEmployee from AuthContext to update authentication state
         loginAsEmployee();
+        //const token = getCookie('authToken');  // You can extract the token from cookies here
+        localStorage.setItem('authToken', token); 
+        // Call loginAsEmployee from AuthContext to update authentication state
         navigate('/employee/dashboard');
       } else {
         setError('Invalid credentials');
@@ -85,6 +88,13 @@ export default function Login() {
       setError('An error occurred. Please try again.');
     }
 
+  };
+
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
   };
 
   const togglePasswordVisibility = () => {

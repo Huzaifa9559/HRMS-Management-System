@@ -22,7 +22,7 @@ export default function Payslips() {
     const fetchPayslips = async () => {
       setLoading(true);
       try {
-        const token = Cookies.get('token');
+        const token = localStorage.getItem('authToken');
         const response = await axios.get(`/api/employees/payslips/${selectedYear}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,7 +54,7 @@ export default function Payslips() {
   // Handle document download
   const handleDownload = async (payslipId) => {
     try {
-      const token = Cookies.get('token');
+      const token = localStorage.getItem('authToken');
       const response = await axios.get(`/api/employees/payslips/download/${payslipId}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',

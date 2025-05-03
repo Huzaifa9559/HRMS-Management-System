@@ -152,7 +152,7 @@ exports.addEmployee = async (req, res) => {
 exports.editEmployee = async (req, res) => {
     const { employeeId, updatedData } = req.body; // Get employeeId and updated data from request body
     const file = req.file;
-    if (!employeeId || !updatedData) {
+    if (!employeeId) {
         return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Employee ID and updated data are required');
     }
 

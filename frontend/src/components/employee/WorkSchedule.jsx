@@ -15,7 +15,7 @@ export default function WorkSchedule() {
   useEffect(() => {
     const fetchScheduleData = async () => {
       try {
-        const token = Cookies.get('token');
+        const token = localStorage.getItem('authToken');
         const response = await axios.get(`/api/employees/work-schedule/${selectedMonth}`, {
           headers: {
             Authorization: `Bearer ${token}` // Add token to headers

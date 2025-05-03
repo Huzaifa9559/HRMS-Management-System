@@ -5,21 +5,22 @@ import { useAuth } from './AuthContext';
 
 // PrivateRoute component to protect routes based on user authentication and role
 const PrivateRoute = ({ element, requiredRole }) => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, userRole } = useAuth(); // Use AuthContext
 
-  // Check if the user is authenticated and has the correct role
+  // Debugging
+  console.log('isAuthenticated:', isAuthenticated);
+  console.log('userRole:', userRole);
+
+  // Check if the user is authenticated and has the required role
   if (!isAuthenticated) {
-    // If not authenticated, redirect to login
     return <Navigate to="/login" replace />;
   }
 
   if (userRole !== requiredRole) {
-    // If the user role doesn't match, redirect to a no-access or unauthorized page (optional)
     return <Navigate to="/no-access" replace />;
   }
 
-  // If authenticated and role matches, render the protected component
-  return element;
+  return element; // If authenticated and role matches, render the component
 };
 
 export default PrivateRoute;

@@ -4,7 +4,8 @@ const httpStatus = require('../utils/httpStatus');
 
 
 exports.getAnnouncements = async (req, res) => {
-    const { department } = req.query; // Extract department name from query parameters
+    const  {department } = req.query; // Extract department name from query parameters
+    console.log("helo",department);
     if (!department) {
         return sendResponse(res, httpStatus.BAD_REQUEST, null, 'Department name is required');
     }

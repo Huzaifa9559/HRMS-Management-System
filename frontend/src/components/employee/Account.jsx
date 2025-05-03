@@ -12,7 +12,9 @@ const EmpAccount = () => {
   const navigate = useNavigate();
   const [employeeData, setEmployeeData] = useState();
   const [loading, setLoading] = useState(true);
-  const backendURL = process.env.REACT_APP_BACKEND_URL;
+  //const backendURL = process.env.REACT_APP_BACKEND_URL;
+
+  const backendURL='http://localhost:8000';
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250);
@@ -22,7 +24,8 @@ const EmpAccount = () => {
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        const token = Cookies.get('token');
+        const token = localStorage.getItem('authToken');
+  
         const response = await axios.get(`/api/employees/employee`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -32,7 +35,7 @@ const EmpAccount = () => {
       } catch (error) {
         console.error('Error fetching employee data:', error);
         toast.error('Session expired. Please try again.');
-        navigate('/login');
+        //navigate('/login');
       }
     };
 

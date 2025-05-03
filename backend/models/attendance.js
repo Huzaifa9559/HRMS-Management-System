@@ -162,11 +162,11 @@ Attendance.Attendance_Dashboard = async function () {
         COUNT(CASE WHEN a.attendance_status = 1 THEN 1 END) AS presentCount,
         COUNT(CASE WHEN a.attendance_status = 0 THEN 1 END) AS absentCount
         FROM 
-        department d
+        Department d
         LEFT JOIN 
-        employee e ON d.departmentID = e.departmentID
+        Employee e ON d.departmentID = e.departmentID
         LEFT JOIN 
-        attendance a ON e.employeeID = a.employeeID
+        Attendance a ON e.employeeID = a.employeeID
         GROUP BY 
         d.departmentID, d.department_name
         ORDER BY 

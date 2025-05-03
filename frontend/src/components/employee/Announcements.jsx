@@ -11,7 +11,7 @@ import axios from 'axios';
 const ITEMS_PER_PAGE = 6;
 
 export default function Announcements() {
-  const [selectedDepartment, setSelectedDepartment] = useState("Human Resources (HR)");
+  const [selectedDepartment, setSelectedDepartment] = useState("Technology");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [myAnnouncements, setMyAnnouncements] = useState([]);
@@ -30,7 +30,12 @@ export default function Announcements() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await axios.get('/api/employees/department');
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get('/api/employees/department', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setDepartments(response.data.data);
     } catch (error) {
       
@@ -40,8 +45,13 @@ export default function Announcements() {
 
   const fetchAnnouncements = async (department) => {
     try {
-      const response = await axios.get(`/api/employees/announcements?department=${department}`);
-
+      const token = localStorage.getItem('authToken');
+  
+      const response = await axios.get(`/api/employees/announcements?department=${department}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setMyAnnouncements(response.data.data);
     } catch (error) {
 setMyAnnouncements([]);

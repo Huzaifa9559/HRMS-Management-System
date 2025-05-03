@@ -206,7 +206,8 @@ export default function Leave() {
   useEffect(() => {
     const fetchLeaveData = async () => {
       try {
-        const token = Cookies.get('token');
+        const token = localStorage.getItem('authToken');
+        console.log(token);
         const response = await axios.get(`/api/employees/leave/leave-details`, {
           headers: {
             'Authorization': `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
@@ -215,7 +216,7 @@ export default function Leave() {
         setAllLeaveData(response.data.data);
       } catch (error) {
         console.error('Error fetching leave data:', error);
-        navigate('/login');
+        //navigate('/login');
       }
     };
 

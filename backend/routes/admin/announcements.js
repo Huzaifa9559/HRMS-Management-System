@@ -8,7 +8,7 @@ const { getAnnouncements, getAnnouncmentDetails, deleteAnnouncement,createAnnoun
 
 announcement.get('/', getAnnouncements);
 announcement.get('/view/:announcementId', getAnnouncmentDetails);
-announcement.post('/delete', deleteAnnouncement);
+announcement.delete('/delete', deleteAnnouncement);
 announcement.post('/create', createAnnouncement);
 
 module.exports = announcement; // Export the router

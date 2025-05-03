@@ -11,7 +11,7 @@ import Loader from '../Loader';
 const EmpAccount = () => {
   const [employeeData, setEmployeeData] = useState();
   const [loading, setLoading] = useState(true);
-  const backendURL = process.env.REACT_APP_BACKEND_URL;
+  const backendURL = 'http://localhost:8000';
   const { id } = useParams();
 
   useEffect(() => {

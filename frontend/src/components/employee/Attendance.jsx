@@ -51,7 +51,7 @@ export default function Attendance() {
   useEffect(() => {
     const fetchPreviousData = async () => {
       try {
-        const token = Cookies.get('token'); // Get the token for authorization
+        const token = localStorage.getItem('authToken');// Get the token for authorization
         const response = await axios.get('/api/employees/attendance/all', {
           headers: {
             'Authorization': `Bearer ${token}`, // Include the token in the request headers
@@ -97,7 +97,7 @@ export default function Attendance() {
         toast.error('You have already checked in today.'); // Show error notification
         return;
       }
-      const token = Cookies.get('token'); // Get the token for authorization
+      const token = localStorage.getItem('authToken'); // Get the token for authorization
       const date = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
       const response = await axios.get(`/api/employees/attendance?date=${date}`, { // Pass date as a query parameter
         headers: {
@@ -129,7 +129,7 @@ export default function Attendance() {
   const handleBreakIn = async () => {
     // API call to store break-in time in the database
     try {
-      const token = Cookies.get('token'); // Get the token for authorization
+      const token = localStorage.getItem('authToken'); // Get the token for authorization
       const action = "breakIn";
       const date = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
       // Store break-in time in DB
@@ -153,7 +153,7 @@ export default function Attendance() {
     setIsOnBreak(false)
     localStorage.setItem('isOnBreak', 'false');
     try {
-      const token = Cookies.get('token');
+      const token = localStorage.getItem('authToken');
       const action = "breakOut";
       const date = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
       await axios.post('/api/employees/attendance/breakout', { date, action }, {
@@ -179,7 +179,7 @@ export default function Attendance() {
     setShowCheckoutModal(false);
 
     try {
-      const token = Cookies.get('token');
+      const token = localStorage.getItem('authToken');
       const action = "clockOut";
       const date = new Date().toISOString().split('T')[0];
       await axios.post('/api/employees/attendance/clockout', { date, action }, {
