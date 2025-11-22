@@ -36,7 +36,7 @@ export default function Header({ title }) {
     fetchEmployeeData();
   }, []);
 
-  const backendURL = 'http://localhost:8000';
+  const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
   const imageURL = employeeData ? `${backendURL}/uploads/employees/${employeeData}` : null;
 
     const profileDetails = {

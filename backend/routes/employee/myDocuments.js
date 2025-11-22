@@ -1,10 +1,12 @@
 const express = require('express'); // Import express
 const myDocumentsrouter = express.Router(); // Create a router instance
 
-const { getEmployeeMyDocuments, downloadDocument, getDocumentSignature,
-    saveDocumentSignature
-} =
-    require('../../controllers/myDocuments');
+const {
+  getEmployeeMyDocuments,
+  downloadDocument,
+  getDocumentSignature,
+  saveDocumentSignature,
+} = require('../../controllers/myDocuments');
 
 myDocumentsrouter.get('/', getEmployeeMyDocuments);
 myDocumentsrouter.get('/download/:documentId', downloadDocument);

@@ -48,7 +48,7 @@ import LoginComponent from './components/LoginComponent.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-axios.defaults.baseURL ='http://localhost:8000';
+axios.defaults.baseURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
 root.render(
   <React.StrictMode>

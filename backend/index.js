@@ -15,11 +15,27 @@ const app = express();
 
 // Important Middlewares
 app.use('/uploads/employees', express.static(path.join(__dirname, 'uploads/employees')));
+// CORS configuration - support multiple origins
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+  : ['http://localhost:3000'];
+
 app.use(cors({
-  origin: `http://localhost:3000`, // Frontend address
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 //app.use(cors());
 app.use(express.json()); // Use express's built-in JSON parser
@@ -34,6 +50,11 @@ const authenticateToken = require('./middlewares/protectedUsers');
 app.use('/api/employees/auth', employeeAuthRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 //protected employees routes
 app.use('/api/employees', authenticateToken, employeeRoutes);
 app.use('/api/admin', adminRoutes);
@@ -41,9 +62,15 @@ app.use('/api/admin', adminRoutes);
 
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
 
 
 

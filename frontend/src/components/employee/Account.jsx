@@ -12,9 +12,7 @@ const EmpAccount = () => {
   const navigate = useNavigate();
   const [employeeData, setEmployeeData] = useState();
   const [loading, setLoading] = useState(true);
-  //const backendURL = process.env.REACT_APP_BACKEND_URL;
-
-  const backendURL='http://localhost:8000';
+  const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250);

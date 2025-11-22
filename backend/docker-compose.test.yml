@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # Test MySQL Database Service
+  mysql-test:
+    image: mysql:8.0
+    container_name: hrms-mysql-test
+    restart: unless-stopped
+    ports:
+      - "3307:3306"  # Different port to avoid conflict with dev database
+    environment:
+      - MYSQL_ROOT_PASSWORD=testpassword
+      - MYSQL_DATABASE=test_db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=testpassword
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptestpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
+

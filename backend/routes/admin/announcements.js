@@ -1,10 +1,12 @@
 const express = require('express'); // Import express
 const announcement = express.Router();
 
-const { getAnnouncements, getAnnouncmentDetails, deleteAnnouncement,createAnnouncement
-    
- } = require('../../controllers/announcements');
-
+const {
+  getAnnouncements,
+  getAnnouncmentDetails,
+  deleteAnnouncement,
+  createAnnouncement,
+} = require('../../controllers/announcements');
 
 announcement.get('/', getAnnouncements);
 announcement.get('/view/:announcementId', getAnnouncmentDetails);

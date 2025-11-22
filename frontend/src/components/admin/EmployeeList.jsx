@@ -41,7 +41,7 @@ export default function EmployeeList() {
     const [employeeDetails, setEmployeeDetails] = useState(null);
     const navigate = useNavigate();
 
-    const backendURL = 'http://localhost:8000';
+    const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
     const debouncedChangeHandler = useMemo(
         () => debounce((value) => setDebouncedSearchTerm(value), 300),

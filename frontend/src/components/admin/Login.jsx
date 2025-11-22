@@ -65,7 +65,8 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/admin/auth/login', {
+      const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+      const response = await fetch(`${backendURL}/api/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

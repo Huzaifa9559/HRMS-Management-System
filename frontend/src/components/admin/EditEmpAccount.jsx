@@ -55,7 +55,7 @@ const [employeeDetails, setEmployeeDetails] = useState({
         const designationsRes = await axios.get('/api/admin/designation'); // Replace with correct API endpoint
         setDesignations(designationsRes.data.data);
 
-        const backendURL ='http://localhost:8000';
+        const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
         const imageURL = employeeRes.data.data.employee_image ? `${backendURL}/uploads/employees/${employeeRes.data.data.employee_image}` : null;
         setProfileImage(imageURL);
 
