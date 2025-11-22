@@ -1,3 +1,5 @@
 node_modules
 .env
 uploads
+HRMS-Admin-API.postman_collection.json
+HRMS-API.postman_collection.json
