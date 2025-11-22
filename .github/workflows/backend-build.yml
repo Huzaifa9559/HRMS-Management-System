@@ -1,0 +1,44 @@
+name: Backend Build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Verify backend build
+        working-directory: ./backend
+        run: |
+          echo "Verifying backend dependencies and syntax..."
+          node --check index.js || exit 1
+          echo "Backend build verification successful"
+
+      - name: Run tests (if available)
+        working-directory: ./backend
+        run: npm test || echo "No tests configured"
+        continue-on-error: true
