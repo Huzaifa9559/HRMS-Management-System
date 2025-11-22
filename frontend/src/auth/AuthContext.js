@@ -16,6 +16,7 @@ const isSessionValid = () => {
   return true;
 };
 
+
 // Auth Provider component to wrap around the app
 export const AuthProvider = ({ children }) => {
   // Initialize authentication state from local storage
