@@ -25,7 +25,7 @@
     "migrate:status": "sequelize-cli db:migrate:status",
     "migrate:safe": "node scripts/safe-migrate.js",
     "migrate:prod": "bash scripts/run-production-migration.sh",
-    "build": "npm run migrate && echo 'Build completed successfully'",
+    "build": "node --check index.js && echo 'Build completed successfully'",
     "prebuild": "echo 'Running pre-build checks...'",
     "postbuild": "echo 'Build process completed'",
     "deploy": "npm run build && npm run prod"
