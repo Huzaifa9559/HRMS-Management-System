@@ -424,6 +424,18 @@ jobs:
             # Clean up unused images
             docker system prune -f
 
+      - name: Create Nginx directory on server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: |
+            mkdir -p /opt/hrms/nginx
+            chmod 755 /opt/hrms/nginx
+            echo "✅ Nginx directory created"
+
       - name: Copy Nginx files to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -431,8 +443,9 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
-          source: "nginx/*"
+          source: "nginx/docker-compose.yml,nginx/nginx.conf,nginx/nginx.conf.initial"
           target: "/opt/hrms/nginx/"
+          overwrite: true
 
       - name: Deploy Nginx Reverse Proxy
         uses: appleboy/ssh-action@v1.0.0
