@@ -25,17 +25,6 @@ jobs:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: testpassword
-          MYSQL_DATABASE: test_db
-          MYSQL_USER: root
-          MYSQL_PASSWORD: testpassword
-        ports:
-          - 3306:3306
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,42 +40,41 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Install MySQL client
+      - name: Start MySQL test database with Docker Compose
+        working-directory: ./backend
         run: |
-          sudo apt-get update
-          sudo apt-get install -y default-mysql-client
+          echo "🚀 Starting MySQL test database..."
+          docker compose -f docker-compose.test.yml up -d
+          echo "✅ MySQL container started"
 
       - name: Wait for MySQL to be ready
+        working-directory: ./backend
         run: |
-          echo "Waiting for MySQL to be ready..."
+          echo "⏳ Waiting for MySQL to be ready..."
           for i in {1..60}; do
-            if mysqladmin ping -h 127.0.0.1 -u root -ptestpassword --silent 2>/dev/null; then
+            if docker compose -f docker-compose.test.yml exec -T mysql-test mysqladmin ping -h localhost -u root -ptestpassword --silent 2>/dev/null; then
               echo "✅ MySQL is ready!"
               break
             fi
             if [ $i -eq 60 ]; then
               echo "❌ MySQL failed to start after 2 minutes"
-              docker logs $(docker ps -q --filter "ancestor=mysql:8.0") || true
+              docker compose -f docker-compose.test.yml logs mysql-test
               exit 1
             fi
             echo "Waiting for MySQL... ($i/60)"
             sleep 2
           done
-          echo "MySQL connection verified"
-        env:
-          MYSQL_PWD: testpassword
+          echo "✅ MySQL connection verified"
 
       - name: Configure MySQL
+        working-directory: ./backend
         run: |
-          echo "Configuring MySQL settings..."
-          mysql -h 127.0.0.1 -u root -ptestpassword <<EOF
-          ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'testpassword';
+          echo "🔧 Configuring MySQL settings..."
+          docker compose -f docker-compose.test.yml exec -T mysql-test mysql -u root -ptestpassword <<EOF
           ALTER DATABASE test_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
           FLUSH PRIVILEGES;
           EOF
           echo "✅ MySQL configuration completed"
-        env:
-          MYSQL_PWD: testpassword
 
       - name: Run database migrations (test)
         working-directory: ./backend
@@ -104,7 +92,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: testpassword
           DB_NAME: test_db
-          DB_PORT: 3306
+          DB_PORT: 3307
           DB_DIALECT: mysql
 
       - name: Verify migration status (test)
@@ -123,7 +111,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: testpassword
           DB_NAME: test_db
-          DB_PORT: 3306
+          DB_PORT: 3307
           DB_DIALECT: mysql
 
       - name: Run unit tests
@@ -135,7 +123,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: testpassword
           DB_NAME: test_db
-          DB_PORT: 3306
+          DB_PORT: 3307
           DB_DIALECT: mysql
           JWT_SECRET: test_jwt_secret
 
@@ -149,7 +137,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: testpassword
           DB_NAME: test_db
-          DB_PORT: 3306
+          DB_PORT: 3307
           DB_DIALECT: mysql
           JWT_SECRET: test_jwt_secret
 
@@ -161,6 +149,14 @@ jobs:
           flags: backend
           name: backend-coverage
         continue-on-error: true
+
+      - name: Stop MySQL test database
+        if: always()
+        working-directory: ./backend
+        run: |
+          echo "🛑 Stopping MySQL test database..."
+          docker compose -f docker-compose.test.yml down -v || true
+          echo "✅ MySQL test database stopped"
 
   # Linting Job
   lint:
