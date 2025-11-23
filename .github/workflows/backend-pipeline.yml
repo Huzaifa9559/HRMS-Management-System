@@ -434,9 +434,6 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         env:
           GHCR_TOKEN: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
-          REGISTRY: ${{ env.REGISTRY }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          REPO_OWNER: ${{ github.repository_owner }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
@@ -444,6 +441,9 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             echo "📦 Pulling Docker image from GHCR..."
+            REGISTRY="ghcr.io"
+            REPO_OWNER="${{ github.repository_owner }}"
+            IMAGE_NAME="hrms-backend"
             IMAGE_FULL_NAME="${REGISTRY}/${REPO_OWNER}/${IMAGE_NAME}:latest"
             echo "Image: ${IMAGE_FULL_NAME}"
 
