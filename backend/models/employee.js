@@ -352,7 +352,6 @@ Employee.updateEmployeeById = async function (employeeId, updatedData) {
 
   try {
     // Step 1: Get the current address_ID from the Employee table within the transaction
-    let addressID;
     const [employeeResult] = await sequelize.query(
       'SELECT address_ID FROM Employee WHERE employeeID = ?',
       {
