@@ -424,6 +424,90 @@ jobs:
             # Clean up unused images
             docker system prune -f
 
+      - name: Copy Nginx files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: "nginx/*"
+          target: "/opt/hrms/nginx/"
+
+      - name: Deploy Nginx Reverse Proxy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: |
+            echo "🔧 Setting up Nginx reverse proxy..."
+            
+            # Ensure nginx directory exists
+            mkdir -p /opt/hrms/nginx
+            cd /opt/hrms/nginx
+            
+            # Update container ports to bind to localhost (if not already done)
+            cd /opt/hrms/backend
+            if grep -q '"8000:8000"' docker-compose.yml 2>/dev/null; then
+              sed -i 's/"8000:8000"/"127.0.0.1:8000:8000"/' docker-compose.yml
+              docker-compose restart backend || true
+              echo "✅ Backend ports updated to localhost"
+            fi
+            
+            cd /opt/hrms/frontend
+            if grep -q '"80:80"' docker-compose.yml 2>/dev/null; then
+              sed -i 's/"80:80"/"127.0.0.1:80:80"/' docker-compose.yml
+              docker-compose restart frontend || true
+              echo "✅ Frontend ports updated to localhost"
+            fi
+            
+            # Copy nginx files if they don't exist (from repo)
+            cd /opt/hrms/nginx
+            if [ ! -f "docker-compose.yml" ]; then
+              echo "⚠️  Nginx files not found. Please ensure nginx/ directory exists in repo."
+              echo "   For now, skipping nginx deployment."
+              exit 0
+            fi
+            
+            # Create certbot directories
+            mkdir -p certbot/conf certbot/www
+            
+            # Ensure network exists
+            docker network create hrms-network --driver bridge 2>/dev/null || true
+            
+            # Check if SSL certificates exist
+            if [ -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
+              echo "✅ SSL certificates found, using SSL config"
+              # Ensure we have the full nginx.conf with SSL
+              if [ ! -f "nginx.conf" ] || ! grep -q "ssl_certificate" nginx.conf 2>/dev/null; then
+                echo "⚠️  nginx.conf missing SSL config, using initial config"
+                if [ -f "nginx.conf.initial" ]; then
+                  cp nginx.conf.initial nginx.conf
+                fi
+              fi
+            else
+              echo "⚠️  SSL certificates not found, using HTTP-only config"
+              if [ -f "nginx.conf.initial" ]; then
+                cp nginx.conf.initial nginx.conf
+              fi
+            fi
+            
+            # Start/restart nginx
+            echo "🚀 Starting Nginx reverse proxy..."
+            docker-compose up -d nginx
+            
+            # Wait and verify
+            sleep 5
+            if docker ps | grep -q hrms-nginx; then
+              echo "✅ Nginx reverse proxy is running"
+              docker exec hrms-nginx nginx -t && echo "✅ Nginx config is valid"
+            else
+              echo "⚠️  Nginx container may not be running. Check logs:"
+              docker logs hrms-nginx || true
+            fi
+
       - name: Health Check
         run: |
           sleep 10

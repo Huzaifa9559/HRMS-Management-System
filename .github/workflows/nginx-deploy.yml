@@ -1,0 +1,155 @@
+name: Nginx Reverse Proxy Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'nginx/**'
+      - '.github/workflows/nginx-deploy.yml'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Backend Pipeline", "Frontend Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy-nginx:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update Container Ports (Bind to localhost)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: |
+            echo "🔧 Updating container ports to bind to localhost only..."
+            
+            # Update backend docker-compose.yml
+            cd /opt/hrms/backend
+            if grep -q '"8000:8000"' docker-compose.yml; then
+              sed -i 's/"8000:8000"/"127.0.0.1:8000:8000"/' docker-compose.yml
+              echo "✅ Backend ports updated"
+            fi
+            
+            # Update frontend docker-compose.yml
+            cd /opt/hrms/frontend
+            if grep -q '"80:80"' docker-compose.yml; then
+              sed -i 's/"80:80"/"127.0.0.1:80:80"/' docker-compose.yml
+              echo "✅ Frontend ports updated"
+            fi
+            
+            # Restart containers with new port bindings
+            echo "🔄 Restarting containers with new port bindings..."
+            cd /opt/hrms/backend && docker-compose restart backend || true
+            cd /opt/hrms/frontend && docker-compose restart frontend || true
+            echo "✅ Containers restarted"
+
+      - name: Copy Nginx files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: "nginx/*"
+          target: "/opt/hrms/nginx/"
+
+      - name: Setup Nginx Reverse Proxy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: |
+            cd /opt/hrms/nginx
+            
+            # Create certbot directories if they don't exist
+            mkdir -p certbot/conf certbot/www
+            
+            # Create network if it doesn't exist
+            docker network create hrms-network --driver bridge 2>/dev/null || true
+            
+            # Check if SSL certificates exist
+            if [ -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
+              echo "✅ SSL certificates found, using full SSL config"
+              # Use full nginx.conf with SSL
+              if [ ! -f "nginx.conf" ] || [ ! -f "nginx.conf.backup" ]; then
+                cp nginx.conf nginx.conf.backup 2>/dev/null || true
+              fi
+            else
+              echo "⚠️  SSL certificates not found, using initial config (HTTP only)"
+              echo "📝 To enable SSL, run SSL setup manually first (see NGINX-QUICK-START.md)"
+              # Use initial config without SSL redirect
+              if [ ! -f "nginx.conf.initial" ]; then
+                echo "❌ nginx.conf.initial not found! Please check nginx files."
+                exit 1
+              fi
+              cp nginx.conf.initial nginx.conf
+            fi
+            
+            # Start/restart nginx container
+            echo "🚀 Starting Nginx reverse proxy..."
+            docker-compose up -d nginx
+            
+            # Wait for nginx to be ready
+            sleep 5
+            
+            # Check if nginx is running
+            if docker ps | grep -q hrms-nginx; then
+              echo "✅ Nginx container is running"
+            else
+              echo "❌ Nginx container failed to start"
+              docker logs hrms-nginx
+              exit 1
+            fi
+            
+            # Test nginx configuration
+            docker exec hrms-nginx nginx -t || {
+              echo "❌ Nginx configuration test failed"
+              docker logs hrms-nginx
+              exit 1
+            }
+            
+            echo "✅ Nginx reverse proxy deployed successfully"
+
+      - name: Health Check
+        run: |
+          sleep 5
+          # Test HTTP (will redirect to HTTPS if SSL is configured)
+          echo "Testing frontend..."
+          curl -f -L http://${{ secrets.DO_HOST }} || echo "⚠️  Frontend health check failed (may need SSL setup)"
+          echo ""
+          echo "Testing backend API..."
+          curl -f http://${{ secrets.DO_HOST }}:8000/api/health || echo "⚠️  Backend health check failed"
+
+      - name: Display Status
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: |
+            echo "📊 Nginx Deployment Status:"
+            echo "=========================="
+            docker ps | grep -E "hrms-nginx|hrms-frontend|hrms-backend" || true
+            echo ""
+            echo "🌐 Network Status:"
+            docker network inspect hrms-network --format '{{.Name}}: {{len .Containers}} containers' || true
+            echo ""
+            if [ -f "/opt/hrms/nginx/certbot/conf/live/h-rms.me/fullchain.pem" ]; then
+              echo "✅ SSL certificates are configured"
+            else
+              echo "⚠️  SSL certificates not found - using HTTP only"
+              echo "   Run SSL setup to enable HTTPS (see NGINX-QUICK-START.md)"
+            fi
+
