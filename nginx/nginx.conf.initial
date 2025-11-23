@@ -1,12 +1,12 @@
 # Initial Nginx Config (Before SSL) - Use this first!
 
-# Resolver for dynamic DNS (allows nginx to resolve container names at runtime)
-resolver 127.0.0.11 valid=30s;
-
 # Frontend Configuration - h-rms.me
 server {
     listen 80;
     server_name h-rms.me www.h-rms.me;
+
+    # Resolver for dynamic DNS (must be in server or location context)
+    resolver 127.0.0.11 valid=10s ipv6=off;
 
     # For Let's Encrypt validation
     location /.well-known/acme-challenge/ {
@@ -14,10 +14,10 @@ server {
     }
 
     # Proxy to frontend (NO redirect yet - SSL not installed)
-    # Using variables for dynamic DNS resolution
-    set $frontend_upstream "http://hrms-frontend:80";
+    # Using variables forces runtime resolution instead of startup resolution
     location / {
-        proxy_pass $frontend_upstream;
+        set $frontend "hrms-frontend:80";
+        proxy_pass http://$frontend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -31,16 +31,19 @@ server {
     listen 80;
     server_name api.h-rms.me;
 
+    # Resolver for dynamic DNS (must be in server or location context)
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
     # For Let's Encrypt validation
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
     # Proxy to backend (NO redirect yet - SSL not installed)
-    # Using variables for dynamic DNS resolution
-    set $backend_upstream "http://hrms-backend:8000";
+    # Using variables forces runtime resolution instead of startup resolution
     location / {
-        proxy_pass $backend_upstream;
+        set $backend "hrms-backend:8000";
+        proxy_pass http://$backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext';
 const PrivateRoute = ({ element, requiredRole }) => {
   const { isAuthenticated, userRole } = useAuth(); // Use AuthContext
 
+  
   // Debugging
   console.log('isAuthenticated:', isAuthenticated);
   console.log('userRole:', userRole);
