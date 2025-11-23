@@ -16,6 +16,8 @@ on:
 env:
   NODE_VERSION: "18"
   IMAGE_NAME: hrms-frontend
+  REGISTRY: ghcr.io
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   # Testing Job
@@ -264,29 +266,40 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image to GHCR
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          push: false
-          tags: ${{ env.IMAGE_NAME }}:latest
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             REACT_APP_BACKEND_URL=${{ secrets.REACT_APP_BACKEND_URL }}
             REACT_APP_FRONTEND_URL=${{ secrets.REACT_APP_FRONTEND_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Save Docker image as tar
+      - name: Verify image was pushed
         run: |
-          docker save ${{ env.IMAGE_NAME }}:latest | gzip > /tmp/${{ env.IMAGE_NAME }}.tar.gz
-          ls -lh /tmp/${{ env.IMAGE_NAME }}.tar.gz
-
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-docker-image
-          path: /tmp/${{ env.IMAGE_NAME }}.tar.gz
-          retention-days: 1
+          echo "✅ Image pushed to GHCR:"
+          echo "  - ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+          echo "  - ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
 
   # Deploy to Digital Ocean
   deploy:
@@ -301,36 +314,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-docker-image
-          path: /tmp/
-
-      - name: Transfer Docker image to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          port: ${{ secrets.DO_PORT || 22 }}
-          source: "/tmp/frontend-docker-image/*.tar.gz"
-          target: "/tmp/"
-          strip_components: 1
-
-      - name: Load Docker image on server
+      - name: Pull Docker image from GHCR on server
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          REPO_OWNER: ${{ github.repository_owner }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            echo "📦 Loading Docker image..."
-            gunzip -c /tmp/${{ env.IMAGE_NAME }}.tar.gz | docker load
-            echo "✅ Docker image loaded successfully"
-            docker images | grep ${{ env.IMAGE_NAME }} || true
-            rm -f /tmp/${{ env.IMAGE_NAME }}.tar.gz
+            echo "📦 Pulling Docker image from GHCR..."
+            IMAGE_FULL_NAME="${REGISTRY}/${REPO_OWNER}/${IMAGE_NAME}:latest"
+            echo "Image: ${IMAGE_FULL_NAME}"
+
+            # Login to GHCR using Personal Access Token
+            if [ -n "${GHCR_TOKEN}" ]; then
+              echo "${GHCR_TOKEN}" | docker login ${REGISTRY} -u ${REPO_OWNER} --password-stdin
+              echo "✅ Logged in to GHCR"
+            else
+              echo "⚠️  No GHCR token found. Attempting public pull (may fail if package is private)..."
+            fi
+
+            # Pull the image
+            if docker pull "${IMAGE_FULL_NAME}"; then
+              echo "✅ Image pulled successfully"
+            else
+              echo "❌ Failed to pull image. Please ensure:"
+              echo "   1. GHCR_PAT secret is set in GitHub Secrets (Production environment)"
+              echo "   2. The package permissions allow the token to read"
+              echo "   3. The image exists in GHCR: ${IMAGE_FULL_NAME}"
+              exit 1
+            fi
+
+            # Tag it for local use (docker-compose expects hrms-frontend:latest)
+            docker tag "${IMAGE_FULL_NAME}" "${IMAGE_NAME}:latest"
+            echo "✅ Docker image pulled and tagged as ${IMAGE_NAME}:latest"
+            docker images | grep "${IMAGE_NAME}" || true
 
       - name: Create/Update .env file on server
         uses: appleboy/ssh-action@v1.0.0
@@ -360,7 +383,24 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            cd /opt/hrms
+            # Determine the base directory (with fallbacks)
+            BASE_DIR="/opt/hrms"
+            if [ ! -d "$BASE_DIR" ]; then
+              BASE_DIR="$HOME/hrms"
+              if [ ! -d "$BASE_DIR" ]; then
+                BASE_DIR="/tmp/hrms"
+              fi
+              mkdir -p "$BASE_DIR" || {
+                echo "❌ Failed to create directory. Trying with sudo..."
+                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
+                BASE_DIR="/opt/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
+              }
+            fi
+            mkdir -p "$BASE_DIR/frontend" || sudo mkdir -p "$BASE_DIR/frontend" || mkdir -p "$HOME/hrms/frontend" || mkdir -p "/tmp/hrms/frontend"
+            cd "$BASE_DIR" || exit 1
+
             # Create .env file from GitHub Secrets (automated)
             {
               echo "# =========================================="
@@ -401,10 +441,11 @@ jobs:
               echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
               echo "AWS_REGION=${AWS_REGION}"
               echo "AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}"
-            } > .env
+            } > "$BASE_DIR/frontend/.env"
+
             # Set secure permissions
-            chmod 600 .env
-            echo ".env file created/updated successfully from GitHub Secrets"
+            chmod 600 "$BASE_DIR/frontend/.env"
+            echo ".env file created/updated successfully from GitHub Secrets at $BASE_DIR/frontend/.env"
 
       - name: Deploy to Digital Ocean Droplet
         uses: appleboy/ssh-action@v1.0.0
@@ -414,11 +455,75 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            cd /opt/hrms
+            # Determine the base directory (with fallbacks)
+            BASE_DIR="/opt/hrms"
+            if [ ! -d "$BASE_DIR" ]; then
+              BASE_DIR="$HOME/hrms"
+              if [ ! -d "$BASE_DIR" ]; then
+                BASE_DIR="/tmp/hrms"
+              fi
+              mkdir -p "$BASE_DIR" || {
+                echo "❌ Failed to create directory. Trying with sudo..."
+                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
+                BASE_DIR="/opt/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
+              }
+            fi
+            cd "$BASE_DIR" || exit 1
+
+            # Check which docker compose command is available
+            DOCKER_COMPOSE_CMD=""
+            # Test docker-compose (standalone)
+            if command -v docker-compose >/dev/null 2>&1; then
+              if docker-compose --version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker-compose"
+                echo "✅ Found docker-compose (standalone)"
+              fi
+            fi
+            # Test docker compose (plugin) if standalone not found
+            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+              if docker compose version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker compose"
+                echo "✅ Found docker compose (plugin)"
+              fi
+            fi
+            # Error if neither is found
+            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+              echo "❌ Error: Neither 'docker-compose' nor 'docker compose' is available."
+              echo "Please install Docker Compose:"
+              echo "  For plugin version (recommended):"
+              echo "    sudo apt-get update && sudo apt-get install docker-compose-plugin"
+              echo "  Or for standalone version:"
+              echo "    sudo apt-get update && sudo apt-get install docker-compose"
+              exit 1
+            fi
+
             # Create shared network if it doesn't exist
             docker network create hrms-network --driver bridge 2>/dev/null || true
-            # Use the loaded image instead of pulling
-            docker-compose up -d --no-deps frontend
+
+            # Ensure frontend directory and docker-compose.yml exist
+            if [ ! -d "frontend" ]; then
+              mkdir -p frontend
+              echo "⚠️  Frontend directory not found, creating it..."
+            fi
+            if [ ! -f "frontend/docker-compose.yml" ]; then
+              echo "❌ Error: frontend/docker-compose.yml not found at $BASE_DIR/frontend/"
+              echo "Please ensure the docker-compose.yml file is present in the frontend directory."
+              exit 1
+            fi
+
+            # Start frontend service
+            cd frontend
+
+            # Export environment variables for docker-compose (from .env file)
+            set -a
+            source "$BASE_DIR/frontend/.env"
+            set +a
+
+            # Use the pulled image (already tagged as hrms-frontend:latest)
+            $DOCKER_COMPOSE_CMD up -d --no-deps frontend
+
             # Clean up unused images
             docker system prune -f
 

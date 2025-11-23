@@ -7,7 +7,7 @@ services:
     container_name: hrms-mysql
     restart: unless-stopped
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - '${DB_PORT:-3306}:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-rootpassword}
       - MYSQL_DATABASE=${DB_NAME:-hrms_db}
@@ -19,7 +19,17 @@ services:
     networks:
       - hrms-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
+      test:
+        [
+          'CMD',
+          'mysqladmin',
+          'ping',
+          '-h',
+          'localhost',
+          '-u',
+          'root',
+          '-p${DB_ROOT_PASSWORD:-rootpassword}',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,19 +37,19 @@ services:
     command: --default-authentication-plugin=mysql_native_password
 
   backend:
-    image: hrms-backend:latest
+    image: ${BACKEND_IMAGE:-hrms-backend:latest}
     container_name: hrms-backend
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       # Application Configuration
       - NODE_ENV=production
       - PORT=8000
-      
+
       # Database Configuration
       - DB_HOST=mysql
       - DB_USER=${DB_USER:-hrms_user}
@@ -47,20 +57,20 @@ services:
       - DB_NAME=${DB_NAME:-hrms_db}
       - DB_PORT=3306
       - DB_DIALECT=mysql
-      
+
       # Security & Authentication
       - JWT_SECRET=${JWT_SECRET}
-      
+
       # Email Configuration (SendGrid)
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-no-reply@kitor.io}
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Xylobit HRMS}
-      
+
       # URL Configuration
       - FRONTEND_URL=${FRONTEND_URL}
       - DOMAIN=${DOMAIN}
       - BACKEND_URL=${BACKEND_URL}
-      
+
       # AWS S3 Configuration (File Storage)
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -71,7 +81,13 @@ services:
     networks:
       - hrms-network
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:8000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -85,4 +101,3 @@ networks:
   hrms-network:
     external: true
     name: hrms-network
-

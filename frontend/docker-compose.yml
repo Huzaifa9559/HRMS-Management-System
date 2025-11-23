@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Nginx service using official nginx image
   frontend:
-    image: hrms-frontend:latest
+    image: ${FRONTEND_IMAGE:-hrms-frontend:latest}
     container_name: hrms-frontend
     restart: unless-stopped
     ports:

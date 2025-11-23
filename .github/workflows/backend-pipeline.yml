@@ -18,6 +18,8 @@ on:
 env:
   NODE_VERSION: "18"
   IMAGE_NAME: hrms-backend
+  REGISTRY: ghcr.io
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   # Testing Job
@@ -380,51 +382,37 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image to GHCR
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          push: false
-          load: true
-          tags: ${{ env.IMAGE_NAME }}:latest
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Verify Docker image exists
+      - name: Verify image was pushed
         run: |
-          echo "🔍 Verifying Docker image was built..."
-          docker images | grep "${{ env.IMAGE_NAME }}"
-          if ! docker images | grep -q "${{ env.IMAGE_NAME }}.*latest"; then
-            echo "❌ Docker image ${{ env.IMAGE_NAME }}:latest not found!"
-            echo "Available images:"
-            docker images
-            exit 1
-          fi
-          IMAGE_SIZE=$(docker images --format "{{.Size}}" ${{ env.IMAGE_NAME }}:latest)
-          echo "✅ Image found: ${{ env.IMAGE_NAME }}:latest (Size: $IMAGE_SIZE)"
-
-      - name: Save Docker image as tar
-        run: |
-          echo "💾 Saving Docker image to tar.gz..."
-          docker save ${{ env.IMAGE_NAME }}:latest | gzip > /tmp/${{ env.IMAGE_NAME }}.tar.gz
-          FILE_SIZE=$(stat -f%z /tmp/${{ env.IMAGE_NAME }}.tar.gz 2>/dev/null || stat -c%s /tmp/${{ env.IMAGE_NAME }}.tar.gz 2>/dev/null || du -b /tmp/${{ env.IMAGE_NAME }}.tar.gz | cut -f1)
-          FILE_SIZE_MB=$((FILE_SIZE / 1024 / 1024))
-          echo "📊 Saved image size: ${FILE_SIZE_MB}MB (${FILE_SIZE} bytes)"
-          ls -lh /tmp/${{ env.IMAGE_NAME }}.tar.gz
-
-          # Verify the saved file is reasonable size (at least 1MB)
-          if [ $FILE_SIZE -lt 1048576 ]; then
-            echo "❌ ERROR: Saved image file is too small! This indicates a problem."
-            exit 1
-          fi
-          echo "✅ Image saved successfully"
-
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-docker-image
-          path: /tmp/${{ env.IMAGE_NAME }}.tar.gz
-          retention-days: 1
+          echo "✅ Image pushed to GHCR:"
+          echo "  - ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
+          echo "  - ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
 
   # Deploy to Digital Ocean
   deploy:
@@ -439,63 +427,59 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
+      - name: Pull Docker image from GHCR on server
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          REPO_OWNER: ${{ github.repository_owner }}
         with:
-          name: backend-docker-image
-          path: /tmp/artifacts
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: |
+            echo "📦 Pulling Docker image from GHCR..."
+            IMAGE_FULL_NAME="${REGISTRY}/${REPO_OWNER}/${IMAGE_NAME}:latest"
+            echo "Image: ${IMAGE_FULL_NAME}"
 
-      - name: Find and verify Docker image
-        run: |
-          echo "📦 Searching for Docker image file..."
-          # Artifacts are extracted to a directory named after the artifact
-          IMAGE_FILE=$(find /tmp/artifacts -name "${{ env.IMAGE_NAME }}.tar.gz" -type f | head -1)
-          if [ -z "$IMAGE_FILE" ]; then
-            echo "❌ Docker image file not found in /tmp/artifacts"
-            echo "📋 Contents of /tmp/artifacts:"
-            ls -lah /tmp/artifacts/ 2>/dev/null || true
-            find /tmp/artifacts -type f 2>/dev/null || true
-            echo "📋 Searching entire /tmp:"
-            find /tmp -name "*.tar.gz" -type f 2>/dev/null || true
-            exit 1
-          fi
-          echo "✅ Found image: $IMAGE_FILE"
-          FILE_SIZE=$(stat -f%z "$IMAGE_FILE" 2>/dev/null || stat -c%s "$IMAGE_FILE" 2>/dev/null || du -b "$IMAGE_FILE" | cut -f1)
-          FILE_SIZE_MB=$((FILE_SIZE / 1024 / 1024))
-          echo "📊 File size: ${FILE_SIZE_MB}MB (${FILE_SIZE} bytes)"
+            # Login to GHCR using Personal Access Token
+            if [ -n "${GHCR_TOKEN}" ]; then
+              echo "${GHCR_TOKEN}" | docker login ${REGISTRY} -u ${REPO_OWNER} --password-stdin
+              echo "✅ Logged in to GHCR"
+            else
+              echo "⚠️  No GHCR token found. Attempting public pull (may fail if package is private)..."
+            fi
 
-          # Verify file is not too small (should be at least 1MB for a Docker image)
-          if [ $FILE_SIZE -lt 1048576 ]; then
-            echo "❌ ERROR: Docker image file is too small (${FILE_SIZE_MB}MB). Expected at least 1MB."
-            echo "This suggests the artifact may be corrupted or the image wasn't built correctly."
-            echo "Checking if image exists in Docker:"
-            docker images | grep "${{ env.IMAGE_NAME }}" || echo "Image not found in Docker"
-            exit 1
-          fi
+            # Pull the image
+            if docker pull "${IMAGE_FULL_NAME}"; then
+              echo "✅ Image pulled successfully"
+            else
+              echo "❌ Failed to pull image. Please ensure:"
+              echo "   1. GHCR_PAT secret is set in GitHub Secrets (Production environment)"
+              echo "   2. The package permissions allow the token to read"
+              echo "   3. The image exists in GHCR: ${IMAGE_FULL_NAME}"
+              exit 1
+            fi
 
-          # Copy to a known location
-          cp "$IMAGE_FILE" /tmp/${{ env.IMAGE_NAME }}.tar.gz
-          echo "✅ Image prepared at /tmp/${{ env.IMAGE_NAME }}.tar.gz"
-          ls -lh /tmp/${{ env.IMAGE_NAME }}.tar.gz
+            # Tag it for local use (docker-compose expects hrms-backend:latest)
+            docker tag "${IMAGE_FULL_NAME}" "${IMAGE_NAME}:latest"
+            echo "✅ Docker image pulled and tagged as ${IMAGE_NAME}:latest"
+            docker images | grep "${IMAGE_NAME}" || true
 
-      - name: Transfer Docker image to server
-        run: |
-          echo "📤 Transferring Docker image to server via SSH..."
-          # Install SSH key
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+      - name: Transfer docker-compose.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: "backend/docker-compose.yml"
+          target: "/tmp/"
+          overwrite: true
 
-          # Transfer file using scp command
-          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${{ secrets.DO_PORT || 22 }} -i ~/.ssh/deploy_key /tmp/${{ env.IMAGE_NAME }}.tar.gz ${{ secrets.DO_USERNAME }}@${{ secrets.DO_HOST }}:/tmp/
-
-          # Verify transfer
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${{ secrets.DO_PORT || 22 }} -i ~/.ssh/deploy_key ${{ secrets.DO_USERNAME }}@${{ secrets.DO_HOST }} "ls -lh /tmp/${{ env.IMAGE_NAME }}.tar.gz && echo '✅ Image transferred successfully'"
-
-          # Clean up
-          rm -f ~/.ssh/deploy_key
-
-      - name: Load Docker image on server
+      - name: Setup backend directory structure on server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.DO_HOST }}
@@ -503,11 +487,33 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            echo "📦 Loading Docker image..."
-            gunzip -c /tmp/${{ env.IMAGE_NAME }}.tar.gz | docker load
-            echo "✅ Docker image loaded successfully"
-            docker images | grep ${{ env.IMAGE_NAME }} || true
-            rm -f /tmp/${{ env.IMAGE_NAME }}.tar.gz
+            # Determine the base directory (with fallbacks)
+            BASE_DIR="/opt/hrms"
+            if [ ! -d "$BASE_DIR" ]; then
+              BASE_DIR="$HOME/hrms"
+              if [ ! -d "$BASE_DIR" ]; then
+                BASE_DIR="/tmp/hrms"
+              fi
+              mkdir -p "$BASE_DIR" || {
+                echo "❌ Failed to create directory. Trying with sudo..."
+                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
+                BASE_DIR="/opt/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
+              }
+            fi
+            # Create backend directory
+            mkdir -p "$BASE_DIR/backend" || sudo mkdir -p "$BASE_DIR/backend" || mkdir -p "$HOME/hrms/backend" || mkdir -p "/tmp/hrms/backend"
+            # Move docker-compose.yml to backend directory
+            if [ -f "/tmp/docker-compose.yml" ]; then
+              mv /tmp/docker-compose.yml "$BASE_DIR/backend/docker-compose.yml" || \
+                sudo mv /tmp/docker-compose.yml "$BASE_DIR/backend/docker-compose.yml" || \
+                mv /tmp/docker-compose.yml "$HOME/hrms/backend/docker-compose.yml" || \
+                mv /tmp/docker-compose.yml "/tmp/hrms/backend/docker-compose.yml"
+              echo "✅ docker-compose.yml transferred to $BASE_DIR/backend/"
+            else
+              echo "⚠️  docker-compose.yml not found in /tmp/, will check existing location"
+            fi
 
       - name: Create/Update .env file on server
         uses: appleboy/ssh-action@v1.0.0
@@ -537,7 +543,22 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            cd /opt/hrms
+            # Determine the base directory (with fallbacks)
+            BASE_DIR="/opt/hrms"
+            if [ ! -d "$BASE_DIR" ]; then
+              BASE_DIR="$HOME/hrms"
+              if [ ! -d "$BASE_DIR" ]; then
+                BASE_DIR="/tmp/hrms"
+              fi
+              mkdir -p "$BASE_DIR" || {
+                echo "❌ Failed to create directory. Trying with sudo..."
+                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
+                BASE_DIR="/opt/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
+              }
+            fi
+            cd "$BASE_DIR" || exit 1
             # Create .env file from GitHub Secrets (automated)
             {
               echo "# =========================================="
@@ -580,10 +601,11 @@ jobs:
               echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
               echo "AWS_REGION=${AWS_REGION}"
               echo "AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}"
-            } > .env
+            } > "$BASE_DIR/backend/.env"
+
             # Set secure permissions
-            chmod 600 .env
-            echo ".env file created/updated successfully from GitHub Secrets"
+            chmod 600 "$BASE_DIR/backend/.env"
+            echo ".env file created/updated successfully from GitHub Secrets at $BASE_DIR/backend/.env"
 
       - name: Deploy to Digital Ocean Droplet
         uses: appleboy/ssh-action@v1.0.0
@@ -593,15 +615,77 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            cd /opt/hrms
+            # Determine the base directory (with fallbacks)
+            BASE_DIR="/opt/hrms"
+            if [ ! -d "$BASE_DIR" ]; then
+              BASE_DIR="$HOME/hrms"
+              if [ ! -d "$BASE_DIR" ]; then
+                BASE_DIR="/tmp/hrms"
+              fi
+              mkdir -p "$BASE_DIR" || {
+                echo "❌ Failed to create directory. Trying with sudo..."
+                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
+                BASE_DIR="/opt/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
+                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
+              }
+            fi
+            cd "$BASE_DIR" || exit 1
+
+            # Check which docker compose command is available
+            DOCKER_COMPOSE_CMD=""
+            # Test docker-compose (standalone)
+            if command -v docker-compose >/dev/null 2>&1; then
+              if docker-compose --version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker-compose"
+                echo "✅ Found docker-compose (standalone)"
+              fi
+            fi
+            # Test docker compose (plugin) if standalone not found
+            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+              if docker compose version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker compose"
+                echo "✅ Found docker compose (plugin)"
+              fi
+            fi
+            # Error if neither is found
+            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+              echo "❌ Error: Neither 'docker-compose' nor 'docker compose' is available."
+              echo "Please install Docker Compose:"
+              echo "  For plugin version (recommended):"
+              echo "    sudo apt-get update && sudo apt-get install docker-compose-plugin"
+              echo "  Or for standalone version:"
+              echo "    sudo apt-get update && sudo apt-get install docker-compose"
+              exit 1
+            fi
+
             # Create shared network if it doesn't exist
             docker network create hrms-network --driver bridge 2>/dev/null || true
+
+            # Ensure backend directory and docker-compose.yml exist
+            if [ ! -d "backend" ]; then
+              mkdir -p backend
+              echo "⚠️  Backend directory not found, creating it..."
+            fi
+            if [ ! -f "backend/docker-compose.yml" ]; then
+              echo "❌ Error: backend/docker-compose.yml not found at $BASE_DIR/backend/"
+              echo "Please ensure the docker-compose.yml file is present in the backend directory."
+              exit 1
+            fi
+
             # Start services (database will start first due to depends_on)
-            # Note: Backend image is already loaded, MySQL image will be pulled if needed
-            docker-compose up -d mysql
+            # Note: Backend image is already pulled from GHCR and tagged as hrms-backend:latest, MySQL image will be pulled if needed
+            cd backend
+
+            # Export environment variables for docker-compose (from .env file)
+            set -a
+            source "$BASE_DIR/backend/.env"
+            set +a
+
+            $DOCKER_COMPOSE_CMD up -d mysql
             sleep 10
             # Use the loaded image instead of pulling
-            docker-compose up -d --no-deps backend
+            $DOCKER_COMPOSE_CMD up -d --no-deps backend
             # Wait for backend to be ready
             echo "Waiting for backend container to be ready..."
             sleep 15
@@ -609,23 +693,23 @@ jobs:
             echo "🔄 Running database migrations (with auto-rollback on failure)..."
             # Capture migration state before running migrations
             echo "📊 Capturing migration state before migration..."
-            MIGRATION_STATE_BEFORE=$(docker-compose exec -T backend npm run migrate:status 2>&1 || echo "")
+            MIGRATION_STATE_BEFORE=$($DOCKER_COMPOSE_CMD exec -T backend npm run migrate:status 2>&1 || echo "")
             echo "$MIGRATION_STATE_BEFORE"
             # Run migrations using safe migration script (with automatic rollback)
             echo "🚀 Starting safe migration process..."
-            if docker-compose exec -T backend npm run migrate:safe; then
+            if $DOCKER_COMPOSE_CMD exec -T backend npm run migrate:safe; then
               echo "✅ Migrations completed successfully"
               # Verify final migration status
               echo "📊 Verifying final migration status..."
-              docker-compose exec -T backend npm run migrate:status
+              $DOCKER_COMPOSE_CMD exec -T backend npm run migrate:status
               echo "✅ All migrations verified and database is in correct state"
             else
               echo "❌ Migration failed! Rollback was attempted automatically."
               echo "📋 Showing backend logs for debugging..."
-              docker-compose logs --tail=50 backend
+              $DOCKER_COMPOSE_CMD logs --tail=50 backend
               echo ""
               echo "📊 Current migration status after rollback:"
-              docker-compose exec -T backend npm run migrate:status || true
+              $DOCKER_COMPOSE_CMD exec -T backend npm run migrate:status || true
               echo ""
               echo "❌ Deployment stopped due to migration failure."
               echo "📋 Database has been rolled back to previous state."
