@@ -886,75 +886,178 @@ jobs:
               echo "⏳ Waiting for MySQL to be ready..."
               sleep 15
               
+              # Wait for MySQL to be fully ready (check multiple times)
+              echo "🔍 Waiting for MySQL to accept connections..."
+              for i in {1..30}; do
+                if docker exec hrms-mysql mysqladmin ping -h localhost --silent 2>/dev/null; then
+                  echo "✅ MySQL is ready"
+                  break
+                fi
+                if [ $i -eq 30 ]; then
+                  echo "❌ MySQL did not become ready after 30 attempts"
+                  exit 1
+                fi
+                sleep 2
+              done
+              
               # Grant permissions to user from any host (required for Docker network connections)
               echo "🔧 Granting database user permissions for Docker network connections..."
               
               # Get the actual root password from the container (it might differ from .env)
               ACTUAL_ROOT_PASSWORD=$(docker exec hrms-mysql printenv MYSQL_ROOT_PASSWORD 2>/dev/null || echo "$DB_ROOT_PASSWORD")
               
+              echo "📋 Ensuring database '$DB_NAME' exists..."
+              docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
+                CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;
+              " 2>&1 || {
+                echo "❌ ERROR: Could not create database. Check root password."
+                exit 1
+              }
+              
               # Use --password= syntax to avoid shell interpretation issues
-              if docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
-                -- Create user for any host (%) if it doesn't exist
-                CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
-                -- Grant all privileges to user from any host
+              GRANT_OUTPUT=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
+                -- Drop existing user if exists (to ensure clean state)
+                DROP USER IF EXISTS '$DB_USER'@'%';
+                DROP USER IF EXISTS '$DB_USER'@'localhost';
+                
+                -- Create user for any host (%)
+                CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
+                
+                -- Create user for localhost
+                CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
+                
+                -- Grant all privileges
                 GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';
-                -- Also ensure user exists for localhost (for local connections)
-                CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
                 GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
+                
                 -- Flush privileges to apply changes
                 FLUSH PRIVILEGES;
-                SELECT 'Permissions granted successfully' AS status;
-              " 2>&1 | grep -q "Permissions granted successfully"; then
+                
+                -- Show grants to verify
+                SHOW GRANTS FOR '$DB_USER'@'%';
+              " 2>&1)
+              
+              if echo "$GRANT_OUTPUT" | grep -q "GRANT.*ON.*$DB_NAME"; then
                 echo "✅ MySQL user permissions configured"
+                echo "$GRANT_OUTPUT" | grep "GRANT" || true
               else
-                echo "⚠️  Warning: Could not grant permissions (user might already exist with correct permissions)"
-                echo "   This is OK if the database was already initialized"
+                echo "❌ ERROR: Could not grant permissions"
+                echo "   Output: $GRANT_OUTPUT"
+                exit 1
+              fi
+              
+              # Verify connection
+              echo "🔍 Verifying user can connect..."
+              if docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -e "USE \`$DB_NAME\`; SELECT 'Connection successful' AS status;" 2>&1 | grep -q "Connection successful"; then
+                echo "✅ Database connection verified"
+              else
+                echo "❌ Database connection failed"
+                exit 1
               fi
             else
               echo "ℹ️  MySQL container already running, skipping startup"
               # Still verify/update permissions in case they're missing
-              echo "🔧 Verifying database user permissions..."
+              echo "🔧 Verifying and fixing database user permissions..."
               
               # Get the actual root password from the container (it might differ from .env)
               ACTUAL_ROOT_PASSWORD=$(docker exec hrms-mysql printenv MYSQL_ROOT_PASSWORD 2>/dev/null || echo "$DB_ROOT_PASSWORD")
               
+              echo "🔍 Attempting to grant permissions with root password from container..."
+              
+              # First, ensure database exists
+              echo "📋 Ensuring database '$DB_NAME' exists..."
+              docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
+                CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;
+              " 2>&1 || echo "⚠️  Could not create database (may already exist)"
+              
               # Try to grant permissions with the actual root password from container
-              if docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
-                -- Create user for any host (%) if it doesn't exist
-                CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
-                -- Grant permissions if user doesn't have them from %
-                GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';
-                FLUSH PRIVILEGES;
-                SELECT 'Permissions granted successfully' AS status;
-              " 2>&1 | grep -q "Permissions granted successfully"; then
-                echo "✅ Permissions granted successfully"
-              else
-                echo "⚠️  Could not grant permissions automatically"
-                echo "   Testing if user can already connect from Docker network..."
+              GRANT_OUTPUT=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
+                -- Drop existing user if exists (to recreate with correct permissions)
+                DROP USER IF EXISTS '$DB_USER'@'%';
+                DROP USER IF EXISTS '$DB_USER'@'localhost';
                 
-                # Test if user can connect by trying to query from within MySQL container
-                # (simulating connection from Docker network)
-                if docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -e "SELECT 1 AS test;" 2>&1 | grep -q "test"; then
-                  echo "✅ User can connect - permissions may already be correct"
+                -- Create user for any host (%)
+                CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
+                
+                -- Create user for localhost
+                CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
+                
+                -- Grant all privileges
+                GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';
+                GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
+                
+                -- Flush privileges to apply changes
+                FLUSH PRIVILEGES;
+                
+                -- Show grants to verify
+                SHOW GRANTS FOR '$DB_USER'@'%';
+              " 2>&1)
+              
+              # Check if there was an error accessing with root
+              if echo "$GRANT_OUTPUT" | grep -q "Access denied"; then
+                echo "❌ ERROR: Cannot access MySQL with root password"
+                echo "   Root password from container environment may be incorrect"
+                echo "   Output: $GRANT_OUTPUT"
+                echo ""
+                echo "📋 You need to manually fix this. SSH into server and run:"
+                echo "   docker exec -it hrms-mysql mysql -uroot -p"
+                echo "   # Enter the actual root password (check docker-compose.yml or container env)"
+                echo "   CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
+                echo "   CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';"
+                echo "   GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';"
+                echo "   FLUSH PRIVILEGES;"
+                exit 1
+              fi
+              
+              if echo "$GRANT_OUTPUT" | grep -q "GRANT.*ON.*$DB_NAME"; then
+                echo "✅ Permissions granted successfully"
+                echo "$GRANT_OUTPUT" | grep "GRANT" || true
+              else
+                echo "⚠️  Permission grant output:"
+                echo "$GRANT_OUTPUT"
+                echo ""
+                echo "🔍 Testing if user can connect..."
+                
+                # Test connection from within MySQL container (simulating Docker network)
+                TEST_OUTPUT=$(docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -e "SELECT 1 AS test;" 2>&1)
+                
+                if echo "$TEST_OUTPUT" | grep -q "test"; then
+                  echo "✅ User can connect - permissions are working"
                 else
-                  echo "❌ User cannot connect - permissions need to be fixed"
+                  echo "❌ User cannot connect - permissions are NOT working"
+                  echo "   Test output: $TEST_OUTPUT"
                   echo ""
-                  echo "📋 To fix this, run the following command on the server:"
+                  echo "📋 CRITICAL: Database user permissions are not configured correctly"
+                  echo "   You MUST fix this before migrations can run"
+                  echo ""
+                  echo "   Option 1: Manual fix (SSH into server and run):"
                   echo "   docker exec -it hrms-mysql mysql -uroot -p"
-                  echo "   Then run:"
+                  echo "   # Enter root password when prompted"
                   echo "   CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';"
                   echo "   GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';"
                   echo "   FLUSH PRIVILEGES;"
                   echo ""
-                  echo "   OR recreate the MySQL container:"
+                  echo "   Option 2: Recreate MySQL container (WARNING: Deletes all data!):"
                   echo "   cd $BASE_DIR/backend"
                   echo "   docker compose down mysql"
-                  echo "   docker volume rm backend_mysql_data  # WARNING: This deletes all data!"
+                  echo "   docker volume rm backend_mysql_data"
                   echo "   docker compose up -d mysql"
                   echo ""
-                  echo "⚠️  Migration will likely fail until permissions are fixed"
+                  echo "❌ Stopping deployment - fix permissions first"
+                  exit 1
                 fi
               fi
+            fi
+
+            # Verify connection one more time before proceeding
+            echo ""
+            echo "🔍 Final connection test before migrations..."
+            if docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -e "USE \`$DB_NAME\`; SELECT 'Connection successful' AS status;" 2>&1 | grep -q "Connection successful"; then
+              echo "✅ Database connection verified - ready for migrations"
+            else
+              echo "❌ Database connection failed - cannot proceed with migrations"
+              echo "   Please fix MySQL user permissions (see instructions above)"
+              exit 1
             fi
 
             # Test migrations in a NEW container with the new image before replacing the old one
