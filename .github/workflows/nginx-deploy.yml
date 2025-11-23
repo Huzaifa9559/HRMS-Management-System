@@ -351,3 +351,32 @@ jobs:
               echo "⚠️  SSL certificates not found - using HTTP only"
               echo "   Run SSL setup to enable HTTPS (see NGINX-QUICK-START.md)"
             fi
+
+            # Clean up unused Docker resources
+            echo "🧹 Cleaning up unused Docker resources..."
+
+            # Show disk usage before cleanup
+            echo "📊 Disk usage before cleanup:"
+            docker system df
+
+            # Remove stopped containers
+            echo "🗑️  Removing stopped containers..."
+            docker container prune -f
+
+            # Remove unused images (but keep images that are in use)
+            echo "🗑️  Removing unused images..."
+            docker image prune -af --filter "until=24h" || docker image prune -af
+
+            # Remove unused volumes (but keep named volumes)
+            echo "🗑️  Removing unused volumes..."
+            docker volume prune -f
+
+            # Remove unused networks (but keep hrms-network)
+            echo "🗑️  Removing unused networks..."
+            docker network prune -f
+
+            # Show disk usage after cleanup
+            echo "📊 Disk usage after cleanup:"
+            docker system df
+
+            echo "✅ Docker cleanup completed"

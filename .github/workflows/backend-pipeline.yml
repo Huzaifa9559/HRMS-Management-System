@@ -888,8 +888,12 @@ jobs:
               
               # Grant permissions to user from any host (required for Docker network connections)
               echo "🔧 Granting database user permissions for Docker network connections..."
+              
+              # Get the actual root password from the container (it might differ from .env)
+              ACTUAL_ROOT_PASSWORD=$(docker exec hrms-mysql printenv MYSQL_ROOT_PASSWORD 2>/dev/null || echo "$DB_ROOT_PASSWORD")
+              
               # Use --password= syntax to avoid shell interpretation issues
-              docker exec hrms-mysql mysql -uroot --password="$DB_ROOT_PASSWORD" -e "
+              if docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
                 -- Create user for any host (%) if it doesn't exist
                 CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
                 -- Grant all privileges to user from any host
@@ -899,22 +903,58 @@ jobs:
                 GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
                 -- Flush privileges to apply changes
                 FLUSH PRIVILEGES;
-              " 2>&1 || {
+                SELECT 'Permissions granted successfully' AS status;
+              " 2>&1 | grep -q "Permissions granted successfully"; then
+                echo "✅ MySQL user permissions configured"
+              else
                 echo "⚠️  Warning: Could not grant permissions (user might already exist with correct permissions)"
                 echo "   This is OK if the database was already initialized"
-              }
-              echo "✅ MySQL user permissions configured"
+              fi
             else
               echo "ℹ️  MySQL container already running, skipping startup"
               # Still verify/update permissions in case they're missing
               echo "🔧 Verifying database user permissions..."
-              docker exec hrms-mysql mysql -uroot --password="$DB_ROOT_PASSWORD" -e "
+              
+              # Get the actual root password from the container (it might differ from .env)
+              ACTUAL_ROOT_PASSWORD=$(docker exec hrms-mysql printenv MYSQL_ROOT_PASSWORD 2>/dev/null || echo "$DB_ROOT_PASSWORD")
+              
+              # Try to grant permissions with the actual root password from container
+              if docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
                 -- Create user for any host (%) if it doesn't exist
                 CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
                 -- Grant permissions if user doesn't have them from %
                 GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';
                 FLUSH PRIVILEGES;
-              " 2>&1 || echo "⚠️  Could not update permissions (may already be correct)"
+                SELECT 'Permissions granted successfully' AS status;
+              " 2>&1 | grep -q "Permissions granted successfully"; then
+                echo "✅ Permissions granted successfully"
+              else
+                echo "⚠️  Could not grant permissions automatically"
+                echo "   Testing if user can already connect from Docker network..."
+                
+                # Test if user can connect by trying to query from within MySQL container
+                # (simulating connection from Docker network)
+                if docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -e "SELECT 1 AS test;" 2>&1 | grep -q "test"; then
+                  echo "✅ User can connect - permissions may already be correct"
+                else
+                  echo "❌ User cannot connect - permissions need to be fixed"
+                  echo ""
+                  echo "📋 To fix this, run the following command on the server:"
+                  echo "   docker exec -it hrms-mysql mysql -uroot -p"
+                  echo "   Then run:"
+                  echo "   CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';"
+                  echo "   GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';"
+                  echo "   FLUSH PRIVILEGES;"
+                  echo ""
+                  echo "   OR recreate the MySQL container:"
+                  echo "   cd $BASE_DIR/backend"
+                  echo "   docker compose down mysql"
+                  echo "   docker volume rm backend_mysql_data  # WARNING: This deletes all data!"
+                  echo "   docker compose up -d mysql"
+                  echo ""
+                  echo "⚠️  Migration will likely fail until permissions are fixed"
+                fi
+              fi
             fi
 
             # Test migrations in a NEW container with the new image before replacing the old one
@@ -1071,10 +1111,35 @@ jobs:
               fi
             fi
 
-            # Clean up unused images (only after successful deployment)
+            # Clean up unused Docker resources (only after successful deployment)
             if [ "$MIGRATION_SUCCESS" = true ]; then
-              echo "🧹 Cleaning up unused Docker images..."
-              docker system prune -f
+              echo "🧹 Cleaning up unused Docker resources..."
+              
+              # Show disk usage before cleanup
+              echo "📊 Disk usage before cleanup:"
+              docker system df
+              
+              # Remove stopped containers
+              echo "🗑️  Removing stopped containers..."
+              docker container prune -f
+              
+              # Remove unused images (but keep images that are in use)
+              echo "🗑️  Removing unused images..."
+              docker image prune -af --filter "until=24h" || docker image prune -af
+              
+              # Remove unused volumes (but keep named volumes like mysql_data)
+              echo "🗑️  Removing unused volumes..."
+              docker volume prune -f
+              
+              # Remove unused networks (but keep hrms-network)
+              echo "🗑️  Removing unused networks..."
+              docker network prune -f
+              
+              # Show disk usage after cleanup
+              echo "📊 Disk usage after cleanup:"
+              docker system df
+              
+              echo "✅ Docker cleanup completed"
             fi
 
       - name: Health Check
