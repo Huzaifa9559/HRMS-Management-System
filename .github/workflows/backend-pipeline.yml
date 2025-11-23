@@ -509,16 +509,50 @@ jobs:
             fi
             # Create backend directory
             mkdir -p "$BASE_DIR/backend" || sudo mkdir -p "$BASE_DIR/backend" || mkdir -p "$HOME/hrms/backend" || mkdir -p "/tmp/hrms/backend"
-            # Move docker-compose.yml to backend directory
+
+            # Find and move docker-compose.yml to backend directory
+            echo "🔍 Searching for docker-compose.yml..."
+            DOCKER_COMPOSE_FILE=""
+
+            # Check common locations
             if [ -f "/tmp/docker-compose.yml" ]; then
-              mv /tmp/docker-compose.yml "$BASE_DIR/backend/docker-compose.yml" || \
-                sudo mv /tmp/docker-compose.yml "$BASE_DIR/backend/docker-compose.yml" || \
-                mv /tmp/docker-compose.yml "$HOME/hrms/backend/docker-compose.yml" || \
-                mv /tmp/docker-compose.yml "/tmp/hrms/backend/docker-compose.yml"
-              echo "✅ docker-compose.yml transferred to $BASE_DIR/backend/"
+              DOCKER_COMPOSE_FILE="/tmp/docker-compose.yml"
+            elif [ -f "$HOME/docker-compose.yml" ]; then
+              DOCKER_COMPOSE_FILE="$HOME/docker-compose.yml"
             else
-              echo "⚠️  docker-compose.yml not found in /tmp/, will check existing location"
+              # Search in /tmp for any docker-compose.yml
+              DOCKER_COMPOSE_FILE=$(find /tmp -name "docker-compose.yml" -type f 2>/dev/null | head -1)
             fi
+
+            if [ -n "$DOCKER_COMPOSE_FILE" ] && [ -f "$DOCKER_COMPOSE_FILE" ]; then
+              echo "✅ Found docker-compose.yml at: $DOCKER_COMPOSE_FILE"
+              # Try to move it to the backend directory
+              if cp "$DOCKER_COMPOSE_FILE" "$BASE_DIR/backend/docker-compose.yml" 2>/dev/null || \
+                 sudo cp "$DOCKER_COMPOSE_FILE" "$BASE_DIR/backend/docker-compose.yml" 2>/dev/null || \
+                 cp "$DOCKER_COMPOSE_FILE" "$HOME/hrms/backend/docker-compose.yml" 2>/dev/null || \
+                 cp "$DOCKER_COMPOSE_FILE" "/tmp/hrms/backend/docker-compose.yml" 2>/dev/null; then
+                echo "✅ docker-compose.yml copied to $BASE_DIR/backend/"
+                # Remove the temporary file
+                rm -f "$DOCKER_COMPOSE_FILE" 2>/dev/null || true
+              else
+                echo "❌ Failed to copy docker-compose.yml to backend directory"
+                exit 1
+              fi
+            else
+              echo "❌ docker-compose.yml not found in expected locations"
+              echo "📋 Contents of /tmp:"
+              ls -la /tmp/ | grep -i docker || echo "No docker files found"
+              echo "📋 Searching entire /tmp:"
+              find /tmp -name "*docker*" -type f 2>/dev/null | head -5 || echo "No docker files found"
+              exit 1
+            fi
+
+            # Verify the file exists in the backend directory
+            if [ ! -f "$BASE_DIR/backend/docker-compose.yml" ]; then
+              echo "❌ docker-compose.yml not found at $BASE_DIR/backend/docker-compose.yml after copy"
+              exit 1
+            fi
+            echo "✅ Verified docker-compose.yml exists at $BASE_DIR/backend/docker-compose.yml"
 
       - name: Create/Update .env file on server
         uses: appleboy/ssh-action@v1.0.0
