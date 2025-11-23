@@ -634,63 +634,6 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            # Debug: Check which environment variables are available
-            echo "🔍 Debugging: Checking environment variables..."
-            echo "DB_USER is set: $([ -n "${DB_USER}" ] && echo 'YES' || echo 'NO')"
-            echo "DB_PASSWORD is set: $([ -n "${DB_PASSWORD}" ] && echo 'YES' || echo 'NO')"
-            echo "DB_NAME is set: $([ -n "${DB_NAME}" ] && echo 'YES' || echo 'NO')"
-
-            # List all DB_* environment variables (masked)
-            echo ""
-            echo "📋 Available DB_* environment variables:"
-            env | grep "^DB_" | sed 's/=\(.*\)/=***/' || echo "No DB_* variables found"
-
-            # Verify required secrets are set before creating .env file
-            if [ -z "${DB_USER}" ]; then
-              echo ""
-              echo "❌ ERROR: DB_USER secret is not set or empty"
-              echo "📋 Troubleshooting:"
-              echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-              echo "   2. Click 'Environments' → 'Production'"
-              echo "   3. Verify 'DB_USER' secret exists and has a value"
-              echo "   4. Make sure you're adding to 'Production' environment, not repository-level secrets"
-              exit 1
-            fi
-            if [ -z "${DB_PASSWORD}" ]; then
-              echo ""
-              echo "❌ ERROR: DB_PASSWORD secret is not set or empty"
-              echo "📋 Troubleshooting:"
-              echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-              echo "   2. Click 'Environments' → 'Production'"
-              echo "   3. Verify 'DB_PASSWORD' secret exists and has a value"
-              exit 1
-            fi
-            if [ -z "${DB_NAME}" ]; then
-              echo ""
-              echo "❌ ERROR: DB_NAME secret is not set or empty"
-              echo "📋 Troubleshooting:"
-              echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-              echo "   2. Click 'Environments' → 'Production'"
-              echo "   3. Verify 'DB_NAME' secret exists and has a value"
-              exit 1
-            fi
-            echo ""
-            echo "✅ All required database secrets are set and have values"
-            # Determine the base directory (with fallbacks)
-            BASE_DIR="/opt/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-              mkdir -p "$BASE_DIR" || {
-                echo "❌ Failed to create directory. Trying with sudo..."
-                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
-                BASE_DIR="/opt/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
-              }
-            fi
             cd "$BASE_DIR" || exit 1
             # Create .env file from GitHub Secrets (automated)
             # Use printf to ensure proper escaping of special characters
