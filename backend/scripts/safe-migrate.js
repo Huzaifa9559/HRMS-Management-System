@@ -63,13 +63,19 @@ function saveMigrationState(migrations) {
 }
 
 function getPendingMigrations(currentState, previousState) {
-  if (!previousState || !previousState.migrations) {
+  // Handle case where previousState is an array (direct from getCurrentMigrations)
+  let previousMigrations = [];
+  if (Array.isArray(previousState)) {
+    previousMigrations = previousState;
+  } else if (previousState && Array.isArray(previousState.migrations)) {
+    previousMigrations = previousState.migrations;
+  } else if (!previousState || !previousState.migrations) {
     // If no previous state or no migrations in previous state, return all 'down' migrations
     return currentState.filter((m) => m.state === 'down');
   }
 
   // Find migrations that were 'down' before but are now 'up'
-  const previousNames = new Set(previousState.migrations.map((m) => m.name));
+  const previousNames = new Set(previousMigrations.map((m) => m.name));
   return currentState.filter(
     (m) => m.state === 'up' && !previousNames.has(m.name)
   );
