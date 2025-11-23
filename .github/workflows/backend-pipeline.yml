@@ -748,15 +748,49 @@ jobs:
               docker rm "$TEMP_CONTAINER_NAME" 2>/dev/null || true
               
               # Start temporary container with new image for migration testing
-              # Use the same network and environment as the compose setup
+              # Use docker-compose to ensure same environment and network
+              echo "📋 Starting temporary container for migration testing..."
+              
+              # Export environment variables for use in docker run
+              set -a
+              source "$BASE_DIR/backend/.env"
+              set +a
+              
+              # Start temporary container with all environment variables
               docker run -d \
                 --name "$TEMP_CONTAINER_NAME" \
                 --network hrms-network \
-                --env-file "$BASE_DIR/backend/.env" \
+                -e NODE_ENV="$NODE_ENV" \
+                -e PORT="$PORT" \
+                -e DB_ROOT_PASSWORD="$DB_ROOT_PASSWORD" \
+                -e DB_NAME="$DB_NAME" \
+                -e DB_USER="$DB_USER" \
+                -e DB_PASSWORD="$DB_PASSWORD" \
+                -e DB_PORT="$DB_PORT" \
+                -e DB_DIALECT="$DB_DIALECT" \
+                -e DB_HOST="$DB_HOST" \
+                -e JWT_SECRET="$JWT_SECRET" \
+                -e SENDGRID_API_KEY="$SENDGRID_API_KEY" \
+                -e EMAIL_FROM="$EMAIL_FROM" \
+                -e EMAIL_FROM_NAME="$EMAIL_FROM_NAME" \
+                -e FRONTEND_URL="$FRONTEND_URL" \
+                -e DOMAIN="$DOMAIN" \
+                -e BACKEND_URL="$BACKEND_URL" \
+                -e REACT_APP_BACKEND_URL="$REACT_APP_BACKEND_URL" \
+                -e REACT_APP_FRONTEND_URL="$REACT_APP_FRONTEND_URL" \
+                -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+                -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+                -e AWS_REGION="$AWS_REGION" \
+                -e AWS_S3_BUCKET_NAME="$AWS_S3_BUCKET_NAME" \
                 hrms-backend:latest \
                 sleep 3600 || {
                 echo "❌ Failed to start temporary backend container for migration testing"
                 exit 1
+              }
+              
+              # Also copy .env file into container for dotenv to read (as fallback)
+              docker cp "$BASE_DIR/backend/.env" "$TEMP_CONTAINER_NAME:/app/.env" 2>/dev/null || {
+                echo "⚠️  Note: Could not copy .env file (using environment variables instead)"
               }
               
               echo "⏳ Waiting for temporary container to be ready..."
