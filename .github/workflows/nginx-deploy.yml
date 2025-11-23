@@ -260,14 +260,61 @@ jobs:
             echo "✅ Nginx reverse proxy deployed successfully"
 
       - name: Health Check
-        run: |
-          sleep 5
-          # Test HTTP (will redirect to HTTPS if SSL is configured)
-          echo "Testing frontend..."
-          curl -f -L http://${{ secrets.DO_HOST }} || echo "⚠️  Frontend health check failed (may need SSL setup)"
-          echo ""
-          echo "Testing backend API..."
-          curl -f http://${{ secrets.DO_HOST }}:8000/api/health || echo "⚠️  Backend health check failed"
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: |
+            echo "🔍 Checking container status..."
+
+            # Check if containers are running
+            FRONTEND_RUNNING=$(docker ps --filter "name=hrms-frontend" --format "{{.Names}}" | grep -q hrms-frontend && echo "yes" || echo "no")
+            BACKEND_RUNNING=$(docker ps --filter "name=hrms-backend" --format "{{.Names}}" | grep -q hrms-backend && echo "yes" || echo "no")
+            NGINX_RUNNING=$(docker ps --filter "name=hrms-nginx" --format "{{.Names}}" | grep -q hrms-nginx && echo "yes" || echo "no")
+
+            echo "📊 Container Status:"
+            echo "  Nginx: $NGINX_RUNNING"
+            echo "  Frontend: $FRONTEND_RUNNING"
+            echo "  Backend: $BACKEND_RUNNING"
+            echo ""
+
+            if [ "$NGINX_RUNNING" = "yes" ]; then
+              echo "✅ Nginx container is running"
+              
+              # Test nginx configuration
+              if docker exec hrms-nginx nginx -t >/dev/null 2>&1; then
+                echo "✅ Nginx configuration is valid"
+              else
+                echo "⚠️  Nginx configuration test failed"
+                docker exec hrms-nginx nginx -t
+              fi
+            else
+              echo "❌ Nginx container is not running"
+            fi
+
+            if [ "$FRONTEND_RUNNING" = "yes" ]; then
+              echo "✅ Frontend container is running"
+              echo "   Note: Frontend will be accessible once DNS is configured"
+            else
+              echo "⚠️  Frontend container is not running yet"
+              echo "   Deploy frontend first using the frontend pipeline"
+            fi
+
+            if [ "$BACKEND_RUNNING" = "yes" ]; then
+              echo "✅ Backend container is running"
+              echo "   Note: Backend will be accessible once DNS is configured"
+            else
+              echo "⚠️  Backend container is not running yet"
+              echo "   Deploy backend first using the backend pipeline"
+            fi
+
+            echo ""
+            echo "📝 Next Steps:"
+            echo "   1. Deploy backend and frontend containers"
+            echo "   2. Configure DNS records (A records for h-rms.me and api.h-rms.me)"
+            echo "   3. Set up SSL certificates (see NGINX-QUICK-START.md)"
 
       - name: Display Status
         uses: appleboy/ssh-action@v1.0.0
