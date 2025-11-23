@@ -1024,25 +1024,27 @@ jobs:
               " 2>&1 || echo "⚠️  Could not create database (may already exist)"
               
               # Try to grant permissions with the actual root password from container
+              # First, drop and recreate user to ensure password matches exactly
               GRANT_OUTPUT=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
                 -- Drop existing user if exists (to recreate with correct permissions)
                 DROP USER IF EXISTS '$DB_USER'@'%';
                 DROP USER IF EXISTS '$DB_USER'@'localhost';
                 
-                -- Create user for any host (%)
+                -- Create user for any host (%) with password from .env
                 CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
                 
-                -- Create user for localhost
+                -- Create user for localhost with same password
                 CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
                 
                 -- Grant all privileges
                 GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';
                 GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
                 
-                -- Flush privileges to apply changes
+                -- Flush privileges to apply changes immediately
                 FLUSH PRIVILEGES;
                 
-                -- Show grants to verify
+                -- Verify user was created and show grants
+                SELECT User, Host FROM mysql.user WHERE User='$DB_USER';
                 SHOW GRANTS FOR '$DB_USER'@'%';
               " 2>&1)
               
@@ -1218,24 +1220,91 @@ jobs:
                 echo "❌ ERROR: .env file not found in container at /app/.env"
               fi
               
-              # Test connection from backend container to MySQL
+              # Test connection from backend container to MySQL using Sequelize (same as the app)
               echo ""
-              echo "🔍 Testing connection from backend container to MySQL..."
-              CONNECTION_TEST_FROM_BACKEND=$(docker exec "$TEMP_CONTAINER_NAME" sh -c "mysql -h mysql -u\"\$DB_USER\" -p\"\$DB_PASSWORD\" -e 'SELECT 1 AS test;' 2>&1" || echo "Connection failed")
+              echo "🔍 Testing connection from backend container to MySQL using Sequelize..."
               
-              if echo "$CONNECTION_TEST_FROM_BACKEND" | grep -q "test"; then
+              # Create a simple Sequelize connection test script
+              CONNECTION_TEST_SCRIPT="
+              const { Sequelize } = require('sequelize');
+              const sequelize = new Sequelize(
+                process.env.DB_NAME,
+                process.env.DB_USER,
+                process.env.DB_PASSWORD,
+                {
+                  host: process.env.DB_HOST || 'mysql',
+                  port: parseInt(process.env.DB_PORT || '3306'),
+                  dialect: 'mysql',
+                  logging: false
+                }
+              );
+              sequelize.authenticate()
+                .then(() => {
+                  console.log('Connection successful');
+                  process.exit(0);
+                })
+                .catch((err) => {
+                  console.error('Connection failed:', err.message);
+                  process.exit(1);
+                });
+              "
+              
+              CONNECTION_TEST_OUTPUT=$(docker exec "$TEMP_CONTAINER_NAME" node -e "$CONNECTION_TEST_SCRIPT" 2>&1 || echo "Connection failed")
+              
+              if echo "$CONNECTION_TEST_OUTPUT" | grep -q "Connection successful"; then
                 echo "✅ Connection from backend container to MySQL works!"
+                echo "   Output: $CONNECTION_TEST_OUTPUT"
               else
                 echo "❌ Connection from backend container to MySQL FAILED!"
-                echo "   Output: $CONNECTION_TEST_FROM_BACKEND"
+                echo "   Output: $CONNECTION_TEST_OUTPUT"
                 echo ""
-                echo "🔍 This means the credentials in the container don't match MySQL permissions"
-                echo "   Checking what MySQL expects..."
-                echo "   Expected user: $DB_USER"
-                echo "   Expected database: $DB_NAME"
+                echo "🔍 Debugging: Checking MySQL user permissions..."
+                
+                # Check what users exist in MySQL
+                USER_CHECK=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
+                  SELECT User, Host FROM mysql.user WHERE User='$DB_USER';
+                " 2>&1)
+                
+                echo "MySQL users matching '$DB_USER':"
+                echo "$USER_CHECK"
                 echo ""
-                echo "   Run this on the server to check MySQL users:"
-                echo "   docker exec hrms-mysql mysql -uroot -p -e \"SELECT User, Host FROM mysql.user WHERE User='$DB_USER';\""
+                
+                # Check grants
+                GRANTS_CHECK=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
+                  SHOW GRANTS FOR '$DB_USER'@'%';
+                " 2>&1)
+                
+                echo "Grants for '$DB_USER'@'%':"
+                echo "$GRANTS_CHECK"
+                echo ""
+                
+                # Try to connect from MySQL container using the same credentials
+                echo "🔍 Testing connection from MySQL container with same credentials..."
+                MYSQL_CONTAINER_TEST=$(docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -h mysql -e "SELECT 1 AS test;" 2>&1)
+                
+                if echo "$MYSQL_CONTAINER_TEST" | grep -q "test"; then
+                  echo "✅ Connection works from MySQL container"
+                  echo "   This suggests the issue is with how the backend container connects"
+                  echo "   The password might have special characters that need escaping"
+                else
+                  echo "❌ Connection also fails from MySQL container"
+                  echo "   Output: $MYSQL_CONTAINER_TEST"
+                  echo ""
+                  echo "   This means the password doesn't match what was set in MySQL"
+                  echo "   The password in .env might be different from what MySQL has"
+                fi
+                
+                echo ""
+                echo "📋 To fix this, verify the password matches:"
+                echo "   1. Check the password in .env file: grep DB_PASSWORD $BASE_DIR/backend/.env"
+                echo "   2. Check what MySQL has: docker exec hrms-mysql mysql -uroot -p -e \"SELECT User, Host, authentication_string FROM mysql.user WHERE User='$DB_USER';\""
+                echo "   3. If they don't match, recreate the user:"
+                echo "      docker exec -it hrms-mysql mysql -uroot -p"
+                echo "      DROP USER IF EXISTS '$DB_USER'@'%';"
+                echo "      CREATE USER '$DB_USER'@'%' IDENTIFIED BY 'YOUR_ACTUAL_PASSWORD';"
+                echo "      GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';"
+                echo "      FLUSH PRIVILEGES;"
+                
                 exit 1
               fi
               
