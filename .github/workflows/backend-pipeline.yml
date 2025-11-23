@@ -51,29 +51,85 @@ jobs:
         working-directory: ./backend
         run: |
           echo "⏳ Waiting for MySQL to be ready..."
-          for i in {1..60}; do
-            if docker compose -f docker-compose.test.yml exec -T mysql-test mysqladmin ping -h localhost -u root -ptestpassword --silent 2>/dev/null; then
-              echo "✅ MySQL is ready!"
+
+          # Wait for container to be running
+          echo "Checking container status..."
+          for i in {1..30}; do
+            CONTAINER_STATUS=$(docker compose -f docker-compose.test.yml ps mysql-test --format json 2>/dev/null | grep -o '"State":"[^"]*"' | cut -d'"' -f4 || echo "")
+            if [ "$CONTAINER_STATUS" = "running" ]; then
+              echo "✅ Container is running"
               break
             fi
-            if [ $i -eq 60 ]; then
-              echo "❌ MySQL failed to start after 2 minutes"
+            if [ $i -eq 30 ]; then
+              echo "❌ Container failed to start"
+              docker compose -f docker-compose.test.yml ps -a
               docker compose -f docker-compose.test.yml logs mysql-test
               exit 1
             fi
-            echo "Waiting for MySQL... ($i/60)"
+            echo "Waiting for container... ($i/30)"
             sleep 2
           done
-          echo "✅ MySQL connection verified"
+
+          # Wait for MySQL to accept connections (give it time to initialize)
+          echo "Waiting for MySQL to initialize and accept connections..."
+          echo "This may take 30-60 seconds for MySQL 8.0..."
+
+          for i in {1..90}; do
+            # Try mysqladmin ping inside the container
+            if docker compose -f docker-compose.test.yml exec -T mysql-test mysqladmin ping -h localhost -u root -ptestpassword --silent 2>/dev/null; then
+              echo "✅ MySQL is ready and accepting connections!"
+              break
+            fi
+            
+            if [ $i -eq 90 ]; then
+              echo "❌ MySQL failed to start after 3 minutes"
+              echo "📋 Container logs (last 100 lines):"
+              docker compose -f docker-compose.test.yml logs --tail=100 mysql-test
+              echo ""
+              echo "📊 Container status:"
+              docker compose -f docker-compose.test.yml ps
+              echo ""
+              echo "🔍 Testing connection manually:"
+              docker compose -f docker-compose.test.yml exec -T mysql-test mysqladmin ping -h localhost -u root -ptestpassword || true
+              exit 1
+            fi
+            
+            # Show progress every 10 iterations
+            if [ $((i % 10)) -eq 0 ]; then
+              echo "Still waiting... ($i/90) - MySQL is initializing..."
+            fi
+            sleep 2
+          done
+
+          # Give MySQL additional time to fully initialize
+          echo "⏳ Waiting additional 5 seconds for MySQL to fully initialize..."
+          sleep 5
+          echo "✅ MySQL is ready!"
 
       - name: Configure MySQL
         working-directory: ./backend
         run: |
           echo "🔧 Configuring MySQL settings..."
-          docker compose -f docker-compose.test.yml exec -T mysql-test mysql -u root -ptestpassword <<EOF
-          ALTER DATABASE test_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-          FLUSH PRIVILEGES;
-          EOF
+
+          # Verify connection first
+          echo "Verifying MySQL connection..."
+          docker compose -f docker-compose.test.yml exec -T mysql-test mysqladmin ping -h localhost -u root -ptestpassword || {
+            echo "❌ Failed to connect to MySQL"
+            docker compose -f docker-compose.test.yml logs --tail=20 mysql-test
+            exit 1
+          }
+
+          # Configure database settings
+          echo "Configuring database character set..."
+          docker compose -f docker-compose.test.yml exec -T mysql-test mysql -u root -ptestpassword -e "ALTER DATABASE test_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>&1 || echo "⚠️  Character set configuration skipped (may already be set)"
+
+          # Verify database exists
+          echo "Verifying test_db database..."
+          docker compose -f docker-compose.test.yml exec -T mysql-test mysql -u root -ptestpassword -e "SHOW DATABASES LIKE 'test_db';" | grep test_db || {
+            echo "❌ test_db database not found!"
+            exit 1
+          }
+
           echo "✅ MySQL configuration completed"
 
       - name: Run database migrations (test)
