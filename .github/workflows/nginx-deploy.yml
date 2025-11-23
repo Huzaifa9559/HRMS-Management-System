@@ -87,8 +87,8 @@ jobs:
 
             # Restart containers with new port bindings
             echo "🔄 Restarting containers with new port bindings..."
-            cd $BASE_DIR/backend && docker-compose restart backend 2>/dev/null || echo "⚠️  Backend container not running"
-            cd $BASE_DIR/frontend && docker-compose restart frontend 2>/dev/null || echo "⚠️  Frontend container not running"
+            cd $BASE_DIR/backend && (docker compose restart backend 2>/dev/null || docker-compose restart backend 2>/dev/null) || echo "⚠️  Backend container not running"
+            cd $BASE_DIR/frontend && (docker compose restart frontend 2>/dev/null || docker-compose restart frontend 2>/dev/null) || echo "⚠️  Frontend container not running"
             echo "✅ Container restart attempted"
 
       - name: Create parent directories on server
@@ -193,7 +193,8 @@ jobs:
 
             # Start/restart nginx container
             echo "🚀 Starting Nginx reverse proxy..."
-            docker-compose up -d nginx
+            # Try docker compose (newer) first, fallback to docker-compose (older)
+            docker compose up -d nginx 2>/dev/null || docker-compose up -d nginx
 
             # Wait for nginx to be ready
             sleep 5
