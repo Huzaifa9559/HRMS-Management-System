@@ -39,7 +39,8 @@ jobs:
           --health-cmd="mysqladmin ping -h localhost -u root -ptestpassword"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=10
+          --health-retries=30
+          --health-start-period=60s
 
     steps:
       - name: Checkout code
@@ -64,14 +65,20 @@ jobs:
       - name: Wait for MySQL to be ready
         run: |
           echo "Waiting for MySQL to be ready..."
-          for i in {1..30}; do
+          for i in {1..60}; do
             if mysqladmin ping -h 127.0.0.1 -u root -ptestpassword --silent 2>/dev/null; then
-              echo "MySQL is ready!"
+              echo "✅ MySQL is ready!"
               break
             fi
-            echo "Waiting for MySQL... ($i/30)"
+            if [ $i -eq 60 ]; then
+              echo "❌ MySQL failed to start after 2 minutes"
+              docker logs $(docker ps -q --filter "ancestor=mysql:8.0") || true
+              exit 1
+            fi
+            echo "Waiting for MySQL... ($i/60)"
             sleep 2
           done
+          echo "MySQL connection verified"
         env:
           MYSQL_PWD: testpassword
 
@@ -253,13 +260,34 @@ jobs:
         run: npm ci
 
       - name: Run SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: ./backend
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY || format('{0}_{1}', github.repository_owner, github.event.repository.name) }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/tests/**,**/*.test.js
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
-      - name: Run CodeQL Analysis
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        continue-on-error: true
+        with:
+          languages: javascript
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+        continue-on-error: true
+        with:
+          working-directory: ./backend
+
+      - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
         continue-on-error: true
 
