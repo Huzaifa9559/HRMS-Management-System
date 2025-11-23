@@ -84,15 +84,16 @@ describe('Auth API - Integration Tests', () => {
         await sequelize.query(
           `INSERT INTO Employee (
             employee_first_name, employee_last_name, employee_email, 
-            employee_password, employee_status, employee_joining_date,
+            employee_password, employee_phonenumber, employee_status, employee_joining_date,
             departmentID, designationID, address_ID, employee_DOB
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           {
             replacements: [
               'Test',
               'User',
               'test@example.com',
               hashedPassword,
+              '1234567890', // Phone number (required field)
               1, // Active
               new Date(),
               departmentID,

@@ -418,7 +418,26 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-docker-image
-          path: /tmp/
+          path: /tmp/artifacts
+
+      - name: Find and prepare Docker image
+        run: |
+          echo "📦 Searching for Docker image file..."
+          # Artifacts are extracted to a directory named after the artifact
+          IMAGE_FILE=$(find /tmp/artifacts -name "${{ env.IMAGE_NAME }}.tar.gz" -type f | head -1)
+          if [ -z "$IMAGE_FILE" ]; then
+            echo "❌ Docker image file not found in /tmp/artifacts"
+            echo "📋 Contents of /tmp/artifacts:"
+            ls -lah /tmp/artifacts/ 2>/dev/null || true
+            echo "📋 Searching entire /tmp:"
+            find /tmp -name "*.tar.gz" -type f 2>/dev/null || true
+            exit 1
+          fi
+          echo "✅ Found image: $IMAGE_FILE"
+          echo "📊 File size: $(du -h "$IMAGE_FILE" | cut -f1)"
+          # Copy to a known location for SCP
+          cp "$IMAGE_FILE" /tmp/${{ env.IMAGE_NAME }}.tar.gz
+          echo "✅ Image prepared at /tmp/${{ env.IMAGE_NAME }}.tar.gz"
 
       - name: Transfer Docker image to server
         uses: appleboy/scp-action@v0.1.7
@@ -427,9 +446,9 @@ jobs:
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
-          source: "/tmp/backend-docker-image/*.tar.gz"
+          source: "/tmp/${{ env.IMAGE_NAME }}.tar.gz"
           target: "/tmp/"
-          strip_components: 1
+          overwrite: true
 
       - name: Load Docker image on server
         uses: appleboy/ssh-action@v1.0.0
