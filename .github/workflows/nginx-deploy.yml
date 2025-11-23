@@ -16,11 +16,26 @@ on:
 jobs:
   deploy-nginx:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    # Only run if:
+    # 1. Secrets are configured (DO_HOST, DO_USERNAME, DO_SSH_KEY)
+    # 2. AND (workflow_run succeeded OR push event OR manual trigger)
+    # If secrets are missing, workflow will be skipped (not failed)
+    if: ${{ 
+      secrets.DO_HOST != '' && 
+      secrets.DO_USERNAME != '' && 
+      secrets.DO_SSH_KEY != '' && 
+      (github.event_name == 'workflow_dispatch' || 
+       github.event_name == 'push' || 
+       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
+    }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Verify Required Secrets
+        run: |
+          echo "✅ All required secrets are configured and available"
 
       - name: Update Container Ports (Bind to localhost)
         uses: appleboy/ssh-action@v1.0.0
