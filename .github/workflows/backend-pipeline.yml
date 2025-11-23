@@ -442,14 +442,16 @@ jobs:
           script: |
             echo "📦 Pulling Docker image from GHCR..."
             REGISTRY="ghcr.io"
-            REPO_OWNER="${{ github.repository_owner }}"
+            REPO_OWNER_ORIGINAL="${{ github.repository_owner }}"
+            REPO_OWNER_LOWER=$(echo "${REPO_OWNER_ORIGINAL}" | tr '[:upper:]' '[:lower:]')
             IMAGE_NAME="hrms-backend"
-            IMAGE_FULL_NAME="${REGISTRY}/${REPO_OWNER}/${IMAGE_NAME}:latest"
+            IMAGE_FULL_NAME="${REGISTRY}/${REPO_OWNER_LOWER}/${IMAGE_NAME}:latest"
             echo "Image: ${IMAGE_FULL_NAME}"
 
             # Login to GHCR using Personal Access Token
+            # Note: Login username should match GitHub username (case-sensitive for auth)
             if [ -n "${GHCR_TOKEN}" ]; then
-              echo "${GHCR_TOKEN}" | docker login ${REGISTRY} -u ${REPO_OWNER} --password-stdin
+              echo "${GHCR_TOKEN}" | docker login ${REGISTRY} -u ${REPO_OWNER_ORIGINAL} --password-stdin
               echo "✅ Logged in to GHCR"
             else
               echo "⚠️  No GHCR token found. Attempting public pull (may fail if package is private)..."
