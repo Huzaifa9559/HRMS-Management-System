@@ -193,8 +193,50 @@ jobs:
 
             # Start/restart nginx container
             echo "🚀 Starting Nginx reverse proxy..."
-            # Try docker compose (newer) first, fallback to docker-compose (older)
-            docker compose up -d nginx 2>/dev/null || docker-compose up -d nginx
+            # Check which docker compose command is available
+            DOCKER_COMPOSE_CMD=""
+
+            # Test docker-compose (standalone)
+            if command -v docker-compose >/dev/null 2>&1; then
+              if docker-compose --version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker-compose"
+                echo "✅ Found docker-compose (standalone)"
+              fi
+            fi
+
+            # Test docker compose (plugin) if standalone not found
+            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+              if docker compose version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker compose"
+                echo "✅ Found docker compose (plugin)"
+              fi
+            fi
+
+            # If still not found, provide helpful error
+            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+              echo "❌ Docker Compose not found!"
+              echo ""
+              echo "Checking Docker installation..."
+              docker --version || {
+                echo "❌ Docker is not installed or not accessible"
+                exit 1
+              }
+              echo ""
+              echo "⚠️  Docker Compose is required but not installed."
+              echo ""
+              echo "📝 To install Docker Compose on your server:"
+              echo "   For Ubuntu/Debian:"
+              echo "     sudo apt-get update"
+              echo "     sudo apt-get install docker-compose-plugin"
+              echo ""
+              echo "   Or for standalone version:"
+              echo "     sudo apt-get install docker-compose"
+              exit 1
+            fi
+
+            # Use the detected command
+            echo "🚀 Using: $DOCKER_COMPOSE_CMD"
+            $DOCKER_COMPOSE_CMD up -d nginx
 
             # Wait for nginx to be ready
             sleep 5
