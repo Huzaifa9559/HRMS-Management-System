@@ -424,7 +424,7 @@ jobs:
             # Clean up unused images
             docker system prune -f
 
-      - name: Create Nginx directory on server
+      - name: Create parent directories on server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.DO_HOST }}
@@ -433,19 +433,38 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             mkdir -p /opt/hrms/nginx
-            chmod 755 /opt/hrms/nginx
-            echo "✅ Nginx directory created"
+            chmod -R 755 /opt/hrms
+            echo "✅ Directories created"
 
-      - name: Copy Nginx files to server
+      - name: Copy docker-compose.yml
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
-          source: "nginx/docker-compose.yml,nginx/nginx.conf,nginx/nginx.conf.initial"
-          target: "/opt/hrms/nginx/"
-          overwrite: true
+          source: "nginx/docker-compose.yml"
+          target: "/opt/hrms/nginx/docker-compose.yml"
+
+      - name: Copy nginx.conf
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: "nginx/nginx.conf"
+          target: "/opt/hrms/nginx/nginx.conf"
+
+      - name: Copy nginx.conf.initial
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: "nginx/nginx.conf.initial"
+          target: "/opt/hrms/nginx/nginx.conf.initial"
 
       - name: Deploy Nginx Reverse Proxy
         uses: appleboy/ssh-action@v1.0.0
@@ -456,11 +475,11 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             echo "🔧 Setting up Nginx reverse proxy..."
-            
+
             # Ensure nginx directory exists
             mkdir -p /opt/hrms/nginx
             cd /opt/hrms/nginx
-            
+
             # Update container ports to bind to localhost (if not already done)
             cd /opt/hrms/backend
             if grep -q '"8000:8000"' docker-compose.yml 2>/dev/null; then
@@ -468,14 +487,14 @@ jobs:
               docker-compose restart backend || true
               echo "✅ Backend ports updated to localhost"
             fi
-            
+
             cd /opt/hrms/frontend
             if grep -q '"80:80"' docker-compose.yml 2>/dev/null; then
               sed -i 's/"80:80"/"127.0.0.1:80:80"/' docker-compose.yml
               docker-compose restart frontend || true
               echo "✅ Frontend ports updated to localhost"
             fi
-            
+
             # Copy nginx files if they don't exist (from repo)
             cd /opt/hrms/nginx
             if [ ! -f "docker-compose.yml" ]; then
@@ -483,13 +502,13 @@ jobs:
               echo "   For now, skipping nginx deployment."
               exit 0
             fi
-            
+
             # Create certbot directories
             mkdir -p certbot/conf certbot/www
-            
+
             # Ensure network exists
             docker network create hrms-network --driver bridge 2>/dev/null || true
-            
+
             # Check if SSL certificates exist
             if [ -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
               echo "✅ SSL certificates found, using SSL config"
@@ -506,11 +525,11 @@ jobs:
                 cp nginx.conf.initial nginx.conf
               fi
             fi
-            
+
             # Start/restart nginx
             echo "🚀 Starting Nginx reverse proxy..."
             docker-compose up -d nginx
-            
+
             # Wait and verify
             sleep 5
             if docker ps | grep -q hrms-nginx; then

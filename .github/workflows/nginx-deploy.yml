@@ -74,7 +74,7 @@ jobs:
             cd /opt/hrms/frontend && docker-compose restart frontend || true
             echo "✅ Containers restarted"
 
-      - name: Create Nginx directory on server
+      - name: Create parent directories on server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.DO_HOST }}
@@ -83,19 +83,38 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             mkdir -p /opt/hrms/nginx
-            chmod 755 /opt/hrms/nginx
-            echo "✅ Nginx directory created"
+            chmod -R 755 /opt/hrms
+            echo "✅ Directories created"
 
-      - name: Copy Nginx files to server
+      - name: Copy docker-compose.yml
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
-          source: "nginx/docker-compose.yml,nginx/nginx.conf,nginx/nginx.conf.initial"
-          target: "/opt/hrms/nginx/"
-          overwrite: true
+          source: "nginx/docker-compose.yml"
+          target: "/opt/hrms/nginx/docker-compose.yml"
+
+      - name: Copy nginx.conf
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: "nginx/nginx.conf"
+          target: "/opt/hrms/nginx/nginx.conf"
+
+      - name: Copy nginx.conf.initial
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: "nginx/nginx.conf.initial"
+          target: "/opt/hrms/nginx/nginx.conf.initial"
 
       - name: Setup Nginx Reverse Proxy
         uses: appleboy/ssh-action@v1.0.0
