@@ -86,35 +86,41 @@ jobs:
             chmod -R 755 /opt/hrms
             echo "✅ Directories created"
 
-      - name: Copy docker-compose.yml
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          port: ${{ secrets.DO_PORT || 22 }}
-          source: "nginx/docker-compose.yml"
-          target: "/opt/hrms/nginx/docker-compose.yml"
+      - name: Encode and copy nginx files
+        run: |
+          base64 -w 0 nginx/docker-compose.yml > /tmp/docker-compose.b64
+          base64 -w 0 nginx/nginx.conf > /tmp/nginx.conf.b64
+          base64 -w 0 nginx/nginx.conf.initial > /tmp/nginx.conf.initial.b64
+          echo "DOCKER_COMPOSE_B64<<EOF" >> $GITHUB_ENV
+          cat /tmp/docker-compose.b64 >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          echo "NGINX_CONF_B64<<EOF" >> $GITHUB_ENV
+          cat /tmp/nginx.conf.b64 >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          echo "NGINX_INITIAL_B64<<EOF" >> $GITHUB_ENV
+          cat /tmp/nginx.conf.initial.b64 >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-      - name: Copy nginx.conf
-        uses: appleboy/scp-action@v0.1.7
+      - name: Write nginx files to server
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          DOCKER_COMPOSE_B64: ${{ env.DOCKER_COMPOSE_B64 }}
+          NGINX_CONF_B64: ${{ env.NGINX_CONF_B64 }}
+          NGINX_INITIAL_B64: ${{ env.NGINX_INITIAL_B64 }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
-          source: "nginx/nginx.conf"
-          target: "/opt/hrms/nginx/nginx.conf"
+          script: |
+            # Decode and write files
+            echo "$DOCKER_COMPOSE_B64" | base64 -d > /opt/hrms/nginx/docker-compose.yml
+            echo "$NGINX_CONF_B64" | base64 -d > /opt/hrms/nginx/nginx.conf
+            echo "$NGINX_INITIAL_B64" | base64 -d > /opt/hrms/nginx/nginx.conf.initial
 
-      - name: Copy nginx.conf.initial
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          port: ${{ secrets.DO_PORT || 22 }}
-          source: "nginx/nginx.conf.initial"
-          target: "/opt/hrms/nginx/nginx.conf.initial"
+            # Verify files
+            ls -la /opt/hrms/nginx/
+            echo "✅ All nginx files copied successfully"
 
       - name: Setup Nginx Reverse Proxy
         uses: appleboy/ssh-action@v1.0.0
