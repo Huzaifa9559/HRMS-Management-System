@@ -557,29 +557,54 @@ jobs:
       - name: Verify secrets are accessible
         run: |
           echo "🔍 Verifying secrets are accessible in workflow..."
-          if [ -z "${{ secrets.DB_USER }}" ]; then
-            echo "❌ ERROR: DB_USER secret is not accessible in workflow"
-            echo "📋 This means the secret is either:"
-            echo "   1. Not set in Production environment"
-            echo "   2. Empty/blank"
-            echo "   3. Environment protection rules are blocking access"
+          echo "📋 Note: When using 'environment: Production', secrets must be in Production environment"
+          echo "📋 If secrets are in repository-level, they won't be accessible"
+          echo ""
+
+          # Check if secrets are accessible (they might be in environment or repository-level)
+          DB_USER_ACCESSIBLE="${{ secrets.DB_USER }}"
+          DB_PASSWORD_ACCESSIBLE="${{ secrets.DB_PASSWORD }}"
+          DB_NAME_ACCESSIBLE="${{ secrets.DB_NAME }}"
+
+          if [ -z "$DB_USER_ACCESSIBLE" ]; then
+            echo "❌ ERROR: DB_USER secret is not accessible"
             echo ""
-            echo "📋 Action required:"
+            echo "📋 Possible causes:"
+            echo "   1. Secret is in repository-level secrets (not accessible with environment: Production)"
+            echo "   2. Secret is not in Production environment"
+            echo "   3. Secret value is empty/blank"
+            echo "   4. Environment protection rules are blocking access"
+            echo ""
+            echo "📋 Solution:"
+            echo "   Since your workflow uses 'environment: name: Production',"
+            echo "   secrets MUST be in: Environments → Production → Environment secrets"
+            echo ""
+            echo "   Steps to fix:"
             echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            echo "   2. Click 'Environments' → 'Production'"
-            echo "   3. Verify 'DB_USER' exists and has a value"
-            echo "   4. Check environment protection rules"
+            echo "   2. Click 'Environments' tab (on the right)"
+            echo "   3. Click 'Production'"
+            echo "   4. Add 'DB_USER' to Environment secrets (not repository secrets)"
+            echo "   5. Repeat for DB_PASSWORD, DB_NAME, and all other secrets"
+            echo ""
+            echo "   OR if you want to use repository-level secrets:"
+            echo "   Remove 'environment: name: Production' from the workflow (not recommended)"
             exit 1
           fi
-          if [ -z "${{ secrets.DB_PASSWORD }}" ]; then
+
+          if [ -z "$DB_PASSWORD_ACCESSIBLE" ]; then
             echo "❌ ERROR: DB_PASSWORD secret is not accessible"
+            echo "   Follow the same steps above to add it to Production environment"
             exit 1
           fi
-          if [ -z "${{ secrets.DB_NAME }}" ]; then
+
+          if [ -z "$DB_NAME_ACCESSIBLE" ]; then
             echo "❌ ERROR: DB_NAME secret is not accessible"
+            echo "   Follow the same steps above to add it to Production environment"
             exit 1
           fi
+
           echo "✅ All required secrets are accessible in workflow"
+          echo "✅ Secrets are being read from: Production environment"
 
       - name: Create/Update .env file on server
         uses: appleboy/ssh-action@v1.0.0

@@ -1,7 +1,6 @@
 require('dotenv').config({ path: `${process.cwd()}/.env` });
 
 
-
 module.exports = {
   development: {
     username: process.env.DB_USER,
