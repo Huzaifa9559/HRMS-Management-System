@@ -4,9 +4,9 @@ module.exports = {
     await queryInterface.sequelize.query(`
     CREATE TABLE Attendance (
       attendanceID INT PRIMARY KEY AUTO_INCREMENT,
-      attendance_date DATE NOT NULL DEFAULT CURRENT_DATE,
+      attendance_date DATE NOT NULL,
       attendance_status BOOLEAN DEFAULT 0,
-      attendance_clockIn TIME NOT NULL DEFAULT CURRENT_TIME,
+      attendance_clockIn TIME NOT NULL,
       attendance_clockOut TIME DEFAULT NULL,
       attendance_breakIn TIME DEFAULT NULL,
       attendance_breakOut TIME DEFAULT NULL,
