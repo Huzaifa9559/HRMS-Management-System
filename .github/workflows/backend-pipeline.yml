@@ -389,10 +389,34 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Verify Docker image exists
+        run: |
+          echo "🔍 Verifying Docker image was built..."
+          docker images | grep "${{ env.IMAGE_NAME }}"
+          if ! docker images | grep -q "${{ env.IMAGE_NAME }}.*latest"; then
+            echo "❌ Docker image ${{ env.IMAGE_NAME }}:latest not found!"
+            echo "Available images:"
+            docker images
+            exit 1
+          fi
+          IMAGE_SIZE=$(docker images --format "{{.Size}}" ${{ env.IMAGE_NAME }}:latest)
+          echo "✅ Image found: ${{ env.IMAGE_NAME }}:latest (Size: $IMAGE_SIZE)"
+
       - name: Save Docker image as tar
         run: |
+          echo "💾 Saving Docker image to tar.gz..."
           docker save ${{ env.IMAGE_NAME }}:latest | gzip > /tmp/${{ env.IMAGE_NAME }}.tar.gz
+          FILE_SIZE=$(stat -f%z /tmp/${{ env.IMAGE_NAME }}.tar.gz 2>/dev/null || stat -c%s /tmp/${{ env.IMAGE_NAME }}.tar.gz 2>/dev/null || du -b /tmp/${{ env.IMAGE_NAME }}.tar.gz | cut -f1)
+          FILE_SIZE_MB=$((FILE_SIZE / 1024 / 1024))
+          echo "📊 Saved image size: ${FILE_SIZE_MB}MB (${FILE_SIZE} bytes)"
           ls -lh /tmp/${{ env.IMAGE_NAME }}.tar.gz
+
+          # Verify the saved file is reasonable size (at least 1MB)
+          if [ $FILE_SIZE -lt 1048576 ]; then
+            echo "❌ ERROR: Saved image file is too small! This indicates a problem."
+            exit 1
+          fi
+          echo "✅ Image saved successfully"
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
@@ -420,7 +444,7 @@ jobs:
           name: backend-docker-image
           path: /tmp/artifacts
 
-      - name: Find and prepare Docker image
+      - name: Find and verify Docker image
         run: |
           echo "📦 Searching for Docker image file..."
           # Artifacts are extracted to a directory named after the artifact
@@ -429,26 +453,46 @@ jobs:
             echo "❌ Docker image file not found in /tmp/artifacts"
             echo "📋 Contents of /tmp/artifacts:"
             ls -lah /tmp/artifacts/ 2>/dev/null || true
+            find /tmp/artifacts -type f 2>/dev/null || true
             echo "📋 Searching entire /tmp:"
             find /tmp -name "*.tar.gz" -type f 2>/dev/null || true
             exit 1
           fi
           echo "✅ Found image: $IMAGE_FILE"
-          echo "📊 File size: $(du -h "$IMAGE_FILE" | cut -f1)"
-          # Copy to a known location for SCP
+          FILE_SIZE=$(stat -f%z "$IMAGE_FILE" 2>/dev/null || stat -c%s "$IMAGE_FILE" 2>/dev/null || du -b "$IMAGE_FILE" | cut -f1)
+          FILE_SIZE_MB=$((FILE_SIZE / 1024 / 1024))
+          echo "📊 File size: ${FILE_SIZE_MB}MB (${FILE_SIZE} bytes)"
+
+          # Verify file is not too small (should be at least 1MB for a Docker image)
+          if [ $FILE_SIZE -lt 1048576 ]; then
+            echo "❌ ERROR: Docker image file is too small (${FILE_SIZE_MB}MB). Expected at least 1MB."
+            echo "This suggests the artifact may be corrupted or the image wasn't built correctly."
+            echo "Checking if image exists in Docker:"
+            docker images | grep "${{ env.IMAGE_NAME }}" || echo "Image not found in Docker"
+            exit 1
+          fi
+
+          # Copy to a known location
           cp "$IMAGE_FILE" /tmp/${{ env.IMAGE_NAME }}.tar.gz
           echo "✅ Image prepared at /tmp/${{ env.IMAGE_NAME }}.tar.gz"
+          ls -lh /tmp/${{ env.IMAGE_NAME }}.tar.gz
 
       - name: Transfer Docker image to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          port: ${{ secrets.DO_PORT || 22 }}
-          source: "/tmp/${{ env.IMAGE_NAME }}.tar.gz"
-          target: "/tmp/"
-          overwrite: true
+        run: |
+          echo "📤 Transferring Docker image to server via SSH..."
+          # Install SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Transfer file using scp command
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${{ secrets.DO_PORT || 22 }} -i ~/.ssh/deploy_key /tmp/${{ env.IMAGE_NAME }}.tar.gz ${{ secrets.DO_USERNAME }}@${{ secrets.DO_HOST }}:/tmp/
+
+          # Verify transfer
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${{ secrets.DO_PORT || 22 }} -i ~/.ssh/deploy_key ${{ secrets.DO_USERNAME }}@${{ secrets.DO_HOST }} "ls -lh /tmp/${{ env.IMAGE_NAME }}.tar.gz && echo '✅ Image transferred successfully'"
+
+          # Clean up
+          rm -f ~/.ssh/deploy_key
 
       - name: Load Docker image on server
         uses: appleboy/ssh-action@v1.0.0

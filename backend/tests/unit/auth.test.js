@@ -28,6 +28,7 @@ describe('Auth Service - Unit Tests', () => {
     });
   });
 
+  
   describe('Password Hashing', () => {
     it('should hash password correctly', async () => {
       const password = 'testPassword123';
