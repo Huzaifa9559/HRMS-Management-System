@@ -606,28 +606,145 @@ jobs:
           echo "✅ All required secrets are accessible in workflow"
           echo "✅ Secrets are being read from: Production environment"
 
-      - name: Create/Update .env file on server
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "🔐 Creating .env file from GitHub Secrets..."
+
+          # Function to safely write env variable (handles empty values and special characters)
+          write_env() {
+            local key=$1
+            local value=$2
+            
+            if [ -z "$value" ]; then
+              # Empty value - write as-is
+              echo "${key}=" >> .env
+              return
+            fi
+            
+            # Check if value needs quoting (contains spaces, special chars, or could be interpreted as command)
+            needs_quoting=false
+            
+            # Check for spaces, tabs, newlines
+            if [[ "$value" =~ [[:space:]] ]]; then
+              needs_quoting=true
+            fi
+            
+            # Check for special characters that need escaping
+            if [[ "$value" =~ [\$\\\`\"\'\!\@\#\^\&\*\(\)\[\]\{\}\|\;\<\>\?] ]]; then
+              needs_quoting=true
+            fi
+            
+            # Check if starts with dash (could be command option)
+            if [[ "$value" =~ ^- ]]; then
+              needs_quoting=true
+            fi
+            
+            # Check if value contains characters that could form a valid command when unquoted
+            if [ "$needs_quoting" = false ]; then
+              if ! [[ "$value" =~ ^[a-zA-Z0-9_\.\-\:\/\+=]+$ ]]; then
+                needs_quoting=true
+              fi
+            fi
+            
+            if [ "$needs_quoting" = true ]; then
+              escaped_value=$(printf '%s' "$value" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\$/\\$/g' | sed 's/`/\\`/g')
+              echo "${key}=\"${escaped_value}\"" >> .env
+            else
+              echo "${key}=${value}" >> .env
+            fi
+          }
+
+          # Verify required secrets are accessible
+          if [ -z "${{ secrets.DB_USER }}" ]; then
+            echo "❌ ERROR: DB_USER secret is not accessible in Production environment"
+            echo "   Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo "   Click 'Environments' → 'Production' → Add 'DB_USER' secret"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DB_PASSWORD }}" ]; then
+            echo "❌ ERROR: DB_PASSWORD secret is not accessible in Production environment"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DB_NAME }}" ]; then
+            echo "❌ ERROR: DB_NAME secret is not accessible in Production environment"
+            exit 1
+          fi
+
+          echo "✅ All required secrets are accessible"
+          echo ""
+
+          # Build .env file from GitHub Secrets
+          echo "# ==========================================" > .env
+          echo "# HRMS Application Environment Variables" >> .env
+          echo "# Auto-generated from GitHub Secrets" >> .env
+          echo "# ==========================================" >> .env
+          echo "" >> .env
+
+          echo "# Application Configuration" >> .env
+          write_env "NODE_ENV" "production"
+          write_env "PORT" "8000"
+          echo "" >> .env
+
+          echo "# Database Configuration" >> .env
+          write_env "DB_ROOT_PASSWORD" "${{ secrets.DB_ROOT_PASSWORD }}"
+          write_env "DB_NAME" "${{ secrets.DB_NAME }}"
+          write_env "DB_USER" "${{ secrets.DB_USER }}"
+          write_env "DB_PASSWORD" "${{ secrets.DB_PASSWORD }}"
+          write_env "DB_PORT" "${{ secrets.DB_PORT || '3306' }}"
+          write_env "DB_DIALECT" "${{ secrets.DB_DIALECT || 'mysql' }}"
+          write_env "DB_HOST" "mysql"
+          echo "" >> .env
+
+          echo "# Security & Authentication" >> .env
+          write_env "JWT_SECRET" "${{ secrets.JWT_SECRET }}"
+          echo "" >> .env
+
+          echo "# Email Configuration (SendGrid)" >> .env
+          write_env "SENDGRID_API_KEY" "${{ secrets.SENDGRID_API_KEY }}"
+          write_env "EMAIL_FROM" "${{ secrets.EMAIL_FROM || 'no-reply@kitor.io' }}"
+          write_env "EMAIL_FROM_NAME" "${{ secrets.EMAIL_FROM_NAME || 'Xylobit HRMS' }}"
+          echo "" >> .env
+
+          echo "# URL Configuration" >> .env
+          write_env "FRONTEND_URL" "${{ secrets.FRONTEND_URL }}"
+          write_env "DOMAIN" "${{ secrets.DOMAIN }}"
+          write_env "BACKEND_URL" "${{ secrets.BACKEND_URL }}"
+          echo "" >> .env
+
+          echo "# Frontend Environment Variables (React - for docker-compose)" >> .env
+          write_env "REACT_APP_BACKEND_URL" "${{ secrets.REACT_APP_BACKEND_URL }}"
+          write_env "REACT_APP_FRONTEND_URL" "${{ secrets.REACT_APP_FRONTEND_URL }}"
+          echo "" >> .env
+
+          echo "# AWS S3 Configuration (File Storage)" >> .env
+          write_env "AWS_ACCESS_KEY_ID" "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          write_env "AWS_SECRET_ACCESS_KEY" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          write_env "AWS_REGION" "${{ secrets.AWS_REGION }}"
+          write_env "AWS_S3_BUCKET_NAME" "${{ secrets.AWS_S3_BUCKET_NAME }}"
+
+          # Verify file was created
+          if [ -f .env ]; then
+            echo "✅ .env file created successfully"
+            echo "📄 File size: $(wc -l < .env) lines"
+            echo "✅ All environment variables have been loaded from GitHub Secrets"
+          else
+            echo "❌ Failed to create .env file"
+            exit 1
+          fi
+
+      - name: Transfer .env file to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          source: ".env"
+          target: "/tmp"
+          strip_components: 0
+
+      - name: Move .env file to correct location on server
         uses: appleboy/ssh-action@v1.0.0
-        env:
-          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_PORT: ${{ secrets.DB_PORT || '3306' }}
-          DB_DIALECT: ${{ secrets.DB_DIALECT || 'mysql' }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'no-reply@kitor.io' }}
-          EMAIL_FROM_NAME: ${{ secrets.EMAIL_FROM_NAME || 'Xylobit HRMS' }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          DOMAIN: ${{ secrets.DOMAIN }}
-          BACKEND_URL: ${{ secrets.BACKEND_URL }}
-          REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
-          REACT_APP_FRONTEND_URL: ${{ secrets.REACT_APP_FRONTEND_URL }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
@@ -656,135 +773,33 @@ jobs:
               exit 1
             }
 
-            cd "$BASE_DIR" || exit 1
-
-            # Verify environment variables are set BEFORE creating .env file
-            echo "🔍 Verifying environment variables are accessible..."
-            if [ -z "${DB_USER}" ]; then
-              echo "❌ ERROR: DB_USER environment variable is empty!"
-              echo "   This means the secret is not accessible in the Production environment"
-              echo "   Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-              echo "   Click 'Environments' → 'Production' → Add 'DB_USER' secret"
-              exit 1
-            fi
-            if [ -z "${DB_PASSWORD}" ]; then
-              echo "❌ ERROR: DB_PASSWORD environment variable is empty!"
-              echo "   Add it to Production environment secrets"
-              exit 1
-            fi
-            if [ -z "${DB_NAME}" ]; then
-              echo "❌ ERROR: DB_NAME environment variable is empty!"
-              echo "   Add it to Production environment secrets"
-              exit 1
-            fi
-            echo "✅ All required environment variables are set (non-empty)"
-            echo ""
-
-            # Create .env file from GitHub Secrets (automated)
-            # Use printf to ensure proper escaping of special characters
-            {
-              echo "# =========================================="
-              echo "# HRMS Application Environment Variables"
-              echo "# Auto-generated from GitHub Secrets"
-              echo "# =========================================="
-              echo ""
-              echo "# Application Configuration"
-              echo "NODE_ENV=production"
-              echo "PORT=8000"
-              echo ""
-              echo "# Database Configuration"
-              printf "DB_ROOT_PASSWORD=%s\n" "${DB_ROOT_PASSWORD}"
-              printf "DB_NAME=%s\n" "${DB_NAME}"
-              printf "DB_USER=%s\n" "${DB_USER}"
-              printf "DB_PASSWORD=%s\n" "${DB_PASSWORD}"
-              printf "DB_PORT=%s\n" "${DB_PORT}"
-              printf "DB_DIALECT=%s\n" "${DB_DIALECT}"
-              echo "DB_HOST=mysql"
-              echo ""
-              echo "# Security & Authentication"
-              printf "JWT_SECRET=%s\n" "${JWT_SECRET}"
-              echo ""
-              echo "# Email Configuration (SendGrid)"
-              printf "SENDGRID_API_KEY=%s\n" "${SENDGRID_API_KEY}"
-              printf "EMAIL_FROM=%s\n" "${EMAIL_FROM}"
-              printf "EMAIL_FROM_NAME=%s\n" "${EMAIL_FROM_NAME}"
-              echo ""
-              echo "# URL Configuration"
-              printf "FRONTEND_URL=%s\n" "${FRONTEND_URL}"
-              printf "DOMAIN=%s\n" "${DOMAIN}"
-              printf "BACKEND_URL=%s\n" "${BACKEND_URL}"
-              echo ""
-              echo "# Frontend Environment Variables (React - for docker-compose)"
-              printf "REACT_APP_BACKEND_URL=%s\n" "${REACT_APP_BACKEND_URL}"
-              printf "REACT_APP_FRONTEND_URL=%s\n" "${REACT_APP_FRONTEND_URL}"
-              echo ""
-              echo "# AWS S3 Configuration (File Storage)"
-              printf "AWS_ACCESS_KEY_ID=%s\n" "${AWS_ACCESS_KEY_ID}"
-              printf "AWS_SECRET_ACCESS_KEY=%s\n" "${AWS_SECRET_ACCESS_KEY}"
-              printf "AWS_REGION=%s\n" "${AWS_REGION}"
-              printf "AWS_S3_BUCKET_NAME=%s\n" "${AWS_S3_BUCKET_NAME}"
-            } > "$BASE_DIR/backend/.env"
-
-            # Set secure permissions
-            chmod 600 "$BASE_DIR/backend/.env"
-            echo ".env file created/updated successfully from GitHub Secrets at $BASE_DIR/backend/.env"
-
-            # Verify .env file was created correctly
-            echo "🔍 Verifying .env file content (masked):"
-            if [ -f "$BASE_DIR/backend/.env" ]; then
-              echo "✅ .env file exists"
-              # Show non-sensitive parts
-              grep -E "^(DB_USER|DB_NAME|DB_HOST|DB_PORT|DB_DIALECT|NODE_ENV|PORT)=" "$BASE_DIR/backend/.env" | sed 's/=\(.*\)/=***/' || echo "⚠️  Some variables not found"
-              # Verify DB_USER and DB_PASSWORD are not empty
-              echo ""
-              echo "🔍 Debugging: Checking actual values in .env file..."
-              DB_USER_LINE=$(grep "^DB_USER=" "$BASE_DIR/backend/.env" || echo "")
-              DB_PASSWORD_LINE=$(grep "^DB_PASSWORD=" "$BASE_DIR/backend/.env" || echo "")
+            # Move .env file to correct location
+            if [ -f "/tmp/.env" ]; then
+              mv /tmp/.env "$BASE_DIR/backend/.env"
+              chmod 600 "$BASE_DIR/backend/.env"
+              echo "✅ .env file moved to $BASE_DIR/backend/.env"
               
-              if [ -z "$DB_USER_LINE" ]; then
-                echo "❌ ERROR: DB_USER line not found in .env file!"
+              # Verify .env file
+              if [ -f "$BASE_DIR/backend/.env" ]; then
+                echo "✅ .env file verified on server"
+                echo "📄 File size: $(wc -l < "$BASE_DIR/backend/.env") lines"
+                # Show non-sensitive parts (masked)
+                grep -E "^(DB_USER|DB_NAME|DB_HOST|DB_PORT|DB_DIALECT|NODE_ENV|PORT)=" "$BASE_DIR/backend/.env" | sed 's/=\(.*\)/=***/' || echo "⚠️  Some variables not found"
+              else
+                echo "❌ ERROR: .env file not found after move"
                 exit 1
               fi
-              if [ -z "$DB_PASSWORD_LINE" ]; then
-                echo "❌ ERROR: DB_PASSWORD line not found in .env file!"
-                exit 1
-              fi
-              
-              # Extract values (everything after the first =)
-              DB_USER_VALUE=$(echo "$DB_USER_LINE" | sed 's/^DB_USER=//' | tr -d ' ')
-              DB_PASSWORD_VALUE=$(echo "$DB_PASSWORD_LINE" | sed 's/^DB_PASSWORD=//' | tr -d ' ')
-              
-              echo "DB_USER value length: ${#DB_USER_VALUE} characters"
-              echo "DB_PASSWORD value length: ${#DB_PASSWORD_VALUE} characters"
-              
-              if [ -z "$DB_USER_VALUE" ]; then
-                echo ""
-                echo "❌ ERROR: DB_USER is empty in .env file!"
-                echo ""
-                echo "📋 Root Cause: The DB_USER secret is not accessible in the Production environment"
-                echo "   The environment variable was empty when passed to the SSH action"
-                echo ""
-                echo "📋 Solution:"
-                echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-                echo "   2. Click 'Environments' → 'Production'"
-                echo "   3. Click 'Add secret' and add 'DB_USER' with your database username"
-                echo "   4. Repeat for 'DB_PASSWORD' and 'DB_NAME'"
-                echo "   5. Make sure you're adding to 'Production' environment, NOT repository-level secrets"
-                echo ""
-                echo "   Note: Repository-level secrets won't work when using 'environment: Production'"
-                exit 1
-              fi
-              if [ -z "$DB_PASSWORD_VALUE" ]; then
-                echo ""
-                echo "❌ ERROR: DB_PASSWORD is empty in .env file!"
-                echo "   Follow the same solution above to add DB_PASSWORD to Production environment"
-                exit 1
-              fi
-              echo "✅ DB_USER and DB_PASSWORD are set (non-empty)"
             else
-              echo "❌ ERROR: .env file was not created!"
+              echo "❌ ERROR: .env file not found in /tmp"
               exit 1
             fi
+
+      - name: Clean up local .env file
+        if: always()
+        run: |
+          echo "🧹 Cleaning up local .env file..."
+          rm -f .env
+          echo "✅ Local .env file removed"
 
       - name: Deploy to Digital Ocean Droplet
         uses: appleboy/ssh-action@v1.0.0
