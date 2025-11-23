@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'nginx/**'
-      - '.github/workflows/nginx-deploy.yml'
+      - "nginx/**"
+      - ".github/workflows/nginx-deploy.yml"
   workflow_dispatch:
   workflow_run:
     workflows: ["Backend Pipeline", "Frontend Pipeline"]
@@ -16,25 +16,30 @@ on:
 jobs:
   deploy-nginx:
     runs-on: ubuntu-latest
-    # Only run if:
-    # 1. Secrets are configured (DO_HOST, DO_USERNAME, DO_SSH_KEY)
-    # 2. AND (workflow_run succeeded OR push event OR manual trigger)
-    # If secrets are missing, workflow will be skipped (not failed)
-    if: ${{ 
-      secrets.DO_HOST != '' && 
-      secrets.DO_USERNAME != '' && 
-      secrets.DO_SSH_KEY != '' && 
-      (github.event_name == 'workflow_dispatch' || 
-       github.event_name == 'push' || 
-       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
-    }}
-    
+    # Only run if triggered by workflow_run (after backend/frontend), push, or manual dispatch
+    # Note: Secret validation happens in the first step
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Verify Required Secrets
         run: |
+          if [ -z "${{ secrets.DO_HOST }}" ] || [ -z "${{ secrets.DO_USERNAME }}" ] || [ -z "${{ secrets.DO_SSH_KEY }}" ]; then
+            echo "❌ Error: Missing required GitHub Secrets"
+            echo ""
+            echo "📝 To fix this:"
+            echo "1. Go to your GitHub repository"
+            echo "2. Navigate to: Settings → Secrets and variables → Actions"
+            echo "3. Add the following secrets:"
+            echo "   - DO_HOST: Your Digital Ocean droplet IP address"
+            echo "   - DO_USERNAME: SSH username (usually 'root')"
+            echo "   - DO_SSH_KEY: Your SSH private key"
+            echo ""
+            echo "💡 This workflow will fail until secrets are configured."
+            exit 1
+          fi
           echo "✅ All required secrets are configured and available"
 
       - name: Update Container Ports (Bind to localhost)
@@ -46,21 +51,21 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             echo "🔧 Updating container ports to bind to localhost only..."
-            
+
             # Update backend docker-compose.yml
             cd /opt/hrms/backend
             if grep -q '"8000:8000"' docker-compose.yml; then
               sed -i 's/"8000:8000"/"127.0.0.1:8000:8000"/' docker-compose.yml
               echo "✅ Backend ports updated"
             fi
-            
+
             # Update frontend docker-compose.yml
             cd /opt/hrms/frontend
             if grep -q '"80:80"' docker-compose.yml; then
               sed -i 's/"80:80"/"127.0.0.1:80:80"/' docker-compose.yml
               echo "✅ Frontend ports updated"
             fi
-            
+
             # Restart containers with new port bindings
             echo "🔄 Restarting containers with new port bindings..."
             cd /opt/hrms/backend && docker-compose restart backend || true
@@ -86,13 +91,13 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             cd /opt/hrms/nginx
-            
+
             # Create certbot directories if they don't exist
             mkdir -p certbot/conf certbot/www
-            
+
             # Create network if it doesn't exist
             docker network create hrms-network --driver bridge 2>/dev/null || true
-            
+
             # Check if SSL certificates exist
             if [ -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
               echo "✅ SSL certificates found, using full SSL config"
@@ -110,14 +115,14 @@ jobs:
               fi
               cp nginx.conf.initial nginx.conf
             fi
-            
+
             # Start/restart nginx container
             echo "🚀 Starting Nginx reverse proxy..."
             docker-compose up -d nginx
-            
+
             # Wait for nginx to be ready
             sleep 5
-            
+
             # Check if nginx is running
             if docker ps | grep -q hrms-nginx; then
               echo "✅ Nginx container is running"
@@ -126,14 +131,14 @@ jobs:
               docker logs hrms-nginx
               exit 1
             fi
-            
+
             # Test nginx configuration
             docker exec hrms-nginx nginx -t || {
               echo "❌ Nginx configuration test failed"
               docker logs hrms-nginx
               exit 1
             }
-            
+
             echo "✅ Nginx reverse proxy deployed successfully"
 
       - name: Health Check
@@ -159,7 +164,12 @@ jobs:
             docker ps | grep -E "hrms-nginx|hrms-frontend|hrms-backend" || true
             echo ""
             echo "🌐 Network Status:"
-            docker network inspect hrms-network --format '{{.Name}}: {{len .Containers}} containers' || true
+            if docker network inspect hrms-network >/dev/null 2>&1; then
+              CONTAINER_COUNT=$(docker network inspect hrms-network 2>/dev/null | grep -o '"Name"' | wc -l || echo "0")
+              echo "hrms-network: $CONTAINER_COUNT containers connected"
+            else
+              echo "hrms-network: not found"
+            fi
             echo ""
             if [ -f "/opt/hrms/nginx/certbot/conf/live/h-rms.me/fullchain.pem" ]; then
               echo "✅ SSL certificates are configured"
@@ -167,4 +177,3 @@ jobs:
               echo "⚠️  SSL certificates not found - using HTTP only"
               echo "   Run SSL setup to enable HTTPS (see NGINX-QUICK-START.md)"
             fi
-
