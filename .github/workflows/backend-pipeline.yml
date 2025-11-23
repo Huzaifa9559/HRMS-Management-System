@@ -882,6 +882,17 @@ jobs:
 
             if [ -z "$MYSQL_RUNNING" ]; then
               echo "🚀 Starting MySQL container..."
+              
+              # Check if MySQL data volume exists (might have old password)
+              VOLUME_EXISTS=$(docker volume ls | grep -q "backend_mysql_data\|hrms.*mysql" && echo "yes" || echo "no")
+              if [ "$VOLUME_EXISTS" = "yes" ]; then
+                echo "⚠️  WARNING: MySQL data volume already exists!"
+                echo "   This means MySQL was initialized before with a potentially different root password"
+                echo "   If you get 'Access denied' errors, you may need to:"
+                echo "   1. Delete the volume: docker volume rm backend_mysql_data"
+                echo "   2. Or use the old root password that was used when the volume was created"
+              fi
+              
               $DOCKER_COMPOSE_CMD up -d mysql
               echo "⏳ Waiting for MySQL to be ready..."
               sleep 15
@@ -903,16 +914,58 @@ jobs:
               # Grant permissions to user from any host (required for Docker network connections)
               echo "🔧 Granting database user permissions for Docker network connections..."
               
-              # Get the actual root password from the container (it might differ from .env)
-              ACTUAL_ROOT_PASSWORD=$(docker exec hrms-mysql printenv MYSQL_ROOT_PASSWORD 2>/dev/null || echo "$DB_ROOT_PASSWORD")
+              # Get the actual root password - MySQL container uses MYSQL_ROOT_PASSWORD from docker-compose
+              # docker-compose reads DB_ROOT_PASSWORD from .env and passes it as MYSQL_ROOT_PASSWORD
+              # But if DB_ROOT_PASSWORD is empty, docker-compose uses default 'rootpassword'
+              
+              if [ -z "$DB_ROOT_PASSWORD" ]; then
+                echo "⚠️  WARNING: DB_ROOT_PASSWORD is empty in .env file!"
+                echo "   docker-compose will use default 'rootpassword'"
+                ACTUAL_ROOT_PASSWORD="rootpassword"
+              else
+                ACTUAL_ROOT_PASSWORD="$DB_ROOT_PASSWORD"
+              fi
+              
+              echo "🔍 Using root password: ${ACTUAL_ROOT_PASSWORD:0:3}***"
+              
+              # Also check what the container has (for debugging)
+              CONTAINER_ROOT_PW=$(docker exec hrms-mysql printenv MYSQL_ROOT_PASSWORD 2>/dev/null || echo "")
+              if [ -n "$CONTAINER_ROOT_PW" ]; then
+                echo "   Container MYSQL_ROOT_PASSWORD: ${CONTAINER_ROOT_PW:0:3}***"
+                # If they don't match, try container password
+                if [ "$CONTAINER_ROOT_PW" != "$ACTUAL_ROOT_PASSWORD" ]; then
+                  echo "⚠️  Root password in container doesn't match .env file!"
+                  echo "   Trying with container password..."
+                  ACTUAL_ROOT_PASSWORD="$CONTAINER_ROOT_PW"
+                fi
+              fi
               
               echo "📋 Ensuring database '$DB_NAME' exists..."
-              docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
+              DB_CREATE_OUTPUT=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
                 CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;
-              " 2>&1 || {
-                echo "❌ ERROR: Could not create database. Check root password."
+                SELECT 'Database created or already exists' AS status;
+              " 2>&1)
+              
+              if echo "$DB_CREATE_OUTPUT" | grep -q "Database created or already exists"; then
+                echo "✅ Database '$DB_NAME' exists or was created"
+              else
+                echo "❌ ERROR: Could not create database"
+                echo "   Output: $DB_CREATE_OUTPUT"
+                echo ""
+                echo "🔍 Root password issue detected"
+                echo "   Tried password: ${ACTUAL_ROOT_PASSWORD:0:3}***"
+                echo ""
+                echo "   The MySQL container was likely created with a different root password"
+                echo "   MySQL root password is set only when the container is first initialized"
+                echo ""
+                echo "   Solution: Recreate MySQL container with correct password"
+                echo "   cd $BASE_DIR/backend"
+                echo "   docker compose down mysql"
+                echo "   docker volume rm backend_mysql_data  # WARNING: Deletes all data!"
+                echo "   # Make sure DB_ROOT_PASSWORD is set in .env file"
+                echo "   docker compose up -d mysql"
                 exit 1
-              }
+              fi
               
               # Use --password= syntax to avoid shell interpretation issues
               GRANT_OUTPUT=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
