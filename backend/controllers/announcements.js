@@ -94,7 +94,7 @@ exports.deleteAnnouncement = async (req, res) => {
   }
 
   try {
-    const deleteResult = await Announcement.deleteAnnouncementById(id); // Delete the announcement by ID
+    await Announcement.deleteAnnouncementById(id); // Delete the announcement by ID
     return sendResponse(
       res,
       httpStatus.OK,

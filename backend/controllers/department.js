@@ -1,5 +1,4 @@
 const Department = require('../models/department');
-const Designation = require('../models/designation');
 const sendResponse = require('../utils/responseUtil');
 const httpStatus = require('../utils/httpStatus');
 

@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const path = require('path');
 
 // Configure AWS S3
 const s3 = new AWS.S3({

@@ -362,7 +362,7 @@ Employee.updateEmployeeById = async function (employeeId, updatedData) {
       }
     );
 
-    addressID = employeeResult ? employeeResult.address_ID : null;
+    const addressID = employeeResult ? employeeResult.address_ID : null;
 
     // Step 2: If the address is updated, update the Address table
     if (

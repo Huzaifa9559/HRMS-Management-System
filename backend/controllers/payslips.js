@@ -181,12 +181,7 @@ exports.getAllEmployeesPayslips = async (req, res) => {
     );
 
     if (!payslips || payslips.length === 0) {
-      return sendResponse(
-        res,
-        httpStatus.NOT_FOUND,
-        null,
-        `No payslips found for the year ${year}`
-      );
+      return sendResponse(res, httpStatus.NOT_FOUND, null, 'No payslips found');
     }
 
     return sendResponse(

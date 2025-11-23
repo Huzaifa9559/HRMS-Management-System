@@ -1,6 +1,6 @@
 'use strict';
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  up: async (queryInterface, _Sequelize) => {
     await queryInterface.sequelize.query(`
     CREATE TABLE Documents (
         document_ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -11,7 +11,7 @@ module.exports = {
     );
 `);
   },
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface, _Sequelize) => {
     await queryInterface.sequelize.query(`DROP TABLE Documents;`);
-  }
+  },
 };

@@ -1,5 +1,4 @@
 const { sequelize } = require('../config/sequelizeConfig');
-const Sequelize = require('sequelize');
 //creating our own custom model without the use of sequelize ORM
 const Signatures = {};
 // no need to define attributes in sequelize since using Raw SQL queries for DML operations

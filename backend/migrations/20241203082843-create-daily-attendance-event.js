@@ -1,6 +1,6 @@
 'use strict';
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up(queryInterface, _Sequelize) {
     await queryInterface.sequelize.query(`
       CREATE EVENT check_employee_attendance
       ON SCHEDULE EVERY 1 DAY
@@ -36,7 +36,7 @@ module.exports = {
       END;
     `);
   },
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface, _Sequelize) {
     await queryInterface.sequelize.query(`
       DROP EVENT IF EXISTS check_employee_attendance;
     `);

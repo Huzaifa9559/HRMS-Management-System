@@ -10,10 +10,11 @@ module.exports = {
     sourceType: 'module'
   },
   rules: {
-    'no-console': 'warn',
+    'no-console': 'off', // Allow console statements for debugging
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'prefer-const': 'error',
-    'no-var': 'error'
+    'no-var': 'error',
+    'no-undef': 'error'
   }
 };
 

@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const sinon = require('sinon');
 const bcrypt = require('bcrypt');
 const { setUser } = require('../../service/auth');
 
@@ -9,7 +8,7 @@ describe('Auth Service - Unit Tests', () => {
       const user = {
         id: 1,
         email: 'test@example.com',
-        username: 'testuser'
+        username: 'testuser',
       };
 
       const token = setUser(user);
@@ -47,4 +46,3 @@ describe('Auth Service - Unit Tests', () => {
     });
   });
 });
-

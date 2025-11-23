@@ -1,4 +1,3 @@
-const { Sequelize } = require('sequelize');
 const { sequelize } = require('../config/sequelizeConfig');
 
 // Define the Admin model

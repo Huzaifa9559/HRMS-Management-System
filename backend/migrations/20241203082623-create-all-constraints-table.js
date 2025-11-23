@@ -1,6 +1,6 @@
 'use strict';
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  up: async (queryInterface, _Sequelize) => {
     const queries = [
       `ALTER TABLE \`Leave\`
         ADD COLUMN employeeID INT,
@@ -44,7 +44,7 @@ module.exports = {
       await queryInterface.sequelize.query(query);
     }
   },
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface, _Sequelize) => {
     const queries = [
       `ALTER TABLE \`Leave\`
         DROP FOREIGN KEY leave_employee, 
