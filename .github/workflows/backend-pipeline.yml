@@ -658,6 +658,28 @@ jobs:
 
             cd "$BASE_DIR" || exit 1
 
+            # Verify environment variables are set BEFORE creating .env file
+            echo "🔍 Verifying environment variables are accessible..."
+            if [ -z "${DB_USER}" ]; then
+              echo "❌ ERROR: DB_USER environment variable is empty!"
+              echo "   This means the secret is not accessible in the Production environment"
+              echo "   Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+              echo "   Click 'Environments' → 'Production' → Add 'DB_USER' secret"
+              exit 1
+            fi
+            if [ -z "${DB_PASSWORD}" ]; then
+              echo "❌ ERROR: DB_PASSWORD environment variable is empty!"
+              echo "   Add it to Production environment secrets"
+              exit 1
+            fi
+            if [ -z "${DB_NAME}" ]; then
+              echo "❌ ERROR: DB_NAME environment variable is empty!"
+              echo "   Add it to Production environment secrets"
+              exit 1
+            fi
+            echo "✅ All required environment variables are set (non-empty)"
+            echo ""
+
             # Create .env file from GitHub Secrets (automated)
             # Use printf to ensure proper escaping of special characters
             {
@@ -714,14 +736,48 @@ jobs:
               # Show non-sensitive parts
               grep -E "^(DB_USER|DB_NAME|DB_HOST|DB_PORT|DB_DIALECT|NODE_ENV|PORT)=" "$BASE_DIR/backend/.env" | sed 's/=\(.*\)/=***/' || echo "⚠️  Some variables not found"
               # Verify DB_USER and DB_PASSWORD are not empty
-              DB_USER_VALUE=$(grep "^DB_USER=" "$BASE_DIR/backend/.env" | cut -d'=' -f2- | tr -d ' ')
-              DB_PASSWORD_VALUE=$(grep "^DB_PASSWORD=" "$BASE_DIR/backend/.env" | cut -d'=' -f2- | tr -d ' ')
+              echo ""
+              echo "🔍 Debugging: Checking actual values in .env file..."
+              DB_USER_LINE=$(grep "^DB_USER=" "$BASE_DIR/backend/.env" || echo "")
+              DB_PASSWORD_LINE=$(grep "^DB_PASSWORD=" "$BASE_DIR/backend/.env" || echo "")
+              
+              if [ -z "$DB_USER_LINE" ]; then
+                echo "❌ ERROR: DB_USER line not found in .env file!"
+                exit 1
+              fi
+              if [ -z "$DB_PASSWORD_LINE" ]; then
+                echo "❌ ERROR: DB_PASSWORD line not found in .env file!"
+                exit 1
+              fi
+              
+              # Extract values (everything after the first =)
+              DB_USER_VALUE=$(echo "$DB_USER_LINE" | sed 's/^DB_USER=//' | tr -d ' ')
+              DB_PASSWORD_VALUE=$(echo "$DB_PASSWORD_LINE" | sed 's/^DB_PASSWORD=//' | tr -d ' ')
+              
+              echo "DB_USER value length: ${#DB_USER_VALUE} characters"
+              echo "DB_PASSWORD value length: ${#DB_PASSWORD_VALUE} characters"
+              
               if [ -z "$DB_USER_VALUE" ]; then
+                echo ""
                 echo "❌ ERROR: DB_USER is empty in .env file!"
+                echo ""
+                echo "📋 Root Cause: The DB_USER secret is not accessible in the Production environment"
+                echo "   The environment variable was empty when passed to the SSH action"
+                echo ""
+                echo "📋 Solution:"
+                echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+                echo "   2. Click 'Environments' → 'Production'"
+                echo "   3. Click 'Add secret' and add 'DB_USER' with your database username"
+                echo "   4. Repeat for 'DB_PASSWORD' and 'DB_NAME'"
+                echo "   5. Make sure you're adding to 'Production' environment, NOT repository-level secrets"
+                echo ""
+                echo "   Note: Repository-level secrets won't work when using 'environment: Production'"
                 exit 1
               fi
               if [ -z "$DB_PASSWORD_VALUE" ]; then
+                echo ""
                 echo "❌ ERROR: DB_PASSWORD is empty in .env file!"
+                echo "   Follow the same solution above to add DB_PASSWORD to Production environment"
                 exit 1
               fi
               echo "✅ DB_USER and DB_PASSWORD are set (non-empty)"
