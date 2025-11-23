@@ -22,7 +22,7 @@ describe('Auth API - Integration Tests', () => {
         .post('/api/employees/auth/login')
         .send({
           email: 'nonexistent@example.com',
-          password: 'password123'
+          password: 'password123',
         })
         .end((err, res) => {
           expect(res).to.have.status(404);
@@ -37,7 +37,7 @@ describe('Auth API - Integration Tests', () => {
         .post('/api/employees/auth/login')
         .send({
           email: 'test@example.com',
-          password: 'wrongpassword'
+          password: 'wrongpassword',
         })
         .end((err, res) => {
           expect(res).to.have.status(401);
@@ -53,7 +53,7 @@ describe('Auth API - Integration Tests', () => {
         .post('/api/admin/auth/login')
         .send({
           email: 'k224586@nu.edu.pk',
-          password: 'Password@123'
+          password: 'Password@123',
         })
         .end((err, res) => {
           expect(res).to.have.status(200);
@@ -68,7 +68,7 @@ describe('Auth API - Integration Tests', () => {
         .post('/api/admin/auth/login')
         .send({
           email: 'k224586@nu.edu.pk',
-          password: 'wrongpassword'
+          password: 'wrongpassword',
         })
         .end((err, res) => {
           expect(res).to.have.status(401);
@@ -77,4 +77,3 @@ describe('Auth API - Integration Tests', () => {
     });
   });
 });
-

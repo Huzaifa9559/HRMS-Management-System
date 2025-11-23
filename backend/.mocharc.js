@@ -4,6 +4,5 @@ module.exports = {
   exit: true,
   recursive: true,
   reporter: 'spec',
-  colors: true
+  colors: true,
 };
-

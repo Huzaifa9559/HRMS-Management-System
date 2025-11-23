@@ -32,13 +32,12 @@ module.exports = {
         REFERENCES Employee(employeeID)
         ON DELETE CASCADE
         ON UPDATE CASCADE;`,
-      
+
       `ALTER TABLE Employee
        ADD COLUMN last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;`,
-    
-       `ALTER TABLE Attendance
-       ADD CONSTRAINT unique_employee_attendance UNIQUE (employeeID, attendance_date);`
-    
+
+      `ALTER TABLE Attendance
+       ADD CONSTRAINT unique_employee_attendance UNIQUE (employeeID, attendance_date);`,
     ];
     for (const query of queries) {
       await queryInterface.sequelize.query(query);
@@ -61,15 +60,15 @@ module.exports = {
       `ALTER TABLE Documents
         DROP FOREIGN KEY documents_employee, 
         DROP COLUMN employeeID;`,
-      
+
       `ALTER TABLE Employee
        DROP COLUMN last_updated;`,
-      
+
       `ALTER TABLE Attendance
-       DROP CONSTRAINT unique_employee_attendance;`
+       DROP CONSTRAINT unique_employee_attendance;`,
     ];
     for (const query of queries) {
       await queryInterface.sequelize.query(query);
     }
-  }
+  },
 };

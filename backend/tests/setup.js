@@ -10,4 +10,3 @@ process.env.DB_DIALECT = 'mysql';
 
 // Increase timeout for tests
 process.env.TEST_TIMEOUT = '10000';
-

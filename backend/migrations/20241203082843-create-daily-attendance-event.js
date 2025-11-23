@@ -40,5 +40,5 @@ module.exports = {
     await queryInterface.sequelize.query(`
       DROP EVENT IF EXISTS check_employee_attendance;
     `);
-  }
+  },
 };
