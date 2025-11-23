@@ -30,14 +30,14 @@ describe('Auth API - Integration Tests', () => {
 
       if (existing.length === 0) {
         // Create a test department if it doesn't exist
-        let dept = await sequelize.query(
+        const dept = await sequelize.query(
           "SELECT departmentID FROM Department WHERE department_name = 'Test Department'",
           { type: sequelize.QueryTypes.SELECT }
         );
         let departmentID = dept[0]?.departmentID;
 
         if (!departmentID) {
-          const deptResult = await sequelize.query(
+          await sequelize.query(
             "INSERT INTO Department (department_name) VALUES ('Test Department')",
             { type: sequelize.QueryTypes.INSERT }
           );
@@ -50,7 +50,7 @@ describe('Auth API - Integration Tests', () => {
         }
 
         // Create a test designation if it doesn't exist
-        let des = await sequelize.query(
+        const des = await sequelize.query(
           "SELECT designationID FROM Designation WHERE designation_name = 'Test Designation'",
           { type: sequelize.QueryTypes.SELECT }
         );
