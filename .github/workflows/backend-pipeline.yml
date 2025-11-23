@@ -1052,10 +1052,25 @@ jobs:
             # Verify connection one more time before proceeding
             echo ""
             echo "🔍 Final connection test before migrations..."
-            if docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -e "USE \`$DB_NAME\`; SELECT 'Connection successful' AS status;" 2>&1 | grep -q "Connection successful"; then
+            CONNECTION_TEST=$(docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -e "USE \`$DB_NAME\`; SELECT 'Connection successful' AS status;" 2>&1)
+
+            if echo "$CONNECTION_TEST" | grep -q "Connection successful"; then
               echo "✅ Database connection verified - ready for migrations"
             else
-              echo "❌ Database connection failed - cannot proceed with migrations"
+              echo "❌ Database connection failed!"
+              echo "   Test output: $CONNECTION_TEST"
+              echo ""
+              echo "🔍 Debugging: Checking user grants..."
+              GRANTS_OUTPUT=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "SHOW GRANTS FOR '$DB_USER'@'%';" 2>&1)
+              echo "Grants for '$DB_USER'@'%':"
+              echo "$GRANTS_OUTPUT"
+              echo ""
+              echo "🔍 Checking if user exists..."
+              USER_CHECK=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "SELECT User, Host FROM mysql.user WHERE User='$DB_USER';" 2>&1)
+              echo "Users found:"
+              echo "$USER_CHECK"
+              echo ""
+              echo "❌ Cannot proceed with migrations - connection test failed"
               echo "   Please fix MySQL user permissions (see instructions above)"
               exit 1
             fi
@@ -1120,18 +1135,56 @@ jobs:
               
               # Check if DB_USER is set in container (for debugging)
               DB_USER_CHECK=$(docker exec "$TEMP_CONTAINER_NAME" sh -c 'echo "$DB_USER"' 2>/dev/null || echo "")
+              DB_PASSWORD_CHECK=$(docker exec "$TEMP_CONTAINER_NAME" sh -c 'echo "$DB_PASSWORD"' 2>/dev/null || echo "")
+              DB_NAME_CHECK=$(docker exec "$TEMP_CONTAINER_NAME" sh -c 'echo "$DB_NAME"' 2>/dev/null || echo "")
+              DB_HOST_CHECK=$(docker exec "$TEMP_CONTAINER_NAME" sh -c 'echo "$DB_HOST"' 2>/dev/null || echo "")
+              
+              echo "🔍 Debugging: Environment variables in container:"
+              echo "   DB_USER: ${DB_USER_CHECK:0:3}*** (length: ${#DB_USER_CHECK})"
+              echo "   DB_PASSWORD: ${DB_PASSWORD_CHECK:+SET} (length: ${#DB_PASSWORD_CHECK})"
+              echo "   DB_NAME: $DB_NAME_CHECK"
+              echo "   DB_HOST: $DB_HOST_CHECK"
+              
               if [ -z "$DB_USER_CHECK" ]; then
                 echo "⚠️  Warning: DB_USER appears to be empty in container"
                 echo "📋 Checking all DB_* variables in container:"
                 docker exec "$TEMP_CONTAINER_NAME" env | grep "^DB_" || echo "No DB_ variables found"
-              else
-                echo "✅ DB_USER is set in container (value: ${DB_USER_CHECK:0:3}***)"
               fi
               
               # Also copy .env file into container for dotenv to read (as fallback)
               docker cp "$BASE_DIR/backend/.env" "$TEMP_CONTAINER_NAME:/app/.env" 2>/dev/null || {
                 echo "⚠️  Warning: Could not copy .env file into container"
               }
+              
+              # Verify .env file was copied and check its contents
+              if docker exec "$TEMP_CONTAINER_NAME" test -f /app/.env; then
+                echo "✅ .env file exists in container"
+                echo "🔍 Checking DB_USER in .env file:"
+                docker exec "$TEMP_CONTAINER_NAME" grep "^DB_USER=" /app/.env | sed 's/=\(.*\)/=***/' || echo "DB_USER not found in .env"
+              else
+                echo "❌ ERROR: .env file not found in container at /app/.env"
+              fi
+              
+              # Test connection from backend container to MySQL
+              echo ""
+              echo "🔍 Testing connection from backend container to MySQL..."
+              CONNECTION_TEST_FROM_BACKEND=$(docker exec "$TEMP_CONTAINER_NAME" sh -c "mysql -h mysql -u\"\$DB_USER\" -p\"\$DB_PASSWORD\" -e 'SELECT 1 AS test;' 2>&1" || echo "Connection failed")
+              
+              if echo "$CONNECTION_TEST_FROM_BACKEND" | grep -q "test"; then
+                echo "✅ Connection from backend container to MySQL works!"
+              else
+                echo "❌ Connection from backend container to MySQL FAILED!"
+                echo "   Output: $CONNECTION_TEST_FROM_BACKEND"
+                echo ""
+                echo "🔍 This means the credentials in the container don't match MySQL permissions"
+                echo "   Checking what MySQL expects..."
+                echo "   Expected user: $DB_USER"
+                echo "   Expected database: $DB_NAME"
+                echo ""
+                echo "   Run this on the server to check MySQL users:"
+                echo "   docker exec hrms-mysql mysql -uroot -p -e \"SELECT User, Host FROM mysql.user WHERE User='$DB_USER';\""
+                exit 1
+              fi
               
               echo "⏳ Waiting for temporary container to be ready..."
               sleep 10
