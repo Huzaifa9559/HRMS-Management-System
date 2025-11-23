@@ -582,6 +582,20 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
+            # Verify required secrets are set before creating .env file
+            if [ -z "${DB_USER}" ]; then
+              echo "❌ ERROR: DB_USER secret is not set in GitHub Secrets (Production environment)"
+              exit 1
+            fi
+            if [ -z "${DB_PASSWORD}" ]; then
+              echo "❌ ERROR: DB_PASSWORD secret is not set in GitHub Secrets (Production environment)"
+              exit 1
+            fi
+            if [ -z "${DB_NAME}" ]; then
+              echo "❌ ERROR: DB_NAME secret is not set in GitHub Secrets (Production environment)"
+              exit 1
+            fi
+            echo "✅ All required database secrets are set"
             # Determine the base directory (with fallbacks)
             BASE_DIR="/opt/hrms"
             if [ ! -d "$BASE_DIR" ]; then
@@ -599,6 +613,7 @@ jobs:
             fi
             cd "$BASE_DIR" || exit 1
             # Create .env file from GitHub Secrets (automated)
+            # Use printf to ensure proper escaping of special characters
             {
               echo "# =========================================="
               echo "# HRMS Application Environment Variables"
@@ -610,41 +625,64 @@ jobs:
               echo "PORT=8000"
               echo ""
               echo "# Database Configuration"
-              echo "DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}"
-              echo "DB_NAME=${DB_NAME}"
-              echo "DB_USER=${DB_USER}"
-              echo "DB_PASSWORD=${DB_PASSWORD}"
-              echo "DB_PORT=${DB_PORT}"
-              echo "DB_DIALECT=${DB_DIALECT}"
+              printf "DB_ROOT_PASSWORD=%s\n" "${DB_ROOT_PASSWORD}"
+              printf "DB_NAME=%s\n" "${DB_NAME}"
+              printf "DB_USER=%s\n" "${DB_USER}"
+              printf "DB_PASSWORD=%s\n" "${DB_PASSWORD}"
+              printf "DB_PORT=%s\n" "${DB_PORT}"
+              printf "DB_DIALECT=%s\n" "${DB_DIALECT}"
               echo "DB_HOST=mysql"
               echo ""
               echo "# Security & Authentication"
-              echo "JWT_SECRET=${JWT_SECRET}"
+              printf "JWT_SECRET=%s\n" "${JWT_SECRET}"
               echo ""
               echo "# Email Configuration (SendGrid)"
-              echo "SENDGRID_API_KEY=${SENDGRID_API_KEY}"
-              echo "EMAIL_FROM=${EMAIL_FROM}"
-              echo "EMAIL_FROM_NAME=${EMAIL_FROM_NAME}"
+              printf "SENDGRID_API_KEY=%s\n" "${SENDGRID_API_KEY}"
+              printf "EMAIL_FROM=%s\n" "${EMAIL_FROM}"
+              printf "EMAIL_FROM_NAME=%s\n" "${EMAIL_FROM_NAME}"
               echo ""
               echo "# URL Configuration"
-              echo "FRONTEND_URL=${FRONTEND_URL}"
-              echo "DOMAIN=${DOMAIN}"
-              echo "BACKEND_URL=${BACKEND_URL}"
+              printf "FRONTEND_URL=%s\n" "${FRONTEND_URL}"
+              printf "DOMAIN=%s\n" "${DOMAIN}"
+              printf "BACKEND_URL=%s\n" "${BACKEND_URL}"
               echo ""
               echo "# Frontend Environment Variables (React - for docker-compose)"
-              echo "REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}"
-              echo "REACT_APP_FRONTEND_URL=${REACT_APP_FRONTEND_URL}"
+              printf "REACT_APP_BACKEND_URL=%s\n" "${REACT_APP_BACKEND_URL}"
+              printf "REACT_APP_FRONTEND_URL=%s\n" "${REACT_APP_FRONTEND_URL}"
               echo ""
               echo "# AWS S3 Configuration (File Storage)"
-              echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
-              echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
-              echo "AWS_REGION=${AWS_REGION}"
-              echo "AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}"
+              printf "AWS_ACCESS_KEY_ID=%s\n" "${AWS_ACCESS_KEY_ID}"
+              printf "AWS_SECRET_ACCESS_KEY=%s\n" "${AWS_SECRET_ACCESS_KEY}"
+              printf "AWS_REGION=%s\n" "${AWS_REGION}"
+              printf "AWS_S3_BUCKET_NAME=%s\n" "${AWS_S3_BUCKET_NAME}"
             } > "$BASE_DIR/backend/.env"
 
             # Set secure permissions
             chmod 600 "$BASE_DIR/backend/.env"
             echo ".env file created/updated successfully from GitHub Secrets at $BASE_DIR/backend/.env"
+
+            # Verify .env file was created correctly
+            echo "🔍 Verifying .env file content (masked):"
+            if [ -f "$BASE_DIR/backend/.env" ]; then
+              echo "✅ .env file exists"
+              # Show non-sensitive parts
+              grep -E "^(DB_USER|DB_NAME|DB_HOST|DB_PORT|DB_DIALECT|NODE_ENV|PORT)=" "$BASE_DIR/backend/.env" | sed 's/=\(.*\)/=***/' || echo "⚠️  Some variables not found"
+              # Verify DB_USER and DB_PASSWORD are not empty
+              DB_USER_VALUE=$(grep "^DB_USER=" "$BASE_DIR/backend/.env" | cut -d'=' -f2- | tr -d ' ')
+              DB_PASSWORD_VALUE=$(grep "^DB_PASSWORD=" "$BASE_DIR/backend/.env" | cut -d'=' -f2- | tr -d ' ')
+              if [ -z "$DB_USER_VALUE" ]; then
+                echo "❌ ERROR: DB_USER is empty in .env file!"
+                exit 1
+              fi
+              if [ -z "$DB_PASSWORD_VALUE" ]; then
+                echo "❌ ERROR: DB_PASSWORD is empty in .env file!"
+                exit 1
+              fi
+              echo "✅ DB_USER and DB_PASSWORD are set (non-empty)"
+            else
+              echo "❌ ERROR: .env file was not created!"
+              exit 1
+            fi
 
       - name: Deploy to Digital Ocean Droplet
         uses: appleboy/ssh-action@v1.0.0
@@ -748,49 +786,62 @@ jobs:
               docker rm "$TEMP_CONTAINER_NAME" 2>/dev/null || true
               
               # Start temporary container with new image for migration testing
-              # Use docker-compose to ensure same environment and network
               echo "📋 Starting temporary container for migration testing..."
               
-              # Export environment variables for use in docker run
-              set -a
-              source "$BASE_DIR/backend/.env"
-              set +a
+              # Verify .env file exists and has content
+              if [ ! -f "$BASE_DIR/backend/.env" ]; then
+                echo "❌ .env file not found at $BASE_DIR/backend/.env"
+                exit 1
+              fi
               
-              # Start temporary container with all environment variables
+              # Verify key database variables exist in .env file
+              echo "🔍 Verifying .env file contains required variables..."
+              if ! grep -q "^DB_USER=" "$BASE_DIR/backend/.env"; then
+                echo "❌ DB_USER not found in .env file"
+                exit 1
+              fi
+              if ! grep -q "^DB_PASSWORD=" "$BASE_DIR/backend/.env"; then
+                echo "❌ DB_PASSWORD not found in .env file"
+                exit 1
+              fi
+              if ! grep -q "^DB_HOST=" "$BASE_DIR/backend/.env"; then
+                echo "❌ DB_HOST not found in .env file"
+                exit 1
+              fi
+              
+              # Debug: Show DB variables (without showing passwords)
+              echo "📋 Database configuration (masked):"
+              grep "^DB_" "$BASE_DIR/backend/.env" | sed 's/\(PASSWORD\)=.*/\1=***/' || true
+              
+              # Start temporary container using --env-file (most reliable method)
+              # This ensures all variables from .env are properly loaded
               docker run -d \
                 --name "$TEMP_CONTAINER_NAME" \
                 --network hrms-network \
-                -e NODE_ENV="$NODE_ENV" \
-                -e PORT="$PORT" \
-                -e DB_ROOT_PASSWORD="$DB_ROOT_PASSWORD" \
-                -e DB_NAME="$DB_NAME" \
-                -e DB_USER="$DB_USER" \
-                -e DB_PASSWORD="$DB_PASSWORD" \
-                -e DB_PORT="$DB_PORT" \
-                -e DB_DIALECT="$DB_DIALECT" \
-                -e DB_HOST="$DB_HOST" \
-                -e JWT_SECRET="$JWT_SECRET" \
-                -e SENDGRID_API_KEY="$SENDGRID_API_KEY" \
-                -e EMAIL_FROM="$EMAIL_FROM" \
-                -e EMAIL_FROM_NAME="$EMAIL_FROM_NAME" \
-                -e FRONTEND_URL="$FRONTEND_URL" \
-                -e DOMAIN="$DOMAIN" \
-                -e BACKEND_URL="$BACKEND_URL" \
-                -e REACT_APP_BACKEND_URL="$REACT_APP_BACKEND_URL" \
-                -e REACT_APP_FRONTEND_URL="$REACT_APP_FRONTEND_URL" \
-                -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
-                -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
-                -e AWS_REGION="$AWS_REGION" \
-                -e AWS_S3_BUCKET_NAME="$AWS_S3_BUCKET_NAME" \
+                --env-file "$BASE_DIR/backend/.env" \
                 hrms-backend:latest \
                 sleep 3600 || {
                 echo "❌ Failed to start temporary backend container for migration testing"
                 exit 1
               }
               
+              # Verify container started and check environment variables
+              echo "✅ Container started, verifying environment variables..."
+              sleep 2
+              
+              # Check if DB_USER is set in container (for debugging)
+              DB_USER_CHECK=$(docker exec "$TEMP_CONTAINER_NAME" sh -c 'echo "$DB_USER"' 2>/dev/null || echo "")
+              if [ -z "$DB_USER_CHECK" ]; then
+                echo "⚠️  Warning: DB_USER appears to be empty in container"
+                echo "📋 Checking all DB_* variables in container:"
+                docker exec "$TEMP_CONTAINER_NAME" env | grep "^DB_" || echo "No DB_ variables found"
+              else
+                echo "✅ DB_USER is set in container (value: ${DB_USER_CHECK:0:3}***)"
+              fi
+              
               # Also copy .env file into container for dotenv to read (as fallback)
               docker cp "$BASE_DIR/backend/.env" "$TEMP_CONTAINER_NAME:/app/.env" 2>/dev/null || {
-                echo "⚠️  Note: Could not copy .env file (using environment variables instead)"
+                echo "⚠️  Warning: Could not copy .env file into container"
               }
               
               echo "⏳ Waiting for temporary container to be ready..."
