@@ -52,7 +52,8 @@
     "mysql2": "^3.11.4",
     "nodemailer": "^7.0.10",
     "oracledb": "^6.6.0",
-    "sequelize": "^6.37.5"
+    "sequelize": "^6.37.5",
+    "sequelize-cli": "^6.6.2"
   },
   "devDependencies": {
     "chai": "^4.3.10",
@@ -63,7 +64,6 @@
     "nodemon": "^3.1.4",
     "nyc": "^15.1.0",
     "prettier": "^3.2.5",
-    "sequelize-cli": "^6.6.2",
     "sinon": "^17.0.1"
   }
 }

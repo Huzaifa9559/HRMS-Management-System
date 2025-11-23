@@ -63,7 +63,8 @@ function saveMigrationState(migrations) {
 }
 
 function getPendingMigrations(currentState, previousState) {
-  if (!previousState) {
+  if (!previousState || !previousState.migrations) {
+    // If no previous state or no migrations in previous state, return all 'down' migrations
     return currentState.filter((m) => m.state === 'down');
   }
 

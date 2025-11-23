@@ -721,42 +721,79 @@ jobs:
             source "$BASE_DIR/backend/.env"
             set +a
 
-            $DOCKER_COMPOSE_CMD up -d mysql
-            sleep 10
-            # Use the loaded image instead of pulling
-            $DOCKER_COMPOSE_CMD up -d --no-deps backend
-            # Wait for backend to be ready
-            echo "Waiting for backend container to be ready..."
-            sleep 15
+            # Check if containers are already running
+            MYSQL_RUNNING=$($DOCKER_COMPOSE_CMD ps -q mysql 2>/dev/null || echo "")
+            BACKEND_RUNNING=$($DOCKER_COMPOSE_CMD ps -q backend 2>/dev/null || echo "")
+
+            if [ -z "$MYSQL_RUNNING" ]; then
+              echo "🚀 Starting MySQL container..."
+              $DOCKER_COMPOSE_CMD up -d mysql
+              sleep 10
+            else
+              echo "ℹ️  MySQL container already running, skipping startup"
+            fi
+
+            # Start or ensure backend container exists for migration testing
+            # We'll test migrations before replacing the running container
+            if [ -z "$BACKEND_RUNNING" ]; then
+              echo "🚀 Starting backend container for first-time deployment..."
+              $DOCKER_COMPOSE_CMD up -d --no-deps backend
+              sleep 15
+              BACKEND_CONTAINER="backend"
+            else
+              echo "ℹ️  Backend container already running, will test migrations in existing container"
+              echo "⚠️  If migrations fail, the existing container will continue running"
+              BACKEND_CONTAINER="backend"
+            fi
+
             # Run migrations with automatic rollback on failure
             echo "🔄 Running database migrations (with auto-rollback on failure)..."
-            # Capture migration state before running migrations
             echo "📊 Capturing migration state before migration..."
-            MIGRATION_STATE_BEFORE=$($DOCKER_COMPOSE_CMD exec -T backend npm run migrate:status 2>&1 || echo "")
+            MIGRATION_STATE_BEFORE=$($DOCKER_COMPOSE_CMD exec -T "$BACKEND_CONTAINER" npm run migrate:status 2>&1 || echo "")
             echo "$MIGRATION_STATE_BEFORE"
+
             # Run migrations using safe migration script (with automatic rollback)
             echo "🚀 Starting safe migration process..."
-            if $DOCKER_COMPOSE_CMD exec -T backend npm run migrate:safe; then
+            MIGRATION_SUCCESS=false
+            if $DOCKER_COMPOSE_CMD exec -T "$BACKEND_CONTAINER" npm run migrate:safe; then
               echo "✅ Migrations completed successfully"
               # Verify final migration status
               echo "📊 Verifying final migration status..."
-              $DOCKER_COMPOSE_CMD exec -T backend npm run migrate:status
+              $DOCKER_COMPOSE_CMD exec -T "$BACKEND_CONTAINER" npm run migrate:status
               echo "✅ All migrations verified and database is in correct state"
+              MIGRATION_SUCCESS=true
             else
               echo "❌ Migration failed! Rollback was attempted automatically."
               echo "📋 Showing backend logs for debugging..."
-              $DOCKER_COMPOSE_CMD logs --tail=50 backend
+              $DOCKER_COMPOSE_CMD logs --tail=50 "$BACKEND_CONTAINER"
               echo ""
               echo "📊 Current migration status after rollback:"
-              $DOCKER_COMPOSE_CMD exec -T backend npm run migrate:status || true
+              $DOCKER_COMPOSE_CMD exec -T "$BACKEND_CONTAINER" npm run migrate:status || true
               echo ""
               echo "❌ Deployment stopped due to migration failure."
               echo "📋 Database has been rolled back to previous state."
+              if [ -n "$BACKEND_RUNNING" ]; then
+                echo "📋 Previous backend container is still running - no changes made."
+              fi
               echo "📋 Please fix migration issues and try again."
               exit 1
             fi
-            # Clean up unused images
-            docker system prune -f
+
+            # Only if migration succeeded, restart the backend container to pick up new code
+            if [ "$MIGRATION_SUCCESS" = true ] && [ -n "$BACKEND_RUNNING" ]; then
+              echo "🔄 Migrations successful! Restarting backend container to pick up new code..."
+              $DOCKER_COMPOSE_CMD restart backend
+              sleep 10
+              echo "✅ Backend container restarted with new code"
+            elif [ "$MIGRATION_SUCCESS" = true ]; then
+              echo "✅ Backend container is running with migrated database"
+            fi
+
+            # Clean up unused images (only after successful deployment)
+            if [ "$MIGRATION_SUCCESS" = true ]; then
+              echo "🧹 Cleaning up unused Docker images..."
+              docker system prune -f
+            fi
 
       - name: Health Check
         run: |
