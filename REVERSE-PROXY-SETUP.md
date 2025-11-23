@@ -290,7 +290,9 @@ sudo systemctl enable certbot.timer
 
 ## Step 11: Update GitHub Secrets
 
-Go to your GitHub repository: **Settings → Secrets and variables → Actions**
+Go to your GitHub repository: **Settings → Environments → Production → Secrets**
+
+**Note:** All workflows use the `Production` environment for secrets.
 
 Update these secrets with your HTTPS URLs:
 
@@ -406,7 +408,9 @@ sudo systemctl enable certbot.timer
 
 ## Step 11: Update GitHub Secrets
 
-Go to your GitHub repository: **Settings → Secrets and variables → Actions**
+Go to your GitHub repository: **Settings → Environments → Production → Secrets**
+
+**Note:** All workflows use the `Production` environment for secrets.
 
 Update these secrets with your HTTPS URLs:
 

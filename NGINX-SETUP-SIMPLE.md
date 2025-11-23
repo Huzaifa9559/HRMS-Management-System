@@ -272,7 +272,7 @@ curl https://api.h-rms.me/api/health
 
 ## Step 11: Update GitHub Secrets
 
-Go to GitHub: **Settings → Secrets → Actions**
+Go to GitHub: **Settings → Environments → Production → Secrets**
 
 Update:
 - `FRONTEND_URL`: `https://h-rms.me`

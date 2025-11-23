@@ -19,6 +19,8 @@ jobs:
     # Only run if triggered by workflow_run (after backend/frontend), push, or manual dispatch
     # Note: Secret validation happens in the first step
     if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    environment:
+      name: Production
 
     steps:
       - name: Checkout code

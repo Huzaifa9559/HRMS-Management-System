@@ -4,7 +4,9 @@ This document lists all environment variables required for the HRMS Management S
 
 ## Required GitHub Secrets
 
-Add these secrets in your GitHub repository: **Settings → Secrets and variables → Actions**
+Add these secrets in your GitHub repository's **Production** environment: **Settings → Environments → Production → Secrets**
+
+**Note:** All workflows are configured to use the `Production` environment for secrets.
 
 ### Database Configuration
 

@@ -297,7 +297,7 @@ jobs:
     needs: [docker-build]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     environment:
-      name: production
+      name: Production
 
     steps:
       - name: Checkout code

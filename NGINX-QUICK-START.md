@@ -166,6 +166,10 @@ curl https://api.h-rms.me/api/health
 
 ## Update GitHub Secrets
 
+Go to: **Settings → Environments → Production → Secrets**
+
+Update:
+
 - `FRONTEND_URL`: `https://h-rms.me`
 - `BACKEND_URL`: `https://api.h-rms.me`
 - `REACT_APP_BACKEND_URL`: `https://api.h-rms.me`
