@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Test MySQL Database Service
   mysql-test:
@@ -11,8 +9,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=testpassword
       - MYSQL_DATABASE=test_db
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=testpassword
+      # Note: MYSQL_USER and MYSQL_PASSWORD are for regular users, not root
+      # We use root user directly with MYSQL_ROOT_PASSWORD
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptestpassword"]
