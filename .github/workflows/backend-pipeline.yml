@@ -40,8 +40,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
-          --character-set-server=utf8mb4
-          --collation-server=utf8mb4_unicode_ci
 
     steps:
       - name: Checkout code
@@ -77,11 +75,15 @@ jobs:
         env:
           MYSQL_PWD: testpassword
 
-      - name: Configure MySQL authentication
+      - name: Configure MySQL
         run: |
-          echo "Configuring MySQL to use native password authentication..."
-          mysql -h 127.0.0.1 -u root -ptestpassword -e "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'testpassword';" || echo "Authentication plugin configuration skipped (may already be set)"
-          mysql -h 127.0.0.1 -u root -ptestpassword -e "FLUSH PRIVILEGES;" || true
+          echo "Configuring MySQL settings..."
+          mysql -h 127.0.0.1 -u root -ptestpassword <<EOF
+          ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'testpassword';
+          ALTER DATABASE test_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          FLUSH PRIVILEGES;
+          EOF
+          echo "✅ MySQL configuration completed"
         env:
           MYSQL_PWD: testpassword
 
