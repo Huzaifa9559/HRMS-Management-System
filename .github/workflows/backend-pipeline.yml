@@ -488,23 +488,12 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            # Determine the base directory (with fallbacks)
-            BASE_DIR="/opt/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-              mkdir -p "$BASE_DIR" || {
-                echo "❌ Failed to create directory. Trying with sudo..."
-                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
-                BASE_DIR="/opt/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
-              }
-            fi
-            # Create backend directory
-            mkdir -p "$BASE_DIR/backend" || sudo mkdir -p "$BASE_DIR/backend" || mkdir -p "$HOME/hrms/backend" || mkdir -p "/tmp/hrms/backend"
+            # Determine the base directory
+            BASE_DIR="/home/huzaifa/hrms"
+            mkdir -p "$BASE_DIR/backend" || {
+              echo "❌ Failed to create directory: $BASE_DIR/backend"
+              exit 1
+            }
 
             # Find and move docker-compose.yml to backend directory
             echo "🔍 Searching for docker-compose.yml..."
@@ -704,23 +693,9 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            BASE_DIR="/opt/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-              mkdir -p "$BASE_DIR" || {
-                echo "❌ Failed to create directory. Trying with sudo..."
-                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
-                BASE_DIR="/opt/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
-              }
-            fi
-
+            BASE_DIR="/home/huzaifa/hrms"
             mkdir -p "$BASE_DIR/backend" || {
-              echo "❌ Failed to create backend directory"
+              echo "❌ Failed to create backend directory: $BASE_DIR/backend"
               exit 1
             }
 
@@ -757,21 +732,12 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            # Determine the base directory (with fallbacks)
-            BASE_DIR="/opt/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-              mkdir -p "$BASE_DIR" || {
-                echo "❌ Failed to create directory. Trying with sudo..."
-                sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
-                BASE_DIR="/opt/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="$HOME/hrms"
-                [ ! -d "$BASE_DIR" ] && BASE_DIR="/tmp/hrms"
-              }
-            fi
+            # Determine the base directory
+            BASE_DIR="/home/huzaifa/hrms"
+            mkdir -p "$BASE_DIR" || {
+              echo "❌ Failed to create directory: $BASE_DIR"
+              exit 1
+            }
             cd "$BASE_DIR" || exit 1
 
             # Check which docker compose command is available

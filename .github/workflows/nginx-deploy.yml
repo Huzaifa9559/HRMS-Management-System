@@ -56,12 +56,10 @@ jobs:
 
             # Determine base directory
             BASE_DIR="/home/huzaifa/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-            fi
+            mkdir -p "$BASE_DIR" || {
+              echo "❌ Failed to create directory: $BASE_DIR"
+              exit 1
+            }
 
             # Update backend docker-compose.yml
             if [ -f "$BASE_DIR/backend/docker-compose.yml" ]; then
@@ -128,12 +126,10 @@ jobs:
           script: |
             # Determine the base directory
             BASE_DIR="/home/huzaifa/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-            fi
+            mkdir -p "$BASE_DIR" || {
+              echo "❌ Failed to create directory: $BASE_DIR"
+              exit 1
+            }
 
             # Decode and write files
             echo "${{ steps.encode_files.outputs.docker_compose_b64 }}" | base64 -d > $BASE_DIR/nginx/docker-compose.yml
@@ -158,12 +154,10 @@ jobs:
           script: |
             # Determine base directory
             BASE_DIR="/home/huzaifa/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-            fi
+            mkdir -p "$BASE_DIR" || {
+              echo "❌ Failed to create directory: $BASE_DIR"
+              exit 1
+            }
 
             cd $BASE_DIR/nginx
 
@@ -325,13 +319,11 @@ jobs:
             fi
             echo ""
             # Determine base directory
-            BASE_DIR="/opt/hrms"
-            if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
-              fi
-            fi
+            BASE_DIR="/home/huzaifa/hrms"
+            mkdir -p "$BASE_DIR" || {
+              echo "❌ Failed to create directory: $BASE_DIR"
+              exit 1
+            }
 
             if [ -f "$BASE_DIR/nginx/certbot/conf/live/h-rms.me/fullchain.pem" ]; then
               echo "✅ SSL certificates are configured"
