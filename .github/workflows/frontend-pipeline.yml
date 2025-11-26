@@ -637,29 +637,41 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            # Determine the base directory
+            # Determine the base directory (with fallbacks and proper permissions)
             BASE_DIR="/opt/hrms"
             if [ ! -d "$BASE_DIR" ]; then
-              BASE_DIR="$HOME/hrms"
-              if [ ! -d "$BASE_DIR" ]; then
-                BASE_DIR="/tmp/hrms"
+              if sudo mkdir -p "$BASE_DIR" 2>/dev/null; then
+                sudo chown -R $USER:$USER "$BASE_DIR" 2>/dev/null || sudo chmod -R 755 "$BASE_DIR" 2>/dev/null || true
+                echo "✅ Created $BASE_DIR with sudo"
+              else
+                BASE_DIR="$HOME/hrms"
+                if [ ! -d "$BASE_DIR" ]; then
+                  mkdir -p "$BASE_DIR" || BASE_DIR="/tmp/hrms"
+                fi
+                echo "⚠️  Using fallback directory: $BASE_DIR"
               fi
             fi
 
+            # Ensure nginx directory exists
+            mkdir -p "$BASE_DIR/nginx" || sudo mkdir -p "$BASE_DIR/nginx" || {
+              echo "❌ Failed to create nginx directory"
+              exit 1
+            }
+
             # Decode and write files
-            echo "${{ steps.encode_files.outputs.docker_compose_b64 }}" | base64 -d > $BASE_DIR/nginx/docker-compose.yml
-            echo "${{ steps.encode_files.outputs.nginx_conf_b64 }}" | base64 -d > $BASE_DIR/nginx/nginx.conf
-            echo "${{ steps.encode_files.outputs.nginx_initial_b64 }}" | base64 -d > $BASE_DIR/nginx/nginx.conf.initial
+            echo "${{ steps.encode_files.outputs.docker_compose_b64 }}" | base64 -d > "$BASE_DIR/nginx/docker-compose.yml"
+            echo "${{ steps.encode_files.outputs.nginx_conf_b64 }}" | base64 -d > "$BASE_DIR/nginx/nginx.conf"
+            echo "${{ steps.encode_files.outputs.nginx_initial_b64 }}" | base64 -d > "$BASE_DIR/nginx/nginx.conf.initial"
 
             # Create backup of SSL-enabled config (nginx.conf contains SSL config)
-            cp $BASE_DIR/nginx/nginx.conf $BASE_DIR/nginx/nginx.conf.backup 2>/dev/null || true
+            cp "$BASE_DIR/nginx/nginx.conf" "$BASE_DIR/nginx/nginx.conf.backup" 2>/dev/null || true
 
             # Set permissions
-            chmod 644 $BASE_DIR/nginx/*.yml $BASE_DIR/nginx/*.conf 2>/dev/null || sudo chmod 644 $BASE_DIR/nginx/*.yml $BASE_DIR/nginx/*.conf || true
+            chmod 644 "$BASE_DIR/nginx"/*.yml "$BASE_DIR/nginx"/*.conf 2>/dev/null || sudo chmod 644 "$BASE_DIR/nginx"/*.yml "$BASE_DIR/nginx"/*.conf || true
 
             # Verify files
             echo "Files written to: $BASE_DIR/nginx/"
-            ls -la $BASE_DIR/nginx/ || ls -la ~/hrms/nginx/ || ls -la /tmp/hrms/nginx/
+            ls -la "$BASE_DIR/nginx/" || ls -la ~/hrms/nginx/ || ls -la /tmp/hrms/nginx/
             echo "✅ All nginx files copied successfully"
 
       - name: Deploy Nginx Reverse Proxy
@@ -675,27 +687,51 @@ jobs:
           script: |
             echo "🔧 Setting up Nginx reverse proxy..."
 
+            # Determine the base directory (with fallbacks and proper permissions)
+            BASE_DIR="/opt/hrms"
+            if [ ! -d "$BASE_DIR" ]; then
+              if sudo mkdir -p "$BASE_DIR" 2>/dev/null; then
+                sudo chown -R $USER:$USER "$BASE_DIR" 2>/dev/null || sudo chmod -R 755 "$BASE_DIR" 2>/dev/null || true
+                echo "✅ Created $BASE_DIR with sudo"
+              else
+                BASE_DIR="$HOME/hrms"
+                if [ ! -d "$BASE_DIR" ]; then
+                  mkdir -p "$BASE_DIR" || BASE_DIR="/tmp/hrms"
+                fi
+                echo "⚠️  Using fallback directory: $BASE_DIR"
+              fi
+            fi
+
             # Ensure nginx directory exists
-            mkdir -p /opt/hrms/nginx
-            cd /opt/hrms/nginx
+            mkdir -p "$BASE_DIR/nginx" || sudo mkdir -p "$BASE_DIR/nginx" || {
+              echo "❌ Failed to create nginx directory"
+              exit 1
+            }
+            cd "$BASE_DIR/nginx" || exit 1
 
             # Update container ports to bind to localhost (if not already done)
-            cd /opt/hrms/backend
-            if grep -q '"8000:8000"' docker-compose.yml 2>/dev/null; then
-              sed -i 's/"8000:8000"/"127.0.0.1:8000:8000"/' docker-compose.yml
-              docker-compose restart backend || true
-              echo "✅ Backend ports updated to localhost"
+            if [ -d "$BASE_DIR/backend" ] && [ -f "$BASE_DIR/backend/docker-compose.yml" ]; then
+              cd "$BASE_DIR/backend"
+              if grep -q '"8000:8000"' docker-compose.yml 2>/dev/null; then
+                sed -i 's/"8000:8000"/"127.0.0.1:8000:8000"/' docker-compose.yml
+                docker-compose restart backend || true
+                echo "✅ Backend ports updated to localhost"
+              fi
             fi
 
-            cd /opt/hrms/frontend
-            if grep -q '"80:80"' docker-compose.yml 2>/dev/null; then
-              sed -i 's/"80:80"/"127.0.0.1:80:80"/' docker-compose.yml
-              docker-compose restart frontend || true
-              echo "✅ Frontend ports updated to localhost"
+            if [ -d "$BASE_DIR/frontend" ] && [ -f "$BASE_DIR/frontend/docker-compose.yml" ]; then
+              cd "$BASE_DIR/frontend"
+              if grep -q '"80:80"' docker-compose.yml 2>/dev/null; then
+                sed -i 's/"80:80"/"127.0.0.1:80:80"/' docker-compose.yml
+                docker-compose restart frontend || true
+                echo "✅ Frontend ports updated to localhost"
+              fi
             fi
+
+            # Return to nginx directory
+            cd "$BASE_DIR/nginx" || exit 1
 
             # Copy nginx files if they don't exist (from repo)
-            cd /opt/hrms/nginx
             if [ ! -f "docker-compose.yml" ]; then
               echo "⚠️  Nginx files not found. Please ensure nginx/ directory exists in repo."
               echo "   For now, skipping nginx deployment."
@@ -711,6 +747,10 @@ jobs:
             # Get domain and email from environment (passed via secrets)
             DOMAIN="${DOMAIN:-h-rms.me}"
             SSL_EMAIL="${SSL_EMAIL:-admin@${DOMAIN}}"
+
+            echo "📍 Working directory: $(pwd)"
+            echo "🌐 Domain: ${DOMAIN}"
+            echo "📧 SSL Email: ${SSL_EMAIL}"
 
             # Backup the original nginx.conf from repo (contains SSL config)
             if [ -f "nginx.conf" ] && [ ! -f "nginx.conf.backup" ]; then
