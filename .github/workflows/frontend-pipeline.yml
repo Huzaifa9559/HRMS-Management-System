@@ -326,8 +326,6 @@ jobs:
 
       - name: Pull Docker image from GHCR on server
         uses: appleboy/ssh-action@v1.0.0
-        env:
-          GHCR_TOKEN: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
@@ -344,11 +342,13 @@ jobs:
 
             # Login to GHCR using Personal Access Token
             # Note: Login username should match GitHub username (case-sensitive for auth)
-            if [ -n "${GHCR_TOKEN}" ]; then
+            GHCR_TOKEN="${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}"
+            if [ -n "${GHCR_TOKEN}" ] && [ "${GHCR_TOKEN}" != "" ]; then
               echo "${GHCR_TOKEN}" | docker login ${REGISTRY} -u ${REPO_OWNER_ORIGINAL} --password-stdin
               echo "✅ Logged in to GHCR"
             else
               echo "⚠️  No GHCR token found. Attempting public pull (may fail if package is private)..."
+              echo "   Please ensure GHCR_PAT secret is set in GitHub Secrets (Production environment)"
             fi
 
             # Pull the image
