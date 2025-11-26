@@ -820,16 +820,61 @@ jobs:
                 exit 1
               fi
               
+              # Ensure webroot directory is accessible
+              echo "🔍 Verifying webroot directory setup..."
+              mkdir -p certbot/www/.well-known/acme-challenge
+              chmod -R 755 certbot/www 2>/dev/null || true
+              
+              # Test if nginx can serve the webroot
+              TEST_FILE="certbot/www/.well-known/acme-challenge/test-$$"
+              echo "test" > "$TEST_FILE"
+              HTTP_TEST=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${DOMAIN}/.well-known/acme-challenge/test-$$" || echo "000")
+              rm -f "$TEST_FILE" 2>/dev/null || true
+              
+              if [ "$HTTP_TEST" = "200" ] || [ "$HTTP_TEST" = "404" ]; then
+                echo "   ✅ Webroot directory is accessible via nginx"
+              else
+                echo "   ⚠️  Webroot may not be accessible (HTTP status: ${HTTP_TEST})"
+                echo "   This might prevent certbot validation"
+              fi
+              
               echo "✅ Nginx is running, attempting SSL certificate setup..."
+              
+              # First, verify DNS is pointing to this server
+              echo "🔍 Verifying DNS configuration..."
+              SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || curl -s icanhazip.com || echo "unknown")
+              DOMAIN_IP=$(dig +short ${DOMAIN} | tail -n1 || nslookup ${DOMAIN} 2>/dev/null | grep -A1 "Name:" | tail -n1 | awk '{print $2}' || echo "unknown")
+              
+              echo "   Server IP: ${SERVER_IP}"
+              echo "   Domain ${DOMAIN} resolves to: ${DOMAIN_IP}"
+              
+              if [ "$DOMAIN_IP" != "unknown" ] && [ "$SERVER_IP" != "unknown" ] && [ "$DOMAIN_IP" = "$SERVER_IP" ]; then
+                echo "   ✅ DNS is correctly pointing to this server"
+              else
+                echo "   ⚠️  DNS may not be fully propagated or not pointing to this server"
+                echo "   Server IP: ${SERVER_IP}"
+                echo "   Domain IP: ${DOMAIN_IP}"
+                echo "   Continuing with SSL attempt anyway (DNS may still be propagating)..."
+              fi
+              
+              # Test if domain is accessible via HTTP
+              echo "🔍 Testing HTTP accessibility..."
+              HTTP_TEST=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://${DOMAIN} || echo "000")
+              if [ "$HTTP_TEST" = "200" ] || [ "$HTTP_TEST" = "301" ] || [ "$HTTP_TEST" = "302" ]; then
+                echo "   ✅ Domain is accessible via HTTP (status: ${HTTP_TEST})"
+              else
+                echo "   ⚠️  Domain may not be accessible via HTTP (status: ${HTTP_TEST})"
+                echo "   This could be due to DNS propagation delay or firewall issues"
+              fi
               
               # Attempt to obtain SSL certificates with timeout
               echo "🔐 Requesting SSL certificates from Let's Encrypt for ${DOMAIN}..."
-              echo "   This may take a few minutes. If it times out, DNS may not be configured yet."
+              echo "   This may take 1-3 minutes. Please be patient..."
               
-              # Run certbot with timeout (3 minutes max to avoid SSH action timeout)
+              # Run certbot with timeout (5 minutes to allow for DNS propagation checks)
               # Use timeout command if available, otherwise rely on SSH action timeout
               if command -v timeout >/dev/null 2>&1; then
-                CERTBOT_TIMEOUT=180
+                CERTBOT_TIMEOUT=300
                 echo "   Using timeout command (${CERTBOT_TIMEOUT}s)..."
                 CERTBOT_OUTPUT=$(timeout ${CERTBOT_TIMEOUT} $DOCKER_COMPOSE_CMD run --rm certbot certonly \
                   --webroot \
@@ -838,11 +883,12 @@ jobs:
                   --agree-tos \
                   --no-eff-email \
                   --non-interactive \
+                  --verbose \
                   -d "${DOMAIN}" \
                   -d "www.${DOMAIN}" \
                   -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
               else
-                echo "   timeout command not available, running certbot directly (may take longer)..."
+                echo "   timeout command not available, running certbot directly..."
                 CERTBOT_OUTPUT=$($DOCKER_COMPOSE_CMD run --rm certbot certonly \
                   --webroot \
                   --webroot-path=/var/www/certbot \
@@ -850,32 +896,39 @@ jobs:
                   --agree-tos \
                   --no-eff-email \
                   --non-interactive \
+                  --verbose \
                   -d "${DOMAIN}" \
                   -d "www.${DOMAIN}" \
                   -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
               fi
               
+              echo "--- Certbot Output ---"
               echo "$CERTBOT_OUTPUT"
+              echo "--- End Certbot Output ---"
               
               if [ -z "$CERTBOT_EXIT" ] || [ "$CERTBOT_EXIT" -eq 0 ]; then
                 echo "✅ Certbot command executed successfully"
               else
                 if [ "$CERTBOT_EXIT" -eq 124 ]; then
-                  echo "⚠️  SSL certificate setup timed out"
-                  echo "   This usually means:"
-                  echo "   1. Domain DNS is not pointing to this server"
+                  echo "⚠️  SSL certificate setup timed out after ${CERTBOT_TIMEOUT}s"
+                  echo "   Possible reasons:"
+                  echo "   1. DNS propagation is still in progress (can take up to 48 hours)"
                   echo "   2. Domain is not accessible from the internet"
                   echo "   3. Port 80 is blocked by firewall"
+                  echo "   4. Let's Encrypt servers cannot reach your domain"
                 else
                   echo "⚠️  SSL certificate setup failed (exit code: $CERTBOT_EXIT)"
-                  echo "   This is normal if:"
-                  echo "   1. Domain DNS is not pointing to this server yet"
-                  echo "   2. Domain is not accessible from the internet"
-                  echo "   3. Port 80 is blocked by firewall"
+                  echo "   Check the certbot output above for details"
+                  echo "   Common issues:"
+                  echo "   1. DNS not fully propagated yet"
+                  echo "   2. Domain not accessible from internet"
+                  echo "   3. Port 80 blocked by firewall"
                   echo "   4. Let's Encrypt rate limits (too many requests)"
+                  echo "   5. Invalid domain or email address"
                 fi
                 echo "   Continuing with HTTP-only configuration..."
-                echo "   You can manually set up SSL later by running certbot on the server"
+                echo "   You can manually set up SSL later by running:"
+                echo "   cd $BASE_DIR/nginx && $DOCKER_COMPOSE_CMD run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d ${DOMAIN} -d www.${DOMAIN} -d api.${DOMAIN}"
               fi
               
               # Check if certificates were successfully created
