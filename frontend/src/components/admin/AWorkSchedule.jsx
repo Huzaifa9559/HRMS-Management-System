@@ -32,8 +32,7 @@ const WorkSchedule = () => {
       try {
         const response = await axios.get(`/api/admin/department`);
         setDepartments(response.data.data);
-      } catch (error) {
-        console.error('Error fetching departments:', error);
+      } catch {
         toast.error('Error fetching departments.');
       }
     };
@@ -45,8 +44,7 @@ const WorkSchedule = () => {
       try {
         const response = await axios.get(`/api/admin/work-schedule/${selectedMonth}`);
         setScheduleData(response.data.data);
-      } catch (error) {
-        console.error('Error fetching schedule data:', error);
+      } catch {
         toast.error('Error fetching schedule data.');
       }
     };
@@ -105,8 +103,7 @@ const WorkSchedule = () => {
       toast.success('Schedule updated successfully!', {
         position: 'top-right',
       });
-    } catch (error) {
-      console.error('Error saving schedule:', error);
+    } catch {
       toast.error('Failed to save changes.');
     }
   };

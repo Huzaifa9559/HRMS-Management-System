@@ -70,15 +70,10 @@ const Account = () => {
 };
     useEffect(() => {
         axios.get('https://restcountries.com/v3.1/all')
-            .then((response) => {
-                const countries = response.data.map((country) => ({
-                    name: country.name.common,
-                    code: country.cca2.toLowerCase(), // Use cca2 code for country (ISO 3166-1 alpha-2)
-                    flag: country.flags.png || country.flags.svg, // Fetch flag in png or svg
-                    dialCode: country.idd.root ? `${country.idd.root}${country.idd.suffixes[0]}` : '', // Combine root and suffix
-                }));
+            .then(() => {
+                // Countries data fetched (not used but API call may be needed for future use)
             })
-            .catch((error) => {
+            .catch(() => {
                 // Error fetching country data
             });
     }, []);

@@ -37,8 +37,8 @@ export default function ADashboard() {
         const firstFiveRecords = res4.data.data.slice(0, 5); // Get the first 5 records
         setLeaveData(firstFiveRecords);
       }
-      catch (error) {
-        console.error('Error fetching previous data:', error);
+      catch {
+        // Error fetching previous data
       }
     };
     run();

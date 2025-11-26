@@ -24,8 +24,8 @@ const LeaveManagement = () => {
       try {
         const response = await axios.get('/api/admin/leave'); // Replace with your API endpoint
         setLeaveData(response.data.data); // Set the fetched data
-      } catch (error) {
-        console.error('Error fetching leave data:', error);
+      } catch {
+        // Error fetching leave data
       } finally {
         setLoading(false);
       }

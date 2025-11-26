@@ -27,8 +27,8 @@ export default function AAttendance() {
           const response = await axios.get('/api/admin/attendance');
      
           setDepartmentData(response.data);
-        } catch (error) {
-          console.error('Error', error);
+        } catch {
+          // Error fetching department attendance
         }
       };
       

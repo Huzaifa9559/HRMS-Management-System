@@ -28,8 +28,8 @@ const ViewAttendance = () => {
       try {
         const response = await axios.get(`/api/admin/attendance/view-attendance/${departmentId}`);
         setEmployees(response.data.data[0]);
-      } catch (error) {
-        console.error('Error fetching department attendance:', error);
+      } catch {
+        // Error fetching department attendance
       }
     };
 

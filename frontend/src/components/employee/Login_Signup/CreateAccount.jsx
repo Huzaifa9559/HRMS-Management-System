@@ -20,10 +20,10 @@ export default function CreateAccount() {
         agreeTerms: false
     });
 
-    const [errors, setErrors] = useState({});
+    const [_errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
-    const [phoneCountryCode, setPhoneCountryCode] = useState('');
+    const [_phoneCountryCode, setPhoneCountryCode] = useState('');
 
     // Fetch designations and departments from DB and admin can add it 
 

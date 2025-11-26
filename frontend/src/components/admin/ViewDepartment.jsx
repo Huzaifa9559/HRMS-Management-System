@@ -28,8 +28,8 @@ const ViewDepartments = () => {
       try {
         const response = await axios.get(`/api/admin/designation/view/${departmentId}`);
         setDesignations(response.data.data);
-      } catch (error) {
-        console.error('Error', error);
+      } catch {
+        // Error fetching designations
       }
     };
     fetchDesignations();
@@ -53,8 +53,8 @@ const ViewDepartments = () => {
         const departmentId = window.location.pathname.split('/').pop();
           await axios.post('/api/admin/designation/create', { name: designationName,id:departmentId });
       }
-      catch (error) {
-          console.error(error);
+      catch {
+          // Error creating designation
       }
       toast.success(`Designation "${designationName}" created successfully!`, {
         position: 'top-right',

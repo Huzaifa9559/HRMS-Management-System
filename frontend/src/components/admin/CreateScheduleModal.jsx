@@ -98,8 +98,7 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
     await axios.post('/api/admin/work-schedule', updatedSchedule);
     onSave(updatedSchedule); // Pass data back to parent component if needed
     onHide(); // Close the modal
-  } catch (error) {
-    console.error('Error creating schedule:', error);
+  } catch {
     toast.error("Schedule already exists or error creating new work schedule");
   }
 };

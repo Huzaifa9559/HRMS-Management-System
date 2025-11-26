@@ -16,8 +16,8 @@ const AnnouncementView = () => {
       try {
         const response = await axios.get(`/api/admin/announcements/view/${announcementId}`);
         setAnnouncement(response.data.data);
-      } catch (error) {
-        console.error('Error fetching announcement:', error);
+      } catch {
+        // Error fetching announcement
       }
     };
 

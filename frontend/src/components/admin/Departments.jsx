@@ -37,8 +37,8 @@ export default function Departments() {
         })
         setDepartmentData(response.data.data);
       }
-      catch (error) {
-        console.error(error);
+      catch {
+        // Error fetching departments
       }
     }
     run();
