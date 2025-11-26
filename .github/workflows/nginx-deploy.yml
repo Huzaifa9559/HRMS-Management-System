@@ -167,10 +167,31 @@ jobs:
             # Create network if it doesn't exist
             docker network create hrms-network --driver bridge 2>/dev/null || true
 
-            # Check if SSL certificates exist
-            if [ ! -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
+            # Helper function to check if certificate exists (avoids permission issues)
+            has_cert() {
+              docker run --rm \
+                -v "$(pwd)/certbot/conf:/etc/letsencrypt:ro" \
+                alpine:3.18 \
+                sh -c "[ -f /etc/letsencrypt/live/h-rms.me/fullchain.pem ]" >/dev/null 2>&1
+            }
+
+            # Check if SSL certificates exist using Docker (avoids permission issues)
+            if ! has_cert; then
               echo "⚠️  SSL certificates not found yet, using HTTP-only config for now"
-              cp nginx.conf.initial nginx.conf
+              if [ -f "nginx.conf.initial" ]; then
+                cp nginx.conf.initial nginx.conf
+              fi
+            else
+              echo "✅ SSL certificates found, using SSL-enabled config"
+              if [ -f "nginx.conf.backup" ]; then
+                cp nginx.conf.backup nginx.conf
+              elif [ -f "nginx.conf" ] && ! grep -q "ssl_certificate" nginx.conf 2>/dev/null; then
+                echo "⚠️  SSL certificates exist but nginx.conf doesn't have SSL config"
+                echo "   Using HTTP-only config for now"
+                if [ -f "nginx.conf.initial" ]; then
+                  cp nginx.conf.initial nginx.conf
+                fi
+              fi
             fi
 
             # Start/restart nginx container
@@ -325,7 +346,12 @@ jobs:
               exit 1
             }
 
-            if [ -f "$BASE_DIR/nginx/certbot/conf/live/h-rms.me/fullchain.pem" ]; then
+            # Check SSL certificates using Docker (avoids permission issues)
+            cd "$BASE_DIR/nginx" || exit 1
+            if docker run --rm \
+              -v "$(pwd)/certbot/conf:/etc/letsencrypt:ro" \
+              alpine:3.18 \
+              sh -c "[ -f /etc/letsencrypt/live/h-rms.me/fullchain.pem ]" >/dev/null 2>&1; then
               echo "✅ SSL certificates are configured"
             else
               echo "⚠️  SSL certificates not found - using HTTP only"
