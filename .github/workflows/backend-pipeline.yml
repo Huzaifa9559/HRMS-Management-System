@@ -1195,7 +1195,7 @@ jobs:
                           value = value.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t")
                   lines.append(f"{key}={value}")
               pathlib.Path(dst).write_text("\n".join(lines) + "\n")
-PY
+              PY
 
               if [ ! -s "$SANITIZED_ENV_FILE" ]; then
                 echo "❌ Failed to create sanitized env file at $SANITIZED_ENV_FILE"
