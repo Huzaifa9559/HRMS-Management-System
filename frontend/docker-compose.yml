@@ -1,13 +1,13 @@
-version: '3.8'
-
 services:
-  # Nginx service using official nginx image
+  # Frontend service - no external ports needed (accessed via nginx reverse proxy)
   frontend:
     image: ${FRONTEND_IMAGE:-hrms-frontend:latest}
     container_name: hrms-frontend
     restart: unless-stopped
-    ports:
-      - "80:80"
+    # No ports exposed - nginx reverse proxy handles external access
+    # If you need direct access for debugging, uncomment the line below and use a different port
+    # ports:
+    #   - "3000:80"
     environment:
       # Frontend Environment Variables (React)
       - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
