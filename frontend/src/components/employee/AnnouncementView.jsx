@@ -21,8 +21,8 @@ const AnnouncementView = () => {
           },
         });
         setAnnouncement(response.data.data);
-      } catch (error) {
-        
+      } catch {
+        // Error fetching announcement
       }
     };
 

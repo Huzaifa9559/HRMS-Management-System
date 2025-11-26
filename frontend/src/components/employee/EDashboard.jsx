@@ -9,7 +9,6 @@ import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 const localizer = momentLocalizer(moment);
 
@@ -59,8 +58,8 @@ export default function Dashboard() {
           currentMonthLeaves: data.currentMonthLeaves || 0,
           yesterdayWorkingHours: data.yesterdayWorkingHours || '4 h 5 min',
         });
-      } catch (error) {
-        
+      } catch {
+        // Error fetching employee stats
       } finally {
         setLoading(false); // End loading after fetching data
       }

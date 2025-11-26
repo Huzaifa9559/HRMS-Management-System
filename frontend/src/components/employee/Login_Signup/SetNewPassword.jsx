@@ -14,7 +14,6 @@ export default function SetNewPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess(false);
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');

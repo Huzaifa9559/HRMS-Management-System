@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
@@ -36,22 +36,16 @@ useEffect(() => {
          
             const response2 = await axios.get(`/api/admin/attendance/stats/${employeeId}`);
           setemployeeData(response2.data.data[0]);
-        } catch (error) {
-          console.error('Error', error);
+        } catch {
+          // Error fetching attendance data
         }
       };
       
     fetch_Attendance();
           
-}, []);
+}, [employeeId]);
 
-useEffect(() => {
-    setCurrentPage(1);
-    filterAttendanceData();
-}, [attendanceData,year, month]);
-    
-
-const filterAttendanceData = () => {
+const filterAttendanceData = useCallback(() => {
     let filtered = [...attendanceData];
 
     // Filter by year
@@ -72,7 +66,12 @@ const filterAttendanceData = () => {
     }
 
     setFilteredAttendanceData(filtered);
-};
+}, [attendanceData, year, month]);
+
+useEffect(() => {
+    setCurrentPage(1);
+    filterAttendanceData();
+}, [attendanceData, year, month, filterAttendanceData]);
 
     const backendURL = process.env.REACT_APP_BACKEND_URL;
 const imageURL = employeeData.employee_image ? `${backendURL}/uploads/employees/${employeeData.employee_image}` : null;

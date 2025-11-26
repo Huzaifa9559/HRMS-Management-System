@@ -37,9 +37,8 @@ export default function Announcements() {
         },
       });
       setDepartments(response.data.data);
-    } catch (error) {
-      
-      
+    } catch {
+      // Error fetching departments
     }
   };
 
@@ -53,9 +52,8 @@ export default function Announcements() {
         },
       });
       setMyAnnouncements(response.data.data);
-    } catch (error) {
-setMyAnnouncements([]);
-      
+    } catch {
+      setMyAnnouncements([]);
     }
   };
 

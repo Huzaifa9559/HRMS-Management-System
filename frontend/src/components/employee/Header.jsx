@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Image, OverlayTrigger, Popover } from 'react-bootstrap';
 import { PersonCircle, Key, BoxArrowRight } from 'react-bootstrap-icons';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 export default function Header({ title }) {
     const navigate = useNavigate();
@@ -86,11 +85,11 @@ export default function Header({ title }) {
                     </div>
                 </div>
                 <hr />
-                <a
+                <button
+                    type="button"
                     onClick={handleProfileClick}
-                    className="d-flex align-items-center mb-2"
+                    className="d-flex align-items-center mb-2 border-0 bg-transparent w-100 text-start"
                     style={{
-                        textDecoration: 'none',
                         color: 'black',
                         cursor: 'pointer',
                         backgroundColor: hoveredItem === 'profile' ? '#f0f0f0' : 'transparent',
@@ -101,12 +100,12 @@ export default function Header({ title }) {
                     onMouseLeave={() => setHoveredItem(null)}
                 >
                     <PersonCircle className="me-2" /> Profile
-                </a>
-                <a
+                </button>
+                <button
+                    type="button"
                     onClick={handleChangePasswordClick}
-                    className="d-flex align-items-center mb-2"
+                    className="d-flex align-items-center mb-2 border-0 bg-transparent w-100 text-start"
                     style={{
-                        textDecoration: 'none',
                         color: 'black',
                         cursor: 'pointer',
                         backgroundColor: hoveredItem === 'change-password' ? '#f0f0f0' : 'transparent',
@@ -117,12 +116,12 @@ export default function Header({ title }) {
                     onMouseLeave={() => setHoveredItem(null)}
                 >
                     <Key className="me-2" /> Change Password
-                </a>
-                <a
+                </button>
+                <button
+                    type="button"
                     onClick={handleLogoutClick}
-                    className="d-flex align-items-center"
+                    className="d-flex align-items-center border-0 bg-transparent w-100 text-start"
                     style={{
-                        textDecoration: 'none',
                         color: 'black',
                         cursor: 'pointer',
                         backgroundColor: hoveredItem === 'logout' ? '#f0f0f0' : 'transparent',
@@ -133,7 +132,7 @@ export default function Header({ title }) {
                     onMouseLeave={() => setHoveredItem(null)}
                 >
                     <BoxArrowRight className="me-2" /> Logout
-                </a>
+                </button>
             </Popover.Body>
         </Popover>
     );

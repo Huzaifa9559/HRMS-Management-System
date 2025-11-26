@@ -2,30 +2,24 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
+import LoginComponent from '../LoginComponent';
 
-// Create a shared reference object
-const mockRef = { navigate: null };
+// Create mock navigate function using a global to avoid hoisting issues
+global.mockNavigate = jest.fn();
 
-// Mock react-router-dom - initialize mock inside factory
+// Mock react-router-dom - factory function
 jest.mock('react-router-dom', () => {
   const actualModule = jest.requireActual('react-router-dom');
-  // Create mock function inside factory
-  mockRef.navigate = jest.fn();
   return {
     ...actualModule,
-    useNavigate: () => mockRef.navigate,
+    useNavigate: () => global.mockNavigate,
   };
 });
-
-// Import component after mock
-import LoginComponent from '../LoginComponent';
 
 describe('LoginComponent', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    if (mockRef.navigate) {
-      mockRef.navigate.mockClear();
-    }
+    global.mockNavigate.mockClear();
   });
 
   it('should render login form', () => {
@@ -51,7 +45,7 @@ describe('LoginComponent', () => {
     const employeeButton = screen.getByRole('button', { name: /log in as employee/i });
     fireEvent.click(employeeButton);
 
-    expect(mockRef.navigate).toHaveBeenCalledWith('/login/employee');
+    expect(global.mockNavigate).toHaveBeenCalledWith('/login/employee');
   });
 
   it('should show validation error for invalid email format', async () => {
@@ -64,6 +58,6 @@ describe('LoginComponent', () => {
     const adminButton = screen.getByRole('button', { name: /log in as admin/i });
     fireEvent.click(adminButton);
 
-    expect(mockRef.navigate).toHaveBeenCalledWith('/login/admin');
+    expect(global.mockNavigate).toHaveBeenCalledWith('/login/admin');
   });
 });

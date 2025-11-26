@@ -1,43 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Table, Dropdown } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../Loader';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 export default function WorkSchedule() {
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [loading, setLoading] = useState(true); // Loading state
   const [scheduleData, setScheduleData] = useState([]); // Initialize state for schedule data
 
-  useEffect(() => {
-    const fetchScheduleData = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        const response = await axios.get(`/api/employees/work-schedule/${selectedMonth}`, {
-          headers: {
-            Authorization: `Bearer ${token}` // Add token to headers
-          }
-        });
-
-        // Process the schedule data
-        const transformedData = processScheduleData(response.data.data);
-
-        setScheduleData(transformedData); // Update state with transformed data
-      } catch (error) {
-        
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
-
-    fetchScheduleData();
-  }, [selectedMonth]);
-
   // Function to process schedule data into a weekly format
-  const processScheduleData = (data) => {
+  const processScheduleData = useCallback((data) => {
     // Initialize a template for each week
     const weekTemplate = {
       mon: 'Free Slot', tue: 'Free Slot', wed: 'Free Slot', thu: 'Free Slot',
@@ -49,7 +24,7 @@ export default function WorkSchedule() {
     };
 
     // Assign each day's schedule from the backend to the week template
-    data.forEach(({ day, startTime, endTime, workType }) => {
+    data.forEach(({ day, startTime, endTime }) => {
       const dayKey = day.toLowerCase().slice(0, 3); // 'mon', 'tue', 'wed', etc.
       const formattedTime = startTime && endTime
         ? `${convertTo24HourFormat(startTime)} - ${convertTo24HourFormat(endTime)}`
@@ -68,7 +43,31 @@ export default function WorkSchedule() {
     }
 
     return schedule.weeks;
-  };
+  }, []);
+
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`/api/employees/work-schedule/${selectedMonth}`, {
+          headers: {
+            Authorization: `Bearer ${token}` // Add token to headers
+          }
+        });
+
+        // Process the schedule data
+        const transformedData = processScheduleData(response.data.data);
+
+        setScheduleData(transformedData); // Update state with transformed data
+      } catch {
+        // Error fetching schedule data
+      } finally {
+        setLoading(false); // Stop loading
+      }
+    };
+
+    fetchScheduleData();
+  }, [selectedMonth, processScheduleData]);
 
   const convertTo24HourFormat = (timeString) => {
     if (!timeString) return 'N/A';

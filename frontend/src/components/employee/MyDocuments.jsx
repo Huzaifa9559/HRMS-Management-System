@@ -8,7 +8,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { AiOutlineDownload, AiOutlineEdit } from 'react-icons/ai';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import 'react-toastify/dist/ReactToastify.css';
 import '../../styles/MyDocuments.css';
 

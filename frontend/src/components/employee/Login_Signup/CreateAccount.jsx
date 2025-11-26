@@ -20,8 +20,10 @@ export default function CreateAccount() {
         agreeTerms: false
     });
 
+    const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
+    const [phoneCountryCode, setPhoneCountryCode] = useState('');
 
     // Fetch designations and departments from DB and admin can add it 
 
@@ -39,15 +41,10 @@ export default function CreateAccount() {
     // Fetch country data with flags
     useEffect(() => {
         axios.get('https://restcountries.com/v3.1/all')
-            .then((response) => {
-                const countries = response.data.map((country) => ({
-                    name: country.name.common,
-                    code: country.cca2.toLowerCase(), // Use cca2 code for country (ISO 3166-1 alpha-2)
-                    flag: country.flags.png || country.flags.svg, // Fetch flag in png or svg
-                    dialCode: country.idd.root ? `${country.idd.root}${country.idd.suffixes[0]}` : '', // Combine root and suffix
-                }));
+            .then(() => {
+                // Countries data fetched (not used but API call may be needed for future use)
             })
-            .catch((error) => {
+            .catch(() => {
                 // Error fetching country data
             });
     }, []);
@@ -60,8 +57,8 @@ export default function CreateAccount() {
                 setDesignations(response.data.data);
                 const response2 = await axios.get('/api/public/designation');
                 setDepartments(response2.data.data);
-            } catch (error) {
-                
+            } catch {
+                // Error fetching designations and departments
             }
         };
 
@@ -107,7 +104,7 @@ export default function CreateAccount() {
         return () => {
             clearInterval(headingInterval);
         };
-    }, []);
+    }, [paragraphText]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;

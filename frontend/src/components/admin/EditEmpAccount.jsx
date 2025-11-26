@@ -67,7 +67,7 @@ const [employeeDetails, setEmployeeDetails] = useState({
     };
 
     fetchData();
-  }, []);
+  }, [employeeId]);
 
   // Handle input changes in the form
   const handleChange = (e) => {

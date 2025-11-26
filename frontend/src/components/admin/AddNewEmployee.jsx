@@ -10,14 +10,6 @@ import { PhoneNumberUtil } from 'google-libphonenumber';
 import 'react-phone-input-2/lib/style.css';
 const phoneUtil = PhoneNumberUtil.getInstance();
 const Account = () => {
-        employeeName: '',
-        countryCode: '+',
-        phoneNumber: '',
-        address: '',
-        designation_name: '',
-        department_name: '',
-        agreeTerms: false
-    });
   const [profileImage, setProfileImage] = useState(
     'https://tse3.mm.bing.net/th?id=OIP.zSBNiaIRxqsRKRy5WWTDpAHaHa&pid=Api&P=0&h=220'
   );
@@ -25,7 +17,7 @@ const Account = () => {
   const [showModal, setShowModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-    const [isValidPhone, setIsValidPhone] = useState(true);
+  const [isValidPhone, setIsValidPhone] = useState(true);
   const [employeeDetails, setEmployeeDetails] = useState({
     email: '',
     password: '',
