@@ -55,7 +55,7 @@ jobs:
             echo "🔧 Updating container ports to bind to localhost only..."
 
             # Determine base directory
-            BASE_DIR="/opt/hrms"
+            BASE_DIR="/home/huzaifa/hrms"
             if [ ! -d "$BASE_DIR" ]; then
               BASE_DIR="$HOME/hrms"
               if [ ! -d "$BASE_DIR" ]; then
@@ -100,11 +100,11 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             # Create directories with sudo if needed, or check if they exist
-            if [ ! -d "/opt/hrms" ]; then
-              sudo mkdir -p /opt/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
+            if [ ! -d "/home/huzaifa/hrms" ]; then
+              sudo mkdir -p /home/huzaifa/hrms || mkdir -p ~/hrms || mkdir -p /tmp/hrms
             fi
-            mkdir -p /opt/hrms/nginx 2>/dev/null || sudo mkdir -p /opt/hrms/nginx || mkdir -p ~/hrms/nginx || mkdir -p /tmp/hrms/nginx
-            sudo chmod -R 755 /opt/hrms 2>/dev/null || chmod -R 755 ~/hrms 2>/dev/null || chmod -R 755 /tmp/hrms 2>/dev/null || true
+            mkdir -p /home/huzaifa/hrms/nginx 2>/dev/null || sudo mkdir -p /opt/hrms/nginx || mkdir -p ~/hrms/nginx || mkdir -p /tmp/hrms/nginx
+            sudo chmod -R 755 /home/huzaifa/hrms 2>/dev/null || chmod -R 755 ~/hrms 2>/dev/null || chmod -R 755 /tmp/hrms 2>/dev/null || true
             echo "✅ Directories created"
 
       - name: Encode nginx files to base64
@@ -157,7 +157,7 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             # Determine base directory
-            BASE_DIR="/opt/hrms"
+            BASE_DIR="/home/huzaifa/hrms"
             if [ ! -d "$BASE_DIR" ]; then
               BASE_DIR="$HOME/hrms"
               if [ ! -d "$BASE_DIR" ]; then
