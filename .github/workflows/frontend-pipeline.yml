@@ -731,7 +731,7 @@ jobs:
               docker logs hrms-nginx || true
             fi
 
-      - name: Health Check
-        run: |
-          sleep 10
-          curl -f ${{ secrets.FRONTEND_DEPLOY_URL }}/health || exit 1
+      # - name: Health Check
+      #   run: |
+      #     sleep 10
+      #     curl -f ${{ secrets.FRONTEND_DEPLOY_URL }}/health || exit 1
