@@ -20,10 +20,8 @@ export default function CreateAccount() {
         agreeTerms: false
     });
 
-    const [_errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
-    const [_phoneCountryCode, setPhoneCountryCode] = useState('');
 
     // Fetch designations and departments from DB and admin can add it 
 
@@ -112,7 +110,6 @@ export default function CreateAccount() {
             ...prevState,
             [name]: type === 'checkbox' ? checked : value
         }));
-        setErrors(prevErrors => ({ ...prevErrors, [name]: '' }));
     };
 
     const validateForm = () => {
@@ -129,7 +126,6 @@ export default function CreateAccount() {
         e.preventDefault();
 
         const formErrors = validateForm();
-        setErrors(formErrors);
 
         if (Object.keys(formErrors).length > 0) {
             return;
@@ -218,7 +214,6 @@ export default function CreateAccount() {
                                     value={formData.phoneNumber}
                                     onChange={(phoneNumber, country) => {
                                         setFormData((prevData) => ({ ...prevData, phoneNumber }));
-                                        setPhoneCountryCode(country.countryCode); // Set the country code
                                         validatePhoneNumber(phoneNumber, country.countryCode); // Validate with country code
                                     }}
                                     inputClass="form-control form-control-sm"

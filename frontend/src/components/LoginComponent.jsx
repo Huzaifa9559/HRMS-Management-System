@@ -125,7 +125,7 @@ export default function SelectLogin() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .login-container {
           transition: transform 0.3s ease;
         }

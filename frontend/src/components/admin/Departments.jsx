@@ -76,8 +76,8 @@ export default function Departments() {
     try {
       await axios.post('/api/admin/department/delete', { name: department.name });
       }
-    catch (error) {
-        console.error(error);
+    catch {
+        // Error deleting department
     }
     setDeleteModal(true); // Show delete confirmation modal
   };
@@ -111,8 +111,8 @@ export default function Departments() {
     try {
       await axios.post('/api/admin/department/create', { name: departmentName });
     }
-    catch (error) {
-        console.error(error);
+    catch {
+        // Error creating department
     }
 
     toast.success(`Department "${departmentName}" created successfully!`);
