@@ -174,20 +174,8 @@ jobs:
             docker network create hrms-network --driver bridge 2>/dev/null || true
 
             # Check if SSL certificates exist
-            if [ -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
-              echo "✅ SSL certificates found, using full SSL config"
-              # Use full nginx.conf with SSL
-              if [ ! -f "nginx.conf" ] || [ ! -f "nginx.conf.backup" ]; then
-                cp nginx.conf nginx.conf.backup 2>/dev/null || true
-              fi
-            else
-              echo "⚠️  SSL certificates not found, using initial config (HTTP only)"
-              echo "📝 To enable SSL, run SSL setup manually first (see NGINX-QUICK-START.md)"
-              # Use initial config without SSL redirect
-              if [ ! -f "nginx.conf.initial" ]; then
-                echo "❌ nginx.conf.initial not found! Please check nginx files."
-                exit 1
-              fi
+            if [ ! -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
+              echo "⚠️  SSL certificates not found yet, using HTTP-only config for now"
               cp nginx.conf.initial nginx.conf
             fi
 
