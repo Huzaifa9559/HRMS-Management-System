@@ -686,14 +686,15 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            set -euo pipefail
             echo "🔧 Setting up Nginx reverse proxy..."
 
-            # Detect docker compose
+            # Detect docker compose command
             DOCKER_COMPOSE_CMD=""
-            if command -v docker-compose >/dev/null 2>&1 && docker-compose --version >/dev/null 2>&1; then
-              DOCKER_COMPOSE_CMD="docker-compose"
-              echo "✅ Found docker-compose (standalone)"
+            if command -v docker-compose >/dev/null 2>&1; then
+              if docker-compose --version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker-compose"
+                echo "✅ Found docker-compose (standalone)"
+              fi
             elif docker compose version >/dev/null 2>&1; then
               DOCKER_COMPOSE_CMD="docker compose"
               echo "✅ Found docker compose (plugin)"
@@ -702,199 +703,187 @@ jobs:
               exit 1
             fi
 
-            # Determine base dir
+            # Base directory
             BASE_DIR="/opt/hrms"
             if [ ! -d "$BASE_DIR" ]; then
               if sudo mkdir -p "$BASE_DIR" 2>/dev/null; then
-                sudo chown -R "$USER":"$USER" "$BASE_DIR" 2>/dev/null || true
+                sudo chown -R "$USER:$USER" "$BASE_DIR" 2>/dev/null || true
                 echo "✅ Created $BASE_DIR with sudo"
               else
                 BASE_DIR="$HOME/hrms"
-                mkdir -p "$BASE_DIR"
+                if [ ! -d "$BASE_DIR" ]; then
+                  mkdir -p "$BASE_DIR" || BASE_DIR="/tmp/hrms"
+                fi
                 echo "⚠️  Using fallback directory: $BASE_DIR"
               fi
             fi
 
             # Ensure nginx directory
-            mkdir -p "$BASE_DIR/nginx"
-            cd "$BASE_DIR/nginx"
-            echo "📍 Working directory: $(pwd)"
-
-            # Ensure nginx compose exists
-            if [ ! -f "docker-compose.yml" ]; then
-              echo "⚠️  nginx/docker-compose.yml not found. Skipping nginx deployment."
-              exit 0
-            fi
-
-            # Ensure certbot folders
-            mkdir -p certbot/conf certbot/www
+            mkdir -p "$BASE_DIR/nginx" || sudo mkdir -p "$BASE_DIR/nginx" || {
+              echo "❌ Failed to create nginx directory"
+              exit 1
+            }
+            cd "$BASE_DIR/nginx" || exit 1
 
             # Shared network
             docker network create hrms-network --driver bridge 2>/dev/null || true
 
+            # Ensure compose file exists
+            if [ ! -f "docker-compose.yml" ]; then
+              echo "⚠️  Nginx docker-compose.yml not found in $BASE_DIR/nginx"
+              echo "    Skipping nginx deployment."
+              exit 0
+            fi
+
+            # Certbot directories
+            mkdir -p certbot/conf certbot/www
+
             DOMAIN="${DOMAIN:-h-rms.me}"
             SSL_EMAIL="${SSL_EMAIL:-admin@${DOMAIN}}"
 
+            echo "📍 Working directory: $(pwd)"
             echo "🌐 Domain: ${DOMAIN}"
             echo "📧 SSL Email: ${SSL_EMAIL}"
 
-            # Backup full SSL nginx.conf from repo (if not already)
+            # Helper: check if cert exists using a container (avoids host permissions issue)
+            has_cert() {
+              docker run --rm \
+                -v "$(pwd)/certbot/conf:/etc/letsencrypt" \
+                alpine:3.18 \
+                sh -c "[ -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem ]" >/dev/null 2>&1
+            }
+
+            # Backup original SSL nginx.conf (from repo)
             if [ -f "nginx.conf" ] && [ ! -f "nginx.conf.backup" ]; then
               cp nginx.conf nginx.conf.backup
-              echo "✅ Backed up nginx.conf as nginx.conf.backup"
+              echo "✅ Backed up original nginx.conf"
             fi
 
-            # Helper path for host cert
-            HOST_CERT_PATH="certbot/conf/live/${DOMAIN}/fullchain.pem"
-
-            # If certs already exist on host, skip issuing and just ensure SSL config
-            if [ -f "$HOST_CERT_PATH" ]; then
-              echo "✅ Existing SSL certificates found at ${HOST_CERT_PATH}"
-            else
-              echo "⚠️  SSL certificates not found yet for ${DOMAIN}"
-              echo "📝 Starting with HTTP-only config and requesting new cert..."
-
-              # Use HTTP-only nginx config first (for http-01)
-              if [ -f "nginx.conf.initial" ]; then
-                cp nginx.conf.initial nginx.conf
-                sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
-              fi
-
-              echo "🚀 Starting Nginx with HTTP-only config..."
-              $DOCKER_COMPOSE_CMD up -d nginx
-
-              sleep 5
-              if ! docker ps | grep -q hrms-nginx; then
-                echo "❌ Failed to start hrms-nginx"
-                docker logs hrms-nginx || true
-                exit 1
-              fi
-
-              # Prepare webroot
-              mkdir -p certbot/www/.well-known/acme-challenge
-              chmod -R 755 certbot/www || true
-
-              # Quick HTTP test
-              TEST_FILE="certbot/www/.well-known/acme-challenge/test-$$"
-              echo "test" > "$TEST_FILE"
-              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${DOMAIN}/.well-known/acme-challenge/test-$$" || echo "000")
-              rm -f "$TEST_FILE" || true
-
-              if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "404" ]; then
-                echo "   ✅ Webroot accessible via nginx (status: $HTTP_STATUS)"
-              else
-                echo "   ⚠️  Webroot may not be accessible (status: $HTTP_STATUS)"
-              fi
-
-              # DNS + HTTP checks (for info)
-              echo "🔍 Verifying DNS configuration..."
-              SERVER_IP=$(curl -s ifconfig.me || echo "unknown")
-              DOMAIN_IP=$(dig +short "${DOMAIN}" | tail -n1 || echo "unknown")
-              echo "   Server IP: ${SERVER_IP}"
-              echo "   Domain IP: ${DOMAIN_IP}"
-
-              echo "🔍 Testing HTTP on root domain..."
-              ROOT_HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${DOMAIN}" || echo "000")
-              echo "   HTTP status for http://${DOMAIN}: ${ROOT_HTTP_STATUS}"
-
-              echo "🔐 Requesting SSL certificates from Let's Encrypt..."
-              CERTBOT_EXIT=0
-              CERTBOT_OUTPUT=""
-
-              if command -v timeout >/dev/null 2>&1; then
-                CERTBOT_TIMEOUT=300
-                CERTBOT_OUTPUT=$(timeout ${CERTBOT_TIMEOUT} $DOCKER_COMPOSE_CMD run --rm certbot certonly \
-                  --webroot \
-                  --webroot-path=/var/www/certbot \
-                  --email "${SSL_EMAIL}" \
-                  --agree-tos \
-                  --no-eff-email \
-                  --non-interactive \
-                  --verbose \
-                  -d "${DOMAIN}" \
-                  -d "www.${DOMAIN}" \
-                  -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
-              else
-                CERTBOT_OUTPUT=$($DOCKER_COMPOSE_CMD run --rm certbot certonly \
-                  --webroot \
-                  --webroot-path=/var/www/certbot \
-                  --email "${SSL_EMAIL}" \
-                  --agree-tos \
-                  --no-eff-email \
-                  --non-interactive \
-                  --verbose \
-                  -d "${DOMAIN}" \
-                  -d "www.${DOMAIN}" \
-                  -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
-              fi
-
-              echo "--- Certbot Output ---"
-              echo "$CERTBOT_OUTPUT"
-              echo "--- End Certbot Output ---"
-
-              if [ "${CERTBOT_EXIT}" -ne 0 ]; then
-                echo "⚠️  Certbot failed (exit code: ${CERTBOT_EXIT}) – keeping HTTP-only config."
-                echo "   You can re-run certbot manually on the server:"
-                echo "   cd $BASE_DIR/nginx && $DOCKER_COMPOSE_CMD run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d ${DOMAIN} -d www.${DOMAIN} -d api.${DOMAIN}"
-              else
-                echo "✅ Certbot command executed successfully"
-
-                echo "📁 Listing certbot/conf on host for verification..."
-                ls -R certbot || true
-
-                if [ -f "$HOST_CERT_PATH" ]; then
-                  echo "✅ SSL certificates created at ${HOST_CERT_PATH}"
-                else
-                  echo "⚠️  Certbot succeeded but ${HOST_CERT_PATH} not found."
-                  echo "   This is usually a path/permissions issue. Nginx will stay HTTP-only for now."
-                fi
-              fi
-            fi
-
-            # If host cert exists, switch nginx.conf to SSL version
-            if [ -f "$HOST_CERT_PATH" ]; then
-              echo "🔄 Enabling HTTPS configuration for nginx..."
-
+            # If cert already exists, just ensure SSL config & reload nginx
+            if has_cert; then
+              echo "✅ SSL certificates already exist for ${DOMAIN}"
               if [ -f "nginx.conf.backup" ]; then
                 cp nginx.conf.backup nginx.conf
+                sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
+                sed -i "s|/etc/letsencrypt/live/h-rms.me|/etc/letsencrypt/live/${DOMAIN}|g" nginx.conf 2>/dev/null || true
               fi
 
-              # Update domain & cert paths in nginx.conf
-              sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
-              sed -i "s|/etc/letsencrypt/live/h-rms.me|/etc/letsencrypt/live/${DOMAIN}|g" nginx.conf 2>/dev/null || true
-
-              echo "🔁 Restarting nginx with SSL config..."
               $DOCKER_COMPOSE_CMD up -d nginx
+              sleep 5
 
-              echo "🔍 Testing nginx config..."
-              if docker exec hrms-nginx nginx -t 2>/dev/null; then
+              if docker exec hrms-nginx nginx -t >/dev/null 2>&1; then
                 docker exec hrms-nginx nginx -s reload || true
-                echo "✅ Nginx config is valid and reloaded"
+                echo "✅ Nginx running with SSL configuration"
               else
-                echo "⚠️  Nginx config test failed, check logs:"
+                echo "⚠️  Nginx SSL config test failed, check container logs"
                 docker logs hrms-nginx || true
               fi
-            else
-              echo "ℹ️  SSL certificates not available on host path – staying on HTTP-only mode."
+
+              echo "📋 SSL cert is present at /etc/letsencrypt/live/${DOMAIN}/fullchain.pem (inside containers)"
+              exit 0
             fi
 
-            # Final status
-            echo "🔍 Final verification..."
-            if docker ps | grep -q hrms-nginx; then
-              echo "✅ Nginx reverse proxy container is running"
-            else
-              echo "❌ hrms-nginx is not running"
+            echo "⚠️  SSL certificates not found yet for ${DOMAIN}"
+            echo "📝 Starting with HTTP-only config and requesting new cert..."
+
+            # Use HTTP-only config first (nginx.conf.initial from repo)
+            if [ -f "nginx.conf.initial" ]; then
+              cp nginx.conf.initial nginx.conf
+              sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
+            fi
+
+            # Start nginx (HTTP only)
+            echo "🚀 Starting Nginx with HTTP-only config..."
+            $DOCKER_COMPOSE_CMD up -d nginx
+            sleep 5
+
+            if ! docker ps | grep -q hrms-nginx; then
+              echo "❌ Failed to start nginx. Check logs:"
               docker logs hrms-nginx || true
               exit 1
             fi
 
-            echo "📋 SSL Certificate Status:"
-            if [ -f "$HOST_CERT_PATH" ]; then
-              echo "  ✅ SSL certificates exist for ${DOMAIN}"
-              ls -lh "certbot/conf/live/${DOMAIN}/" 2>/dev/null || true
+            # Basic HTTP check
+            HTTP_TEST=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${DOMAIN}" || echo "000")
+            echo "🔍 HTTP status for http://${DOMAIN}: ${HTTP_TEST}"
+
+            echo "🔐 Requesting SSL certificates from Let's Encrypt..."
+            CERTBOT_EXIT=0
+
+            if command -v timeout >/dev/null 2>&1; then
+              CERTBOT_TIMEOUT=300
+              CERTBOT_OUTPUT=$(timeout ${CERTBOT_TIMEOUT} $DOCKER_COMPOSE_CMD run --rm certbot certonly \
+                --webroot \
+                --webroot-path=/var/www/certbot \
+                --email "${SSL_EMAIL}" \
+                --agree-tos \
+                --no-eff-email \
+                --non-interactive \
+                --verbose \
+                -d "${DOMAIN}" \
+                -d "www.${DOMAIN}" \
+                -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
             else
-              echo "  ❌ SSL certificates NOT found at ${HOST_CERT_PATH}"
-              echo "  💡 If Certbot said it issued a cert, check directory ownership/permissions on the server."
+              CERTBOT_OUTPUT=$($DOCKER_COMPOSE_CMD run --rm certbot certonly \
+                --webroot \
+                --webroot-path=/var/www/certbot \
+                --email "${SSL_EMAIL}" \
+                --agree-tos \
+                --no-eff-email \
+                --non-interactive \
+                --verbose \
+                -d "${DOMAIN}" \
+                -d "www.${DOMAIN}" \
+                -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
+            fi
+
+            echo "--- Certbot Output ---"
+            echo "$CERTBOT_OUTPUT"
+            echo "--- End Certbot Output ---"
+
+            if [ -n "$CERTBOT_EXIT" ] && [ "$CERTBOT_EXIT" -ne 0 ]; then
+              echo "⚠️  Certbot exited with code $CERTBOT_EXIT"
+              echo "    Staying in HTTP-only mode."
+              exit 0
+            fi
+
+            echo "✅ Certbot command executed successfully"
+
+            # Re-check for cert via container (ignore host FS permissions)
+            if has_cert; then
+              echo "✅ SSL certificates obtained and visible via container"
+              echo "🔄 Switching to HTTPS nginx configuration..."
+
+              if [ -f "nginx.conf.backup" ]; then
+                cp nginx.conf.backup nginx.conf
+                sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
+                sed -i "s|/etc/letsencrypt/live/h-rms.me|/etc/letsencrypt/live/${DOMAIN}|g" nginx.conf 2>/dev/null || true
+              fi
+
+              # Restart nginx with SSL config
+              $DOCKER_COMPOSE_CMD up -d nginx
+              sleep 5
+
+              if docker exec hrms-nginx nginx -t >/dev/null 2>&1; then
+                docker exec hrms-nginx nginx -s reload || true
+                echo "✅ Nginx reloaded with SSL configuration"
+              else
+                echo "⚠️  Nginx SSL config test failed, check logs"
+                docker logs hrms-nginx || true
+              fi
+            else
+              echo "⚠️  Certbot said OK but cert not detectable via container."
+              echo "    This is likely a permissions/volume mapping edge case."
+              echo "    Nginx will stay in HTTP-only mode for now."
+            fi
+
+            echo "🔍 Final verification..."
+            if docker ps | grep -q hrms-nginx; then
+              echo "✅ Nginx reverse proxy container is running"
+            else
+              echo "❌ Nginx container is not running. Check logs:"
+              docker logs hrms-nginx || true
+              exit 1
             fi
 
       # - name: Health Check
