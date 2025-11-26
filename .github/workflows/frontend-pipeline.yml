@@ -676,6 +676,7 @@ jobs:
 
       - name: Deploy Nginx Reverse Proxy
         uses: appleboy/ssh-action@v1.0.0
+        timeout-minutes: 10
         env:
           DOMAIN: ${{ secrets.DOMAIN || 'h-rms.me' }}
           SSL_EMAIL: ${{ secrets.EMAIL_FROM || 'admin@h-rms.me' }}
@@ -821,26 +822,58 @@ jobs:
               
               echo "✅ Nginx is running, attempting SSL certificate setup..."
               
-              # Attempt to obtain SSL certificates
+              # Attempt to obtain SSL certificates with timeout
               echo "🔐 Requesting SSL certificates from Let's Encrypt for ${DOMAIN}..."
-              if $DOCKER_COMPOSE_CMD run --rm certbot certonly \
-                --webroot \
-                --webroot-path=/var/www/certbot \
-                --email "${SSL_EMAIL}" \
-                --agree-tos \
-                --no-eff-email \
-                --non-interactive \
-                -d "${DOMAIN}" \
-                -d "www.${DOMAIN}" \
-                -d "api.${DOMAIN}" 2>&1; then
-                echo "✅ Certbot command executed"
+              echo "   This may take a few minutes. If it times out, DNS may not be configured yet."
+              
+              # Run certbot with timeout (3 minutes max to avoid SSH action timeout)
+              # Use timeout command if available, otherwise rely on SSH action timeout
+              if command -v timeout >/dev/null 2>&1; then
+                CERTBOT_TIMEOUT=180
+                echo "   Using timeout command (${CERTBOT_TIMEOUT}s)..."
+                CERTBOT_OUTPUT=$(timeout ${CERTBOT_TIMEOUT} $DOCKER_COMPOSE_CMD run --rm certbot certonly \
+                  --webroot \
+                  --webroot-path=/var/www/certbot \
+                  --email "${SSL_EMAIL}" \
+                  --agree-tos \
+                  --no-eff-email \
+                  --non-interactive \
+                  -d "${DOMAIN}" \
+                  -d "www.${DOMAIN}" \
+                  -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
               else
-                CERTBOT_EXIT=$?
-                echo "⚠️  SSL certificate setup failed (exit code: $CERTBOT_EXIT). This is normal if:"
-                echo "   1. Domain DNS is not pointing to this server yet"
-                echo "   2. Domain is not accessible from the internet"
-                echo "   3. Port 80 is blocked by firewall"
-                echo "   4. Let's Encrypt rate limits (too many requests)"
+                echo "   timeout command not available, running certbot directly (may take longer)..."
+                CERTBOT_OUTPUT=$($DOCKER_COMPOSE_CMD run --rm certbot certonly \
+                  --webroot \
+                  --webroot-path=/var/www/certbot \
+                  --email "${SSL_EMAIL}" \
+                  --agree-tos \
+                  --no-eff-email \
+                  --non-interactive \
+                  -d "${DOMAIN}" \
+                  -d "www.${DOMAIN}" \
+                  -d "api.${DOMAIN}" 2>&1) || CERTBOT_EXIT=$?
+              fi
+              
+              echo "$CERTBOT_OUTPUT"
+              
+              if [ -z "$CERTBOT_EXIT" ] || [ "$CERTBOT_EXIT" -eq 0 ]; then
+                echo "✅ Certbot command executed successfully"
+              else
+                if [ "$CERTBOT_EXIT" -eq 124 ]; then
+                  echo "⚠️  SSL certificate setup timed out"
+                  echo "   This usually means:"
+                  echo "   1. Domain DNS is not pointing to this server"
+                  echo "   2. Domain is not accessible from the internet"
+                  echo "   3. Port 80 is blocked by firewall"
+                else
+                  echo "⚠️  SSL certificate setup failed (exit code: $CERTBOT_EXIT)"
+                  echo "   This is normal if:"
+                  echo "   1. Domain DNS is not pointing to this server yet"
+                  echo "   2. Domain is not accessible from the internet"
+                  echo "   3. Port 80 is blocked by firewall"
+                  echo "   4. Let's Encrypt rate limits (too many requests)"
+                fi
                 echo "   Continuing with HTTP-only configuration..."
                 echo "   You can manually set up SSL later by running certbot on the server"
               fi
