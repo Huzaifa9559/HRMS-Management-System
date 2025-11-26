@@ -39,7 +39,7 @@ export default function Announcements() {
       setDepartments(response.data.data);
     } catch (error) {
       
-      console.error("Error fetching departments:", error);
+      
     }
   };
 
@@ -55,7 +55,7 @@ export default function Announcements() {
       setMyAnnouncements(response.data.data);
     } catch (error) {
 setMyAnnouncements([]);
-      console.error("Error fetching announcements:", error);
+      
     }
   };
 

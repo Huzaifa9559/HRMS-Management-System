@@ -34,7 +34,7 @@ export default function MyDocuments() {
       });
       setMyDocuments(response.data.data);
     } catch (error) {
-      console.error(error);
+      
       toast.error('Failed to load documents.');
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export default function MyDocuments() {
         setShowSignatureModal(false);
         fetchDocuments(); // Refresh the document list
       } catch (error) {
-        console.error(error);
+        
         toast.error('Failed to save the signature.');
       }
     }
@@ -110,7 +110,7 @@ export default function MyDocuments() {
       link.remove();
       toast.success('Document downloaded successfully.');
     } catch (error) {
-      console.error(error);
+      
       toast.error('Failed to download the document.');
     }
   };

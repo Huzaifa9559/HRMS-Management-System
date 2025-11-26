@@ -51,7 +51,6 @@ function NewLeaveRequestOverlay({ show, onHide }) {
       isSubmit = 1;
  
     } catch (error) {
-      console.error('Error submitting leave request:', error);
       toast.error('Failed to submit leave request. Please try again.'); // Show error notification
     }
     setLeaveType('');
@@ -197,7 +196,6 @@ export default function Leave() {
     return () => clearTimeout(timer); // Cleanup on unmount
   }, []);
   const [allLeaveData, setAllLeaveData] = useState([]);
-  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Set the number of items per page
 
@@ -207,7 +205,6 @@ export default function Leave() {
     const fetchLeaveData = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        console.log(token);
         const response = await axios.get(`/api/employees/leave/leave-details`, {
           headers: {
             'Authorization': `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
@@ -215,13 +212,13 @@ export default function Leave() {
         });
         setAllLeaveData(response.data.data);
       } catch (error) {
-        console.error('Error fetching leave data:', error);
+        // Error fetching leave data
         //navigate('/login');
       }
     };
 
     fetchLeaveData();
-    isSubmit = 0;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSubmit]);
 
   // Filtered data based on the active tab
@@ -230,11 +227,11 @@ export default function Leave() {
       case 'Leave Requests':
         return allLeaveData;
       case 'My Pending':
-        return allLeaveData.filter((leave) => leave.leave_status == 0);
+        return allLeaveData.filter((leave) => leave.leave_status === 0);
       case 'My Approved':
-        return allLeaveData.filter((leave) => leave.leave_status == 1);
+        return allLeaveData.filter((leave) => leave.leave_status === 1);
       case 'My Rejected':
-        return allLeaveData.filter((leave) => leave.leave_status == 2);
+        return allLeaveData.filter((leave) => leave.leave_status === 2);
       default:
         return allLeaveData;
     }

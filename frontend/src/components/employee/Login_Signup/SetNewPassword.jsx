@@ -7,7 +7,6 @@ export default function SetNewPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,7 +32,7 @@ export default function SetNewPassword() {
       return;
     }
 
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]+/.test(password)) {
       setError('Password must contain at least one symbol');
       return;
     }
@@ -58,13 +57,11 @@ export default function SetNewPassword() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(true);
         navigate('/login');
       } else {
         setError('Failed to set new password. Please try again.');
       }
     } catch (err) {
-      console.error(err);
       setError('An error occurred. Please try again later.');
     }
   };

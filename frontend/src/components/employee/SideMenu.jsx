@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn, FaFile, FaMoneyBill } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserCheck, FaBusinessTime, FaFileAlt, FaBullhorn, FaFile, FaMoneyBill } from 'react-icons/fa';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { MdDashboard } from 'react-icons/md';
 

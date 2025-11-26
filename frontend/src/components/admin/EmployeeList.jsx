@@ -5,27 +5,24 @@ import {
     InputGroup,
     FormControl,
     Dropdown,
-    Modal,
     Badge,
     Container,
     Row,
     Col,
     Pagination,
 } from 'react-bootstrap';
-import { FaSearch, FaEllipsisV, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
 import debounce from 'lodash.debounce';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
-import { responsivePropType } from 'react-bootstrap/esm/createUtilityClasses';
 
 export default function EmployeeList() {
     // State Variables
-    const [showInviteForm, setShowInviteForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('');
@@ -33,12 +30,9 @@ export default function EmployeeList() {
     const [employees, setEmployees] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
-    const [email, setEmail] = useState('');
     const [designations, setDesignations] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showEmployeeDetails, setShowEmployeeDetails] = useState(false);
-    const [employeeDetails, setEmployeeDetails] = useState(null);
     const navigate = useNavigate();
 
     const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
@@ -68,7 +62,7 @@ export default function EmployeeList() {
                 setDesignations(designationsRes.data.data);
                 setDepartments(departmentsRes.data.data);
             } catch (error) {
-                console.error('Error fetching data:', error);
+                // Error fetching data
             }
         };
 
@@ -76,9 +70,8 @@ export default function EmployeeList() {
             try {
                 const response = await axios.get('/api/admin/employee/all');
                 setEmployees(response.data.data);
-                console.log(response.data.data);
             } catch (error) {
-                console.error('Error fetching employees:', error);
+                // Error fetching employees
             } finally {
                 setLoading(false);
             }
@@ -128,7 +121,6 @@ export default function EmployeeList() {
             setEmployees(employees.filter((employee) => employee.id !== id));
             toast.success('Employee deleted successfully!');
         } catch (error) {
-            console.error('Error deleting employee:', error);
             toast.error('Failed to delete employee.');
         }
     };

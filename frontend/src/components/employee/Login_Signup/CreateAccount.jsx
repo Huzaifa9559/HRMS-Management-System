@@ -20,7 +20,6 @@ export default function CreateAccount() {
         agreeTerms: false
     });
 
-    const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
 
@@ -30,8 +29,6 @@ export default function CreateAccount() {
     const [departments, setDepartments] = useState([]);
 
     const [isValidPhone, setIsValidPhone] = useState(true);
-    const [countryList, setCountryList] = useState([]);
-    const [phoneCountryCode, setPhoneCountryCode] = useState('');
 
     // Typewriter effect for heading and paragraph
     const [typedTextHeading, setTypedTextHeading] = useState('');
@@ -49,10 +46,9 @@ export default function CreateAccount() {
                     flag: country.flags.png || country.flags.svg, // Fetch flag in png or svg
                     dialCode: country.idd.root ? `${country.idd.root}${country.idd.suffixes[0]}` : '', // Combine root and suffix
                 }));
-                setCountryList(countries);
             })
             .catch((error) => {
-                console.error('Error fetching country data:', error);
+                // Error fetching country data
             });
     }, []);
 
@@ -65,7 +61,7 @@ export default function CreateAccount() {
                 const response2 = await axios.get('/api/public/designation');
                 setDepartments(response2.data.data);
             } catch (error) {
-                console.error('Error fetching designations and departments:', error);
+                
             }
         };
 

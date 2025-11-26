@@ -30,7 +30,7 @@ export default function Payslips() {
         });
         setPayslips(response.data.data || []);
       } catch (error) {
-        console.error('Error fetching payslips:', error);
+        
         toast.error('Failed to fetch payslips. Please try again later.');
       } finally {
         setLoading(false);
@@ -69,7 +69,7 @@ export default function Payslips() {
       link.remove();
       toast.success('Payslip downloaded successfully.');
     } catch (error) {
-      console.error('Error downloading payslip:', error);
+      
       toast.error('Failed to download payslip. Please try again.');
     }
   };

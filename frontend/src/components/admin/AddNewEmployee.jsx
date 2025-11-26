@@ -10,7 +10,6 @@ import { PhoneNumberUtil } from 'google-libphonenumber';
 import 'react-phone-input-2/lib/style.css';
 const phoneUtil = PhoneNumberUtil.getInstance();
 const Account = () => {
-      const [formData, setFormData] = useState({
         employeeName: '',
         countryCode: '+',
         phoneNumber: '',
@@ -27,8 +26,6 @@ const Account = () => {
   const [showPassword, setShowPassword] = useState(false);
 
     const [isValidPhone, setIsValidPhone] = useState(true);
-    const [countryList, setCountryList] = useState([]);
-    const [phoneCountryCode, setPhoneCountryCode] = useState('');
   const [employeeDetails, setEmployeeDetails] = useState({
     email: '',
     password: '',
@@ -88,10 +85,9 @@ const Account = () => {
                     flag: country.flags.png || country.flags.svg, // Fetch flag in png or svg
                     dialCode: country.idd.root ? `${country.idd.root}${country.idd.suffixes[0]}` : '', // Combine root and suffix
                 }));
-                setCountryList(countries);
             })
             .catch((error) => {
-                console.error('Error fetching country data:', error);
+                // Error fetching country data
             });
     }, []);
   // Phone number validation
@@ -418,8 +414,6 @@ const handleSubmit = async (e) => {
       country={'us'} // Default country
       value={employeeDetails.phoneNumber}
       onChange={(phoneNumber, country) => {
-        setFormData((prevData) => ({ ...prevData, phoneNumber }));
-        setPhoneCountryCode(country.countryCode); // Set the country code
         validatePhoneNumber(phoneNumber, country.countryCode); // Validate with country code
         employeeDetails.phoneNumber=phoneNumber; //
       }}

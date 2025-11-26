@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Card, Form, Dropdown, Modal, Button } from 'react-bootstrap';
+import { Table, Card, Form, Dropdown } from 'react-bootstrap';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../Loader';
 import { ToastContainer, toast } from 'react-toastify';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { AiOutlineDownload } from 'react-icons/ai';
-import { ChevronDown } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,7 +20,6 @@ const ADocuments = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState([]);
-  const navigate = useNavigate();
 
   // Fetch documents on mount
   const fetchDocuments = useCallback(async () => {
@@ -30,7 +27,6 @@ const ADocuments = () => {
       const response = await axios.get('/api/admin/my-documents');
       setDocuments(response.data.data || []);
     } catch (error) {
-      console.error(error);
       toast.error('Failed to load documents.');
     } finally {
       setLoading(false);
@@ -81,7 +77,6 @@ const ADocuments = () => {
       link.remove();
       toast.success('Document downloaded successfully.');
     } catch (error) {
-      console.error(error);
       toast.error('Failed to download the document.');
     }
   };

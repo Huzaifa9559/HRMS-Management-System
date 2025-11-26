@@ -60,7 +60,7 @@ export default function Dashboard() {
           yesterdayWorkingHours: data.yesterdayWorkingHours || '4 h 5 min',
         });
       } catch (error) {
-        console.error('Error fetching employee stats:', error);
+        
       } finally {
         setLoading(false); // End loading after fetching data
       }

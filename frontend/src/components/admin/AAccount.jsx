@@ -13,7 +13,7 @@ import Header from "./Header";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import Loader from "../Loader";
 
 const EmpAccount = () => {
@@ -34,13 +34,12 @@ const EmpAccount = () => {
         const response = await axios.get(`/api/admin/employee/${id}`);
         setEmployeeData(response.data.data);
       } catch (error) {
-        console.error("Error fetching employee data:", error);
         toast.error("Session expired. Please try again.");
       }
     };
 
     fetchEmployeeData();
-  }, []);
+  }, [id]);
 
   const {
     employeeID,

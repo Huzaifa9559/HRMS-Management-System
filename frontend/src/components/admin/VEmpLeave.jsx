@@ -36,7 +36,6 @@ export default function LeaveManagement() {
         setLeaveData(leaveResponse.data.data);
         setLeaveStats(leaveStatsResponse.data.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
         toast.error("Error fetching data.", { position: "top-right" });
       } finally {
         setLoading(false); // Stop the loading spinner once the data is fetched
@@ -44,30 +43,26 @@ export default function LeaveManagement() {
     };
 
     fetchData();
-  }, []);
+  }, [employeeId, leaveID]);
 
   // Handle Accept Leave Request
   const handleAcceptLeave = async () => {
     try {
-
-      const response = await axios.post(`/api/admin/leave/accept/${leaveID}`);
+      await axios.post(`/api/admin/leave/accept/${leaveID}`);
       toast.success("Leave request accepted!", { position: "top-right" });
       setDone(false);
     } catch (error) {
-      console.error("Error accepting leave request:", error);
       toast.error("Failed to accept leave request.", { position: "top-right" });
-
-    };
+    }
   }
 
     // Handle Reject Leave Request
     const handleRejectLeave = async () => {
       try {
-        const response = await axios.post(`/api/admin/leave/reject/${leaveID}`);
+        await axios.post(`/api/admin/leave/reject/${leaveID}`);
         toast.success("Leave request rejected!", { position: "top-right" });
         setDone(false);
       } catch (error) {
-        console.error("Error rejecting leave request:", error);
         toast.error("Failed to reject leave request.", { position: "top-right" });
       }
     };

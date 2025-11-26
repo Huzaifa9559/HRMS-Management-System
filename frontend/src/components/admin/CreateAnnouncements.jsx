@@ -28,7 +28,7 @@ export default function CreateAnnouncements() {
                 const response = await axios.get('/api/admin/department'); // Replace with your actual API URL
                 setDepartments(response.data.data); // Set department data from the API response
             } catch (error) {
-                console.error('Error fetching departments:', error);
+                // Error fetching departments
             }
         };
         fetchDepartments();
@@ -73,7 +73,7 @@ export default function CreateAnnouncements() {
 
         try {
             // Send the form data via a POST request to the backend API
-            const response = await axios.post('/api/admin/announcements/create', formData); // Replace with your actual API endpoint
+            await axios.post('/api/admin/announcements/create', formData); // Replace with your actual API endpoint
                 toast.success('Announcement created successfully!');
 
                 // Clear the form fields after successful submission
@@ -81,7 +81,6 @@ export default function CreateAnnouncements() {
                 setTitle(""); // Reset title field
                 setDescription(""); // Reset description field
         } catch (error) {
-            console.error('Error creating announcement:', error);
             alert('Failed to create announcement. Please try again.');
         }
     };

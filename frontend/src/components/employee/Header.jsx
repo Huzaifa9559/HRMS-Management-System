@@ -28,7 +28,7 @@ export default function Header({ title }) {
           });
           setProfileData(response2.data.data);
       } catch (error) {
-        console.error('Error fetching employee data:', error);
+        
         //navigate('/login');
       }
     };

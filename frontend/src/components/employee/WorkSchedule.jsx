@@ -27,7 +27,7 @@ export default function WorkSchedule() {
 
         setScheduleData(transformedData); // Update state with transformed data
       } catch (error) {
-        console.error('Error fetching schedule data:', error);
+        
       } finally {
         setLoading(false); // Stop loading
       }

@@ -287,7 +287,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-  # Static Code Analysis (DCA - Dynamic Code Analysis / SAST)
+  # Static Code Analysis (SAST + CodeQL)
   code-analysis:
     name: Static Code Analysis
     runs-on: ubuntu-latest
@@ -307,7 +307,7 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Run SonarCloud Scan
+      - name: Run Sonar Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
         continue-on-error: true
         env:
@@ -316,7 +316,7 @@ jobs:
         with:
           projectBaseDir: ./backend
           args: >
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY || format('{0}_{1}', github.repository_owner, github.event.repository.name) }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/tests/**,**/*.test.js
@@ -332,8 +332,6 @@ jobs:
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
         continue-on-error: true
-        with:
-          working-directory: ./backend
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
@@ -398,7 +396,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,prefix={{branch}}-
+            type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image to GHCR
@@ -413,9 +411,8 @@ jobs:
 
       - name: Verify image was pushed
         run: |
-          echo "✅ Image pushed to GHCR:"
-          echo "  - ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
-          echo "  - ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          echo "✅ Image pushed to GHCR with tags:"
+          echo "${{ steps.meta.outputs.tags }}"
 
   # Deploy to Digital Ocean
   deploy:
@@ -444,12 +441,11 @@ jobs:
             REGISTRY="ghcr.io"
             REPO_OWNER_ORIGINAL="${{ github.repository_owner }}"
             REPO_OWNER_LOWER=$(echo "${REPO_OWNER_ORIGINAL}" | tr '[:upper:]' '[:lower:]')
-            IMAGE_NAME="hrms-backend"
+            IMAGE_NAME="${{ env.IMAGE_NAME }}"
             IMAGE_FULL_NAME="${REGISTRY}/${REPO_OWNER_LOWER}/${IMAGE_NAME}:latest"
             echo "Image: ${IMAGE_FULL_NAME}"
 
-            # Login to GHCR using Personal Access Token
-            # Note: Login username should match GitHub username (case-sensitive for auth)
+            # Login to GHCR using Personal Access Token or GITHUB_TOKEN
             if [ -n "${GHCR_TOKEN}" ]; then
               echo "${GHCR_TOKEN}" | docker login ${REGISTRY} -u ${REPO_OWNER_ORIGINAL} --password-stdin
               echo "✅ Logged in to GHCR"
@@ -558,48 +554,24 @@ jobs:
         run: |
           echo "🔍 Verifying secrets are accessible in workflow..."
           echo "📋 Note: When using 'environment: Production', secrets must be in Production environment"
-          echo "📋 If secrets are in repository-level, they won't be accessible"
           echo ""
 
-          # Check if secrets are accessible (they might be in environment or repository-level)
           DB_USER_ACCESSIBLE="${{ secrets.DB_USER }}"
           DB_PASSWORD_ACCESSIBLE="${{ secrets.DB_PASSWORD }}"
           DB_NAME_ACCESSIBLE="${{ secrets.DB_NAME }}"
 
           if [ -z "$DB_USER_ACCESSIBLE" ]; then
             echo "❌ ERROR: DB_USER secret is not accessible"
-            echo ""
-            echo "📋 Possible causes:"
-            echo "   1. Secret is in repository-level secrets (not accessible with environment: Production)"
-            echo "   2. Secret is not in Production environment"
-            echo "   3. Secret value is empty/blank"
-            echo "   4. Environment protection rules are blocking access"
-            echo ""
-            echo "📋 Solution:"
-            echo "   Since your workflow uses 'environment: name: Production',"
-            echo "   secrets MUST be in: Environments → Production → Environment secrets"
-            echo ""
-            echo "   Steps to fix:"
-            echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            echo "   2. Click 'Environments' tab (on the right)"
-            echo "   3. Click 'Production'"
-            echo "   4. Add 'DB_USER' to Environment secrets (not repository secrets)"
-            echo "   5. Repeat for DB_PASSWORD, DB_NAME, and all other secrets"
-            echo ""
-            echo "   OR if you want to use repository-level secrets:"
-            echo "   Remove 'environment: name: Production' from the workflow (not recommended)"
             exit 1
           fi
 
           if [ -z "$DB_PASSWORD_ACCESSIBLE" ]; then
             echo "❌ ERROR: DB_PASSWORD secret is not accessible"
-            echo "   Follow the same steps above to add it to Production environment"
             exit 1
           fi
 
           if [ -z "$DB_NAME_ACCESSIBLE" ]; then
             echo "❌ ERROR: DB_NAME secret is not accessible"
-            echo "   Follow the same steps above to add it to Production environment"
             exit 1
           fi
 
@@ -610,36 +582,26 @@ jobs:
         run: |
           echo "🔐 Creating .env file from GitHub Secrets..."
 
-          # Function to safely write env variable (handles empty values and special characters)
           write_env() {
             local key=$1
             local value=$2
             
             if [ -z "$value" ]; then
-              # Empty value - write as-is
               echo "${key}=" >> .env
               return
             fi
             
-            # Check if value needs quoting (contains spaces, special chars, or could be interpreted as command)
             needs_quoting=false
             
-            # Check for spaces, tabs, newlines
             if [[ "$value" =~ [[:space:]] ]]; then
               needs_quoting=true
             fi
-            
-            # Check for special characters that need escaping
             if [[ "$value" =~ [\$\\\`\"\'\!\@\#\^\&\*\(\)\[\]\{\}\|\;\<\>\?] ]]; then
               needs_quoting=true
             fi
-            
-            # Check if starts with dash (could be command option)
             if [[ "$value" =~ ^- ]]; then
               needs_quoting=true
             fi
-            
-            # Check if value contains characters that could form a valid command when unquoted
             if [ "$needs_quoting" = false ]; then
               if ! [[ "$value" =~ ^[a-zA-Z0-9_\.\-\:\/\+=]+$ ]]; then
                 needs_quoting=true
@@ -654,11 +616,8 @@ jobs:
             fi
           }
 
-          # Verify required secrets are accessible
           if [ -z "${{ secrets.DB_USER }}" ]; then
             echo "❌ ERROR: DB_USER secret is not accessible in Production environment"
-            echo "   Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            echo "   Click 'Environments' → 'Production' → Add 'DB_USER' secret"
             exit 1
           fi
           if [ -z "${{ secrets.DB_PASSWORD }}" ]; then
@@ -670,10 +629,6 @@ jobs:
             exit 1
           fi
 
-          echo "✅ All required secrets are accessible"
-          echo ""
-
-          # Build .env file from GitHub Secrets
           echo "# ==========================================" > .env
           echo "# HRMS Application Environment Variables" >> .env
           echo "# Auto-generated from GitHub Secrets" >> .env
@@ -722,11 +677,9 @@ jobs:
           write_env "AWS_REGION" "${{ secrets.AWS_REGION }}"
           write_env "AWS_S3_BUCKET_NAME" "${{ secrets.AWS_S3_BUCKET_NAME }}"
 
-          # Verify file was created
           if [ -f .env ]; then
             echo "✅ .env file created successfully"
             echo "📄 File size: $(wc -l < .env) lines"
-            echo "✅ All environment variables have been loaded from GitHub Secrets"
           else
             echo "❌ Failed to create .env file"
             exit 1
@@ -751,7 +704,6 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
-            # Determine the base directory (with fallbacks)
             BASE_DIR="/opt/hrms"
             if [ ! -d "$BASE_DIR" ]; then
               BASE_DIR="$HOME/hrms"
@@ -767,23 +719,19 @@ jobs:
               }
             fi
 
-            # Create backend directory if it doesn't exist
             mkdir -p "$BASE_DIR/backend" || {
               echo "❌ Failed to create backend directory"
               exit 1
             }
 
-            # Move .env file to correct location
             if [ -f "/tmp/.env" ]; then
               mv /tmp/.env "$BASE_DIR/backend/.env"
               chmod 600 "$BASE_DIR/backend/.env"
               echo "✅ .env file moved to $BASE_DIR/backend/.env"
               
-              # Verify .env file
               if [ -f "$BASE_DIR/backend/.env" ]; then
                 echo "✅ .env file verified on server"
                 echo "📄 File size: $(wc -l < "$BASE_DIR/backend/.env") lines"
-                # Show non-sensitive parts (masked)
                 grep -E "^(DB_USER|DB_NAME|DB_HOST|DB_PORT|DB_DIALECT|NODE_ENV|PORT)=" "$BASE_DIR/backend/.env" | sed 's/=\(.*\)/=***/' || echo "⚠️  Some variables not found"
               else
                 echo "❌ ERROR: .env file not found after move"
@@ -828,28 +776,16 @@ jobs:
 
             # Check which docker compose command is available
             DOCKER_COMPOSE_CMD=""
-            # Test docker-compose (standalone)
-            if command -v docker-compose >/dev/null 2>&1; then
-              if docker-compose --version >/dev/null 2>&1; then
-                DOCKER_COMPOSE_CMD="docker-compose"
-                echo "✅ Found docker-compose (standalone)"
-              fi
-            fi
-            # Test docker compose (plugin) if standalone not found
-            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
-              if docker compose version >/dev/null 2>&1; then
-                DOCKER_COMPOSE_CMD="docker compose"
-                echo "✅ Found docker compose (plugin)"
-              fi
-            fi
-            # Error if neither is found
-            if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+            if command -v docker-compose >/dev/null 2>&1 && docker-compose --version >/dev/null 2>&1; then
+              DOCKER_COMPOSE_CMD="docker-compose"
+              echo "✅ Found docker-compose (standalone)"
+            elif docker compose version >/dev/null 2>&1; then
+              DOCKER_COMPOSE_CMD="docker compose"
+              echo "✅ Found docker compose (plugin)"
+            else
               echo "❌ Error: Neither 'docker-compose' nor 'docker compose' is available."
               echo "Please install Docker Compose:"
-              echo "  For plugin version (recommended):"
-              echo "    sudo apt-get update && sudo apt-get install docker-compose-plugin"
-              echo "  Or for standalone version:"
-              echo "    sudo apt-get update && sudo apt-get install docker-compose"
+              echo "  sudo apt-get update && sudo apt-get install docker-compose-plugin"
               exit 1
             fi
 
@@ -863,137 +799,61 @@ jobs:
             fi
             if [ ! -f "backend/docker-compose.yml" ]; then
               echo "❌ Error: backend/docker-compose.yml not found at $BASE_DIR/backend/"
-              echo "Please ensure the docker-compose.yml file is present in the backend directory."
               exit 1
             fi
 
-            # Start services (database will start first due to depends_on)
-            # Note: Backend image is already pulled from GHCR and tagged as hrms-backend:latest, MySQL image will be pulled if needed
             cd backend
 
-            # Export environment variables for docker-compose (from .env file)
+            # Load env vars
+            if [ ! -f ".env" ]; then
+              echo "❌ .env file not found in $BASE_DIR/backend/.env"
+              exit 1
+            fi
+
             set -a
             source "$BASE_DIR/backend/.env"
             set +a
 
-                echo "$USER_CHECK"
-                echo ""
-                
-                # Check grants
-                GRANTS_CHECK=$(docker exec hrms-mysql mysql -uroot --password="$ACTUAL_ROOT_PASSWORD" -e "
-                  SHOW GRANTS FOR '$DB_USER'@'%';
-                " 2>&1)
-                
-                echo "Grants for '$DB_USER'@'%':"
-                echo "$GRANTS_CHECK"
-                echo ""
-                
-                # Try to connect from MySQL container using the same credentials
-                echo "🔍 Testing connection from MySQL container with same credentials..."
-                MYSQL_CONTAINER_TEST=$(docker exec hrms-mysql mysql -u"$DB_USER" --password="$DB_PASSWORD" -h mysql -e "SELECT 1 AS test;" 2>&1)
-                
-                if echo "$MYSQL_CONTAINER_TEST" | grep -q "test"; then
-                  echo "✅ Connection works from MySQL container"
-                  echo "   This suggests the issue is with how the backend container connects"
-                  echo "   The password might have special characters that need escaping"
-                else
-                  echo "❌ Connection also fails from MySQL container"
-                  echo "   Output: $MYSQL_CONTAINER_TEST"
-                  echo ""
-                  echo "   This means the password doesn't match what was set in MySQL"
-                  echo "   The password in .env might be different from what MySQL has"
-                fi
-                
-                echo ""
-                echo "📋 To fix this, verify the password matches:"
-                echo "   1. Check the password in .env file: grep DB_PASSWORD $BASE_DIR/backend/.env"
-                echo "   2. Check what MySQL has: docker exec hrms-mysql mysql -uroot -p -e \"SELECT User, Host, authentication_string FROM mysql.user WHERE User='$DB_USER';\""
-                echo "   3. If they don't match, recreate the user:"
-                echo "      docker exec -it hrms-mysql mysql -uroot -p"
-                echo "      DROP USER IF EXISTS '$DB_USER'@'%';"
-                echo "      CREATE USER '$DB_USER'@'%' IDENTIFIED BY 'YOUR_ACTUAL_PASSWORD';"
-                echo "      GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';"
-                echo "      FLUSH PRIVILEGES;"
-                
+            # Ensure MySQL service is running
+            echo "🚀 Ensuring MySQL service is running..."
+            $DOCKER_COMPOSE_CMD up -d mysql
+
+            # Wait for MySQL to be ready (using root or DB user)
+            MYSQL_ADMIN_USER="root"
+            MYSQL_ADMIN_PASSWORD="${DB_ROOT_PASSWORD:-$DB_PASSWORD}"
+
+            echo "⏳ Waiting for MySQL to be ready..."
+            for i in {1..30}; do
+              if $DOCKER_COMPOSE_CMD exec -T mysql mysqladmin ping -h "localhost" -u"$MYSQL_ADMIN_USER" --password="$MYSQL_ADMIN_PASSWORD" --silent 2>/dev/null; then
+                echo "✅ MySQL is ready"
+                break
+              fi
+
+              if [ $i -eq 30 ]; then
+                echo "❌ MySQL did not become ready in time"
+                $DOCKER_COMPOSE_CMD logs mysql --tail=100 || true
                 exit 1
               fi
-              
-              echo "⏳ Waiting for temporary container to be ready..."
-              sleep 10
-              
-              MIGRATION_CONTAINER="$TEMP_CONTAINER_NAME"
-            else
-              echo "🚀 Starting backend container for first-time deployment..."
-              $DOCKER_COMPOSE_CMD up -d --no-deps backend
-              sleep 15
-              MIGRATION_CONTAINER="backend"
-            fi
 
-            # Run migrations with automatic rollback on failure
-            echo "🔄 Running database migrations (with auto-rollback on failure)..."
-            echo "📊 Capturing migration state before migration..."
-            MIGRATION_STATE_BEFORE=$(docker exec "$MIGRATION_CONTAINER" npm run migrate:status 2>&1 || echo "")
-            echo "$MIGRATION_STATE_BEFORE"
+              echo "Waiting for MySQL... ($i/30)"
+              sleep 2
+            done
 
-            # Run migrations using safe migration script (with automatic rollback)
-            echo "🚀 Starting safe migration process..."
-            if docker exec "$MIGRATION_CONTAINER" npm run migrate:safe; then
+            # Run migrations in a one-off backend container
+            echo "🔄 Running database migrations (npm run migrate:safe)..."
+            if $DOCKER_COMPOSE_CMD run --rm backend sh -lc "npm run migrate:safe"; then
               echo "✅ Migrations completed successfully"
-              # Verify final migration status
-              echo "📊 Verifying final migration status..."
-              docker exec "$MIGRATION_CONTAINER" npm run migrate:status
-              echo "✅ All migrations verified and database is in correct state"
-              MIGRATION_SUCCESS=true
             else
-              echo "❌ Migration failed! Rollback was attempted automatically."
-              echo "📋 Showing backend logs for debugging..."
-              docker logs --tail=50 "$MIGRATION_CONTAINER"
-              echo ""
-              echo "📊 Current migration status after rollback:"
-              docker exec "$MIGRATION_CONTAINER" npm run migrate:status || true
-              echo ""
-              echo "❌ Deployment stopped due to migration failure."
-              echo "📋 Database has been rolled back to previous state."
-              
-              # Clean up temporary container
-              if [ -n "$BACKEND_RUNNING" ]; then
-                echo "📋 Previous backend container is still running - no changes made."
-                docker stop "$TEMP_CONTAINER_NAME" 2>/dev/null || true
-                docker rm "$TEMP_CONTAINER_NAME" 2>/dev/null || true
-              fi
-              echo "📋 Please fix migration issues and try again."
+              echo "❌ Migration failed. Not starting new backend container."
               exit 1
             fi
 
-            # Only if migration succeeded, replace the old container with the new one
-            if [ "$MIGRATION_SUCCESS" = true ] && [ -n "$BACKEND_RUNNING" ]; then
-              echo "🔄 Migrations successful! Replacing old backend container with new one..." && \
-              docker stop "$TEMP_CONTAINER_NAME" 2>/dev/null || true && \
-              docker rm "$TEMP_CONTAINER_NAME" 2>/dev/null || true && \
-              echo "🛑 Stopping old backend container..." && \
-              $DOCKER_COMPOSE_CMD stop backend && \
-              $DOCKER_COMPOSE_CMD rm -f backend && \
-              echo "🚀 Starting new backend container with migrated database..." && \
-              $DOCKER_COMPOSE_CMD up -d --no-deps backend && \
-              echo "⏳ Waiting for new backend container to be ready..." && \
-              sleep 10 && \
-              { $DOCKER_COMPOSE_CMD ps backend | grep -q "Up" && echo "✅ New backend container is running successfully"; } || \
-              { echo "⚠️  Warning: Backend container may not be running properly"; $DOCKER_COMPOSE_CMD ps backend; }
-            elif [ "$MIGRATION_SUCCESS" = true ]; then
-              echo "✅ Backend container is running with migrated database"
-            fi
+            # Start/restart backend service
+            echo "🚀 Starting backend service..."
+            $DOCKER_COMPOSE_CMD up -d backend
 
-            # Clean up unused Docker resources (only after successful deployment)
-            if [ "$MIGRATION_SUCCESS" = true ]; then
-              echo "🧹 Cleaning up unused Docker resources..." && \
-              echo "📊 Disk usage before cleanup:" && docker system df && \
-              echo "🗑️  Removing stopped containers..." && docker container prune -f && \
-              echo "🗑️  Removing unused images..." && (docker image prune -af --filter "until=24h" || docker image prune -af) && \
-              echo "🗑️  Removing unused volumes..." && docker volume prune -f && \
-              echo "🗑️  Removing unused networks..." && docker network prune -f && \
-              echo "📊 Disk usage after cleanup:" && docker system df && \
-              echo "✅ Docker cleanup completed"
-            fi
+            echo "📊 Current service status:"
+            $DOCKER_COMPOSE_CMD ps
 
       - name: Health Check
         run: |

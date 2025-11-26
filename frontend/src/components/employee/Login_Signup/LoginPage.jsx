@@ -48,12 +48,12 @@ export default function Login() {
       return;
     }
 
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]+/.test(password)) {
       setPasswordAlert('Password must contain at least one symbol');
       return;
     }
 
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/.test(password)) {
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,}$/.test(password)) {
       setPasswordAlert('Password must be alphanumeric and contain at least one lowercase letter, one uppercase letter, one number, and one symbol');
       return;
     }
@@ -74,9 +74,8 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
-      console.log(data);
       const token=data.data;
-      if (data.message == 'Login successful') {
+      if (data.message === 'Login successful') {
         loginAsEmployee();
         //const token = getCookie('authToken');  // You can extract the token from cookies here
         localStorage.setItem('authToken', token); 
@@ -89,13 +88,6 @@ export default function Login() {
       setError('An error occurred. Please try again.');
     }
 
-  };
-
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
   };
 
   const togglePasswordVisibility = () => {

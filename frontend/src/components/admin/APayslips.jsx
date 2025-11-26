@@ -4,7 +4,6 @@ import Header from './Header';
 import SideMenu from './SideMenu';
 import Loader from '../Loader';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -26,7 +25,6 @@ export default function AllEmployeesPayslips() {
         const response = await axios.get(`/api/admin/payslips`);
         setPayslips(response.data.data || []);
       } catch (error) {
-        console.error('Error fetching payslips:', error);
         toast.error('Failed to fetch payslips. Please try again later.');
       } finally {
         setLoading(false);
@@ -77,7 +75,6 @@ export default function AllEmployeesPayslips() {
       link.remove();
       toast.success('Payslip downloaded successfully.');
     } catch (error) {
-      console.error('Error downloading payslip:', error);
       toast.error('Failed to download payslip. Please try again.');
     }
   };

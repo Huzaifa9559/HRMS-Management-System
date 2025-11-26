@@ -22,7 +22,7 @@ const AnnouncementView = () => {
         });
         setAnnouncement(response.data.data);
       } catch (error) {
-        console.error('Error fetching announcement:', error);
+        
       }
     };
 

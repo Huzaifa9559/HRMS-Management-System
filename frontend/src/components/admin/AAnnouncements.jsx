@@ -26,7 +26,7 @@ export default function AnnouncementsDashboard() {
         const response = await axios.get('/api/admin/department');
         setDepartments(response.data.data);
       } catch (error) {
-        console.error('Error', error);
+        // Error fetching departments
       }
     };
     const fetchAnnouncements = async () => {
@@ -34,7 +34,7 @@ export default function AnnouncementsDashboard() {
         const response = await axios.get(`/api/admin/announcements?department=${selectedDepartment}`);
         setAnnouncements(response.data.data);
       } catch (error) {
-        console.error('Error', error);
+        // Error fetching announcements
       }
     };
     fetchDepartments();    
@@ -58,7 +58,7 @@ export default function AnnouncementsDashboard() {
         try {
         await axios.post('/api/admin/announcements/delete',{id});
       } catch (error) {
-        console.error('Error', error);
+        // Error deleting announcement
       }
         const updatedAnnouncements = announcements.filter((announcement) => announcement.announcementID !== id);
         setAnnouncements(updatedAnnouncements);
@@ -194,11 +194,6 @@ const clickedButtonStyle = {
     transition: 'all 0.3s ease',
 };
 
-const dropdownStyle = {
-    padding: '10px',
-    borderRadius: '4px',
-    border: '1px solid #ced4da',
-};
 
 const tableContainerStyle = {
     backgroundColor: '#fff',

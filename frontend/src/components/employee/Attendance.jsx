@@ -69,7 +69,7 @@ export default function Attendance() {
           setIsOnBreak(true);
         }
       } catch (error) {
-        console.error('Error fetching previous data:', error);
+        // Error fetching previous data
       }
     };
 
@@ -121,7 +121,6 @@ export default function Attendance() {
       localStorage.setItem('isCheckedIn', 'true'); // Store check-in status
     } catch (error) {
       toast.error('Failed to check in. Please try again.'); // Show error notification
-      console.error('Error checking in:', error);
     }
   }
 
@@ -144,7 +143,6 @@ export default function Attendance() {
       localStorage.setItem('isOnBreak', 'true');
     } catch (error) {
       toast.error('Failed to record break-in time. Please try again.'); // Show error notification
-      console.error('Error recording break-in time:', error);
     }
   }
 
@@ -164,7 +162,6 @@ export default function Attendance() {
       toast.success(`Break-Out!`);
     } catch (error) {
       toast.error('Failed to record break-out time. Please try again.');
-      console.error('Error recording break-out time:', error);
     }
   }
 
@@ -191,7 +188,6 @@ export default function Attendance() {
       toast.success(`Check-out successful!`);
     } catch (error) {
       toast.error('Failed to check out. Please try again.');
-      console.error('Error checking out:', error);
     }
   }
 
@@ -222,7 +218,6 @@ export default function Attendance() {
   // Calculate pagination
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredTimesheet.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredTimesheet.length / itemsPerPage)
 
   // Handle pagination navigation

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-
 // Create the Auth Context
 const AuthContext = createContext();
 
@@ -17,12 +16,13 @@ const isSessionValid = () => {
   return true;
 };
 
-
 // Auth Provider component to wrap around the app
 export const AuthProvider = ({ children }) => {
   // Initialize authentication state from local storage
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return JSON.parse(localStorage.getItem('isAuthenticated')) && isSessionValid();
+    return (
+      JSON.parse(localStorage.getItem('isAuthenticated')) && isSessionValid()
+    );
   });
   const [userRole, setUserRole] = useState(() => {
     return isSessionValid() ? localStorage.getItem('userRole') : null;
@@ -60,14 +60,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('userRole', 'employee');
 
     setSessionTimer();
-      // Debugging
-  console.log('Logged in as employee');
-  console.log('isAuthenticated:', isAuthenticated); // Check if the state updates correctly
-  console.log('userRole:', userRole);
-  
-
   };
-
 
   // Logout function to clear authentication
   const logout = () => {
@@ -88,7 +81,15 @@ export const AuthProvider = ({ children }) => {
 
   // Provide the authentication state and actions to all components
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, loginAsAdmin, loginAsEmployee, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        userRole,
+        loginAsAdmin,
+        loginAsEmployee,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

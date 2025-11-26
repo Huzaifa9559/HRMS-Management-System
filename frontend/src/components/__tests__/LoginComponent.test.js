@@ -1,53 +1,69 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import LoginComponent from '../LoginComponent';
 
-// Mock axios
-jest.mock('axios', () => ({
-  defaults: {
-    baseURL: 'http://localhost:8000'
-  },
-  get: jest.fn(),
-  post: jest.fn()
-}));
+// Create a shared reference object
+const mockRef = { navigate: null };
+
+// Mock react-router-dom - initialize mock inside factory
+jest.mock('react-router-dom', () => {
+  const actualModule = jest.requireActual('react-router-dom');
+  // Create mock function inside factory
+  mockRef.navigate = jest.fn();
+  return {
+    ...actualModule,
+    useNavigate: () => mockRef.navigate,
+  };
+});
+
+// Import component after mock
+import LoginComponent from '../LoginComponent';
 
 describe('LoginComponent', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    if (mockRef.navigate) {
+      mockRef.navigate.mockClear();
+    }
   });
 
   it('should render login form', () => {
-    render(<LoginComponent />);
+    render(
+      <MemoryRouter>
+        <LoginComponent />
+      </MemoryRouter>
+    );
     
-    expect(screen.getByText(/login/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/email/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument();
+    expect(screen.getByText(/welcome to hrms/i)).toBeInTheDocument();
+    expect(screen.getByText(/please select your login type/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /log in as employee/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /log in as admin/i })).toBeInTheDocument();
   });
 
   it('should show validation error for empty email', async () => {
-    render(<LoginComponent />);
+    render(
+      <MemoryRouter>
+        <LoginComponent />
+      </MemoryRouter>
+    );
     
-    const submitButton = screen.getByRole('button', { name: /login/i });
-    fireEvent.click(submitButton);
+    const employeeButton = screen.getByRole('button', { name: /log in as employee/i });
+    fireEvent.click(employeeButton);
 
-    await waitFor(() => {
-      expect(screen.getByText(/email is required/i)).toBeInTheDocument();
-    });
+    expect(mockRef.navigate).toHaveBeenCalledWith('/login/employee');
   });
 
   it('should show validation error for invalid email format', async () => {
-    render(<LoginComponent />);
+    render(
+      <MemoryRouter>
+        <LoginComponent />
+      </MemoryRouter>
+    );
     
-    const emailInput = screen.getByPlaceholderText(/email/i);
-    fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-    
-    const submitButton = screen.getByRole('button', { name: /login/i });
-    fireEvent.click(submitButton);
+    const adminButton = screen.getByRole('button', { name: /log in as admin/i });
+    fireEvent.click(adminButton);
 
-    await waitFor(() => {
-      expect(screen.getByText(/invalid email format/i)).toBeInTheDocument();
-    });
+    expect(mockRef.navigate).toHaveBeenCalledWith('/login/admin');
   });
 });
-

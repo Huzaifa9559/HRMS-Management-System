@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';  // For sending the POST request
 import SideMenu from './SideMenu';
 import Header from './Header';
@@ -21,7 +20,7 @@ export default function CreateNewDoc() {
         "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     ];
     const currentYear = new Date().getFullYear();
-    const years = Array.from(new Array(15), (val, index) => currentYear - index);; // Example years from 2020 to 2029
+    const years = Array.from(new Array(15), (val, index) => currentYear - index); // Example years from 2020 to 2029
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 1250); // Simulate loading
@@ -69,7 +68,6 @@ export default function CreateNewDoc() {
             // Reset fields after successful upload
             resetFormFields();
         } catch (error) {
-            console.error("Error uploading payslip:", error);
             toast.error("Error uploading payslip. Please try again.");
         }
     } else {
@@ -83,7 +81,6 @@ export default function CreateNewDoc() {
             // Reset fields after successful upload
             resetFormFields();
         } catch (error) {
-            console.error("Error uploading document:", error);
             toast.error("Error uploading document. Please try again.");
         }
     }

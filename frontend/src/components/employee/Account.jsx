@@ -3,13 +3,10 @@ import { Container, Row, Col, Card, Table, Image, Badge } from 'react-bootstrap'
 import SideMenu from './SideMenu';
 import Header from './Header';
 import axios from 'axios';
-import Cookies from 'js-cookie';
-import { ToastContainer, toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Loader from '../Loader';
 
 const EmpAccount = () => {
-  const navigate = useNavigate();
   const [employeeData, setEmployeeData] = useState();
   const [loading, setLoading] = useState(true);
   const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
@@ -31,7 +28,6 @@ const EmpAccount = () => {
         });
         setEmployeeData(response.data.data);
       } catch (error) {
-        console.error('Error fetching employee data:', error);
         toast.error('Session expired. Please try again.');
         //navigate('/login');
       }
