@@ -3,6 +3,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
+
 // PrivateRoute component to protect routes based on user authentication and role
 const PrivateRoute = ({ element, requiredRole }) => {
   const { isAuthenticated, userRole } = useAuth(); // Use AuthContext
