@@ -1174,28 +1174,7 @@ jobs:
 
               # Prepare a sanitized env file without quotes/escape sequences for docker --env-file
               SANITIZED_ENV_FILE="$BASE_DIR/backend/.env.runtime"
-              python3 - "$BASE_DIR/backend/.env" "$SANITIZED_ENV_FILE" <<'PY'
-              import sys, pathlib
-              
-              src, dst = sys.argv[1:]
-              lines = []
-              for raw in pathlib.Path(src).read_text().splitlines():
-                  stripped = raw.strip()
-                  if not stripped or stripped.startswith("#") or "=" not in raw:
-                      continue
-                  key, value = raw.split("=", 1)
-                  key = key.strip()
-                  value = value.strip()
-                  if value and value[0] in ("'", '"') and value[-1] == value[0]:
-                      quote = value[0]
-                      value = value[1:-1]
-                      value = value.replace(f"\\{quote}", quote)
-                      value = value.replace("\\\\", "\\")
-                      if quote == '"':
-                          value = value.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t")
-                  lines.append(f"{key}={value}")
-              pathlib.Path(dst).write_text("\n".join(lines) + "\n")
-              PY
+              python3 -c "import sys, pathlib; src, dst = sys.argv[1:]; lines = []; code = \"for raw in pathlib.Path(src).read_text().splitlines():\\n    stripped = raw.strip()\\n    if not stripped or stripped.startswith('#') or '=' not in raw:\\n        continue\\n    key, value = raw.split('=', 1)\\n    key = key.strip()\\n    value = value.strip()\\n    if value and value[0] in (\\\"'\\\", '\\\"') and value[-1] == value[0]:\\n        quote = value[0]\\n        value = value[1:-1]\\n        value = value.replace(f\\\\\"\\\\\\\\{quote}\\\\\", quote)\\n        value = value.replace('\\\\\\\\\\\\\\\\', '\\\\\\\\')\\n        if quote == '\\\"':\\n            value = value.replace('\\\\\\\\n', '\\\\n').replace('\\\\\\\\r', '\\\\r').replace('\\\\\\\\t', '\\\\t')\\n    lines.append(f'{key}={value}')\"; exec(code, {'pathlib': pathlib, 'src': src, 'lines': lines}); pathlib.Path(dst).write_text('\\n'.join(lines) + '\\n')" "$BASE_DIR/backend/.env" "$SANITIZED_ENV_FILE"
 
               if [ ! -s "$SANITIZED_ENV_FILE" ]; then
                 echo "❌ Failed to create sanitized env file at $SANITIZED_ENV_FILE"
