@@ -687,6 +687,26 @@ jobs:
           script: |
             echo "🔧 Setting up Nginx reverse proxy..."
 
+            # Detect which docker-compose command is available
+            DOCKER_COMPOSE_CMD=""
+            if command -v docker-compose >/dev/null 2>&1; then
+              if docker-compose --version >/dev/null 2>&1; then
+                DOCKER_COMPOSE_CMD="docker-compose"
+                echo "✅ Found docker-compose (standalone)"
+              fi
+            elif docker compose version >/dev/null 2>&1; then
+              DOCKER_COMPOSE_CMD="docker compose"
+              echo "✅ Found docker compose (plugin)"
+            else
+              echo "❌ Error: Neither 'docker-compose' nor 'docker compose' is available."
+              echo "Please install docker-compose on the server:"
+              echo "   For Docker Compose v2 (plugin):"
+              echo "    sudo apt-get update && sudo apt-get install docker-compose-plugin"
+              echo "   For Docker Compose v1 (standalone):"
+              echo "    sudo apt-get update && sudo apt-get install docker-compose"
+              exit 1
+            fi
+
             # Determine the base directory (with fallbacks and proper permissions)
             BASE_DIR="/opt/hrms"
             if [ ! -d "$BASE_DIR" ]; then
@@ -714,7 +734,7 @@ jobs:
               cd "$BASE_DIR/backend"
               if grep -q '"8000:8000"' docker-compose.yml 2>/dev/null; then
                 sed -i 's/"8000:8000"/"127.0.0.1:8000:8000"/' docker-compose.yml
-                docker-compose restart backend || true
+                $DOCKER_COMPOSE_CMD restart backend || true
                 echo "✅ Backend ports updated to localhost"
               fi
             fi
@@ -723,7 +743,7 @@ jobs:
               cd "$BASE_DIR/frontend"
               if grep -q '"80:80"' docker-compose.yml 2>/dev/null; then
                 sed -i 's/"80:80"/"127.0.0.1:80:80"/' docker-compose.yml
-                docker-compose restart frontend || true
+                $DOCKER_COMPOSE_CMD restart frontend || true
                 echo "✅ Frontend ports updated to localhost"
               fi
             fi
@@ -789,7 +809,7 @@ jobs:
 
               # Start nginx with HTTP-only config first (required for certbot validation)
               echo "🚀 Starting Nginx with HTTP-only config..."
-              docker-compose up -d nginx
+              $DOCKER_COMPOSE_CMD up -d nginx
               
               # Wait for nginx to be ready
               sleep 5
@@ -803,7 +823,7 @@ jobs:
               
               # Attempt to obtain SSL certificates
               echo "🔐 Requesting SSL certificates from Let's Encrypt for ${DOMAIN}..."
-              if docker-compose run --rm certbot certonly \
+              if $DOCKER_COMPOSE_CMD run --rm certbot certonly \
                 --webroot \
                 --webroot-path=/var/www/certbot \
                 --email "${SSL_EMAIL}" \
@@ -898,7 +918,7 @@ jobs:
                     echo "⚠️  SSL certificates not found in nginx container"
                     echo "   Certificates exist on host but may not be mounted correctly"
                     echo "   Restarting nginx container to remount volumes..."
-                    docker-compose restart nginx
+                    $DOCKER_COMPOSE_CMD restart nginx
                     sleep 3
                   fi
                 else
@@ -913,7 +933,7 @@ jobs:
                       cp nginx.conf.backup nginx.conf
                       sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
                       sed -i "s|/etc/letsencrypt/live/h-rms.me|/etc/letsencrypt/live/${DOMAIN}|g" nginx.conf 2>/dev/null || true
-                      docker-compose restart nginx
+                      $DOCKER_COMPOSE_CMD restart nginx
                       sleep 3
                       echo "✅ Nginx restarted with SSL configuration"
                     fi
