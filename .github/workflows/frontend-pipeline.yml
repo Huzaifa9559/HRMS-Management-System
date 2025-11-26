@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - "frontend/**"
+      - ".github/workflows/frontend-pipeline.yml"
   pull_request:
     branches:
       - main
     paths:
       - "frontend/**"
+      - ".github/workflows/frontend-pipeline.yml"
   workflow_dispatch:
 
 env:
@@ -649,6 +651,9 @@ jobs:
             echo "${{ steps.encode_files.outputs.nginx_conf_b64 }}" | base64 -d > $BASE_DIR/nginx/nginx.conf
             echo "${{ steps.encode_files.outputs.nginx_initial_b64 }}" | base64 -d > $BASE_DIR/nginx/nginx.conf.initial
 
+            # Create backup of SSL-enabled config (nginx.conf contains SSL config)
+            cp $BASE_DIR/nginx/nginx.conf $BASE_DIR/nginx/nginx.conf.backup 2>/dev/null || true
+
             # Set permissions
             chmod 644 $BASE_DIR/nginx/*.yml $BASE_DIR/nginx/*.conf 2>/dev/null || sudo chmod 644 $BASE_DIR/nginx/*.yml $BASE_DIR/nginx/*.conf || true
 
@@ -659,6 +664,9 @@ jobs:
 
       - name: Deploy Nginx Reverse Proxy
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          DOMAIN: ${{ secrets.DOMAIN || 'h-rms.me' }}
+          SSL_EMAIL: ${{ secrets.EMAIL_FROM || 'admin@h-rms.me' }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
@@ -700,35 +708,185 @@ jobs:
             # Ensure network exists
             docker network create hrms-network --driver bridge 2>/dev/null || true
 
+            # Get domain and email from environment (passed via secrets)
+            DOMAIN="${DOMAIN:-h-rms.me}"
+            SSL_EMAIL="${SSL_EMAIL:-admin@${DOMAIN}}"
+
+            # Backup the original nginx.conf from repo (contains SSL config)
+            if [ -f "nginx.conf" ] && [ ! -f "nginx.conf.backup" ]; then
+              cp nginx.conf nginx.conf.backup
+              echo "✅ Backed up original nginx.conf"
+            fi
+
             # Check if SSL certificates exist
-            if [ -f "certbot/conf/live/h-rms.me/fullchain.pem" ]; then
-              echo "✅ SSL certificates found, using SSL config"
+            if [ -f "certbot/conf/live/${DOMAIN}/fullchain.pem" ]; then
+              echo "✅ SSL certificates found for ${DOMAIN}, using SSL config"
               # Ensure we have the full nginx.conf with SSL
               if [ ! -f "nginx.conf" ] || ! grep -q "ssl_certificate" nginx.conf 2>/dev/null; then
-                echo "⚠️  nginx.conf missing SSL config, using initial config"
-                if [ -f "nginx.conf.initial" ]; then
-                  cp nginx.conf.initial nginx.conf
+                echo "🔄 Restoring SSL-enabled nginx.conf..."
+                if [ -f "nginx.conf.backup" ]; then
+                  cp nginx.conf.backup nginx.conf
+                  # Update domain in config if different
+                  sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
+                fi
+              else
+                # Update domain in existing SSL config if needed
+                if ! grep -q "server_name ${DOMAIN}" nginx.conf 2>/dev/null; then
+                  echo "🔄 Updating domain in nginx.conf to ${DOMAIN}..."
+                  sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
                 fi
               fi
             else
-              echo "⚠️  SSL certificates not found, using HTTP-only config"
+              echo "⚠️  SSL certificates not found for ${DOMAIN}"
+              echo "📝 Starting with HTTP-only config, will attempt SSL setup..."
+              
+              # Use initial HTTP-only config first
               if [ -f "nginx.conf.initial" ]; then
                 cp nginx.conf.initial nginx.conf
+                # Update domain in initial config
+                sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
+              fi
+
+              # Start nginx with HTTP-only config first (required for certbot validation)
+              echo "🚀 Starting Nginx with HTTP-only config..."
+              docker-compose up -d nginx
+              
+              # Wait for nginx to be ready
+              sleep 5
+              if ! docker ps | grep -q hrms-nginx; then
+                echo "❌ Failed to start nginx. Check logs:"
+                docker logs hrms-nginx || true
+                exit 1
+              fi
+              
+              echo "✅ Nginx is running, attempting SSL certificate setup..."
+              
+              # Attempt to obtain SSL certificates
+              echo "🔐 Requesting SSL certificates from Let's Encrypt for ${DOMAIN}..."
+              if docker-compose run --rm certbot certonly \
+                --webroot \
+                --webroot-path=/var/www/certbot \
+                --email "${SSL_EMAIL}" \
+                --agree-tos \
+                --no-eff-email \
+                --non-interactive \
+                -d "${DOMAIN}" \
+                -d "www.${DOMAIN}" \
+                -d "api.${DOMAIN}" 2>&1; then
+                echo "✅ Certbot command executed"
+              else
+                CERTBOT_EXIT=$?
+                echo "⚠️  SSL certificate setup failed (exit code: $CERTBOT_EXIT). This is normal if:"
+                echo "   1. Domain DNS is not pointing to this server yet"
+                echo "   2. Domain is not accessible from the internet"
+                echo "   3. Port 80 is blocked by firewall"
+                echo "   4. Let's Encrypt rate limits (too many requests)"
+                echo "   Continuing with HTTP-only configuration..."
+                echo "   You can manually set up SSL later by running certbot on the server"
+              fi
+              
+              # Check if certificates were successfully created
+              if [ -f "certbot/conf/live/${DOMAIN}/fullchain.pem" ]; then
+                echo "✅ SSL certificates obtained successfully!"
+                echo "🔄 Switching to HTTPS configuration..."
+                
+                # Restore SSL-enabled nginx.conf
+                if [ -f "nginx.conf.backup" ]; then
+                  cp nginx.conf.backup nginx.conf
+                  # Update domain in config
+                  sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
+                  # Update certificate paths to match domain
+                  sed -i "s|/etc/letsencrypt/live/h-rms.me|/etc/letsencrypt/live/${DOMAIN}|g" nginx.conf 2>/dev/null || true
+                else
+                  echo "⚠️  Full SSL config not found, certificates obtained but config may need manual update"
+                fi
+                
+                # Test and reload nginx to apply SSL config
+                echo "🔄 Testing and reloading nginx with SSL configuration..."
+                if docker exec hrms-nginx nginx -t 2>/dev/null; then
+                  docker exec hrms-nginx nginx -s reload
+                  echo "✅ Nginx reloaded with SSL configuration"
+                else
+                  echo "⚠️  Nginx config test failed, but certificates are available"
+                  echo "   You may need to manually fix the nginx.conf file"
+                fi
+              else
+                echo "⚠️  SSL certificates not obtained, continuing with HTTP-only configuration"
+                echo "   The site will be accessible via HTTP only"
               fi
             fi
 
-            # Start/restart nginx
-            echo "🚀 Starting Nginx reverse proxy..."
-            docker-compose up -d nginx
-
-            # Wait and verify
-            sleep 5
+            # Final verification and SSL status check
+            echo "🔍 Final verification..."
             if docker ps | grep -q hrms-nginx; then
               echo "✅ Nginx reverse proxy is running"
-              docker exec hrms-nginx nginx -t && echo "✅ Nginx config is valid"
+              
+              # Check SSL certificate status
+              echo "📋 SSL Certificate Status:"
+              if [ -f "certbot/conf/live/${DOMAIN}/fullchain.pem" ]; then
+                echo "  ✅ SSL certificates exist for ${DOMAIN}"
+                ls -lh certbot/conf/live/${DOMAIN}/ 2>/dev/null || true
+              else
+                echo "  ❌ SSL certificates NOT found for ${DOMAIN}"
+                echo "  📍 Expected path: certbot/conf/live/${DOMAIN}/fullchain.pem"
+                echo "  💡 To enable HTTPS, ensure:"
+                echo "     1. Domain DNS points to this server"
+                echo "     2. Port 80 is accessible from internet"
+                echo "     3. Run the workflow again after DNS is configured"
+              fi
+              
+              # Check nginx config
+              if docker exec hrms-nginx nginx -t 2>/dev/null; then
+                echo "✅ Nginx config is valid"
+                
+                # Check if SSL is configured in nginx
+                if docker exec hrms-nginx cat /etc/nginx/conf.d/default.conf 2>/dev/null | grep -q "ssl_certificate"; then
+                  echo "✅ HTTPS is configured in nginx.conf"
+                  
+                  # Verify SSL is actually working
+                  echo "🔍 Testing HTTPS configuration..."
+                  if docker exec hrms-nginx cat /etc/nginx/conf.d/default.conf 2>/dev/null | grep -q "listen 443"; then
+                    echo "✅ Nginx is listening on port 443 (HTTPS)"
+                  else
+                    echo "⚠️  Nginx config has SSL but no listen 443 directive"
+                  fi
+                  
+                  # Check if certificates are accessible in container
+                  if docker exec hrms-nginx test -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem 2>/dev/null; then
+                    echo "✅ SSL certificates are accessible in nginx container"
+                  else
+                    echo "⚠️  SSL certificates not found in nginx container"
+                    echo "   Certificates exist on host but may not be mounted correctly"
+                    echo "   Restarting nginx container to remount volumes..."
+                    docker-compose restart nginx
+                    sleep 3
+                  fi
+                else
+                  echo "ℹ️  Running in HTTP-only mode"
+                  echo "   Current nginx.conf does not have SSL configuration"
+                  
+                  # If certificates exist but config doesn't have SSL, fix it
+                  if [ -f "certbot/conf/live/${DOMAIN}/fullchain.pem" ]; then
+                    echo "🔄 SSL certificates exist but nginx.conf doesn't use them!"
+                    echo "   Updating nginx.conf to use SSL..."
+                    if [ -f "nginx.conf.backup" ]; then
+                      cp nginx.conf.backup nginx.conf
+                      sed -i "s/h-rms.me/${DOMAIN}/g" nginx.conf 2>/dev/null || true
+                      sed -i "s|/etc/letsencrypt/live/h-rms.me|/etc/letsencrypt/live/${DOMAIN}|g" nginx.conf 2>/dev/null || true
+                      docker-compose restart nginx
+                      sleep 3
+                      echo "✅ Nginx restarted with SSL configuration"
+                    fi
+                  fi
+                fi
+              else
+                echo "⚠️  Nginx config test failed. Check logs:"
+                docker logs hrms-nginx || true
+              fi
             else
-              echo "⚠️  Nginx container may not be running. Check logs:"
+              echo "❌ Nginx container is not running. Check logs:"
               docker logs hrms-nginx || true
+              exit 1
             fi
 
       # - name: Health Check

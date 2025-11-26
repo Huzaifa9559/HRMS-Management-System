@@ -4,15 +4,15 @@ on:
   push:
     branches:
       - main
-      - develop
     paths:
       - "backend/**"
+      - ".github/workflows/backend-pipeline.yml"
   pull_request:
     branches:
       - main
-      - develop
     paths:
       - "backend/**"
+      - ".github/workflows/backend-pipeline.yml"
   workflow_dispatch:
 
 env:
