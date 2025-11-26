@@ -91,10 +91,20 @@ export default function SelectLogin() {
               strokeLinejoin="round"
               className="login-svg"
             >
-              <rect x="40" y="40" width="120" height="120" rx="10" className="door" />
+              <rect
+                x="40"
+                y="40"
+                width="120"
+                height="120"
+                rx="10"
+                className="door"
+              />
               <path d="M100 80 L100 120" className="door-line" />
               <circle cx="90" cy="100" r="20" className="user-head" />
-              <path d="M90 120 Q90 140 110 140 L130 140" className="user-body" />
+              <path
+                d="M90 120 Q90 140 110 140 L130 140"
+                className="user-body"
+              />
               <path d="M70 100 L50 100" className="arm-left" />
               <path d="M110 100 L130 100" className="arm-right" />
             </svg>

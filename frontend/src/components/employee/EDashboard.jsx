@@ -4,7 +4,13 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Box, Briefcase, Clock, Clipboard, Calendar as CalendarIcon } from 'lucide-react';
+import {
+  Box,
+  Briefcase,
+  Clock,
+  Clipboard,
+  Calendar as CalendarIcon,
+} from 'lucide-react';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import Loader from '../Loader';
@@ -29,7 +35,8 @@ const CustomCalendar = ({ localizer, events, style }) => (
 export default function Dashboard() {
   const [showCurrentYearLeave, setShowCurrentYearLeave] = useState(false);
   const [showCurrentMonthLeave, setShowCurrentMonthLeave] = useState(false);
-  const [showYesterdayWorkingHours, setShowYesterdayWorkingHours] = useState(false);
+  const [showYesterdayWorkingHours, setShowYesterdayWorkingHours] =
+    useState(false);
   const [showTimesheet, setShowTimesheet] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
 
@@ -48,8 +55,8 @@ export default function Dashboard() {
         const token = localStorage.getItem('authToken');
         const response = await axios.get('/api/employees/employee/stats', {
           headers: {
-            'Authorization': `Bearer ${token}`, // Include the token in the request headers
-          }
+            Authorization: `Bearer ${token}`, // Include the token in the request headers
+          },
         });
         const data = response.data.data;
 
@@ -82,9 +89,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
+    <div
+      className="d-flex"
+      style={{
+        backgroundColor: '#f9f9f9',
+        minHeight: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       <SideMenu />
-      <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+      <div
+        className="flex-grow-1 d-flex flex-column p-3"
+        style={{ overflowY: 'auto' }}
+      >
         <Header title="Dashboard" />
         <Container fluid>
           <Row className="mb-2">
@@ -96,9 +113,13 @@ export default function Dashboard() {
               >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
-                    <Card.Title style={{ fontWeight: 'normal' }}>Current Year Leaves</Card.Title>
+                    <Card.Title style={{ fontWeight: 'normal' }}>
+                      Current Year Leaves
+                    </Card.Title>
                     {showCurrentYearLeave && (
-                      <Card.Text className="h5">{stats.currentYearLeaves} Days</Card.Text>
+                      <Card.Text className="h5">
+                        {stats.currentYearLeaves} Days
+                      </Card.Text>
                     )}
                   </div>
                   <Box size={28} color="#4CAF50" />
@@ -113,9 +134,13 @@ export default function Dashboard() {
               >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
-                    <Card.Title style={{ fontWeight: 'normal' }}>Current Month Leaves</Card.Title>
+                    <Card.Title style={{ fontWeight: 'normal' }}>
+                      Current Month Leaves
+                    </Card.Title>
                     {showCurrentMonthLeave && (
-                      <Card.Text className="h5">{stats.currentMonthLeaves} Days</Card.Text>
+                      <Card.Text className="h5">
+                        {stats.currentMonthLeaves} Days
+                      </Card.Text>
                     )}
                   </div>
                   <Briefcase size={28} color="#9C27B0" />
@@ -125,14 +150,20 @@ export default function Dashboard() {
             <Col md={4}>
               <Card
                 className="hover-card"
-                onClick={() => setShowYesterdayWorkingHours(!showYesterdayWorkingHours)}
+                onClick={() =>
+                  setShowYesterdayWorkingHours(!showYesterdayWorkingHours)
+                }
                 style={{ cursor: 'pointer', height: '90px' }}
               >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
-                    <Card.Title style={{ fontWeight: 'normal' }}>Yesterday's Working Hours</Card.Title>
+                    <Card.Title style={{ fontWeight: 'normal' }}>
+                      Yesterday's Working Hours
+                    </Card.Title>
                     {showYesterdayWorkingHours && (
-                      <Card.Text className="h5">{stats.yesterdayWorkingHours}</Card.Text>
+                      <Card.Text className="h5">
+                        {stats.yesterdayWorkingHours}
+                      </Card.Text>
                     )}
                   </div>
                   <Clock size={28} color="#FF5722" />
@@ -143,7 +174,10 @@ export default function Dashboard() {
 
           <Row className="mb-2">
             <Col>
-              <Card className="hover-card" style={{ backgroundColor: '#ffffff', width: '100%' }}>
+              <Card
+                className="hover-card"
+                style={{ backgroundColor: '#ffffff', width: '100%' }}
+              >
                 <Card.Header
                   onClick={() => setShowCalendar(!showCalendar)}
                   style={{
@@ -162,7 +196,11 @@ export default function Dashboard() {
                 </Card.Header>
                 {showCalendar && (
                   <Card.Body>
-                    <CustomCalendar localizer={localizer} events={events} style={{ height: 200 }} />
+                    <CustomCalendar
+                      localizer={localizer}
+                      events={events}
+                      style={{ height: 200 }}
+                    />
                   </Card.Body>
                 )}
               </Card>
@@ -180,7 +218,9 @@ export default function Dashboard() {
                   className="d-flex justify-content-between align-items-center"
                   style={{ fontSize: '1.25rem' }} // Increased font size
                 >
-                  <Card.Title style={{ fontWeight: 'normal' }}>Timesheet</Card.Title>
+                  <Card.Title style={{ fontWeight: 'normal' }}>
+                    Timesheet
+                  </Card.Title>
                   <Clipboard size={24} color="#FF9800" />
                 </Card.Body>
                 {showTimesheet && (
@@ -233,4 +273,3 @@ cardHoverCSS.innerHTML = `
   }
 `;
 document.head.appendChild(cardHoverCSS);
-

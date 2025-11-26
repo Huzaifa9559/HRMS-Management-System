@@ -38,55 +38,61 @@ const Account = () => {
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
   const [file, setFile] = useState(null);
-  
+
   // Generate a random default password
   const generatePassword = () => {
-  const upperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const lowerCase = 'abcdefghijklmnopqrstuvwxyz';
-  const numbers = '0123456789';
-  const specialChars = '!@#$%^&*()';
-  
-  const allChars = upperCase + lowerCase + numbers + specialChars;
-  
-  const getRandomChar = (chars) => chars.charAt(Math.floor(Math.random() * chars.length));
-  
-  // Ensure at least one of each required character type
-  let password = [
-    getRandomChar(upperCase),
-    getRandomChar(lowerCase),
-    getRandomChar(numbers),
-    getRandomChar(specialChars),
-  ];
-  
-  // Fill the rest of the password with random characters
-  for (let i = 4; i < 12; i++) { // Set password length to 12
-    password.push(getRandomChar(allChars));
-  }
-  
-  // Shuffle the password to randomize character order
-  password = password.sort(() => Math.random() - 0.5).join('');
-  
-  return password;
-};
-    useEffect(() => {
-        axios.get('https://restcountries.com/v3.1/all')
-            .then(() => {
-                // Countries data fetched (not used but API call may be needed for future use)
-            })
-            .catch(() => {
-                // Error fetching country data
-            });
-    }, []);
+    const upperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowerCase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const specialChars = '!@#$%^&*()';
+
+    const allChars = upperCase + lowerCase + numbers + specialChars;
+
+    const getRandomChar = (chars) =>
+      chars.charAt(Math.floor(Math.random() * chars.length));
+
+    // Ensure at least one of each required character type
+    let password = [
+      getRandomChar(upperCase),
+      getRandomChar(lowerCase),
+      getRandomChar(numbers),
+      getRandomChar(specialChars),
+    ];
+
+    // Fill the rest of the password with random characters
+    for (let i = 4; i < 12; i++) {
+      // Set password length to 12
+      password.push(getRandomChar(allChars));
+    }
+
+    // Shuffle the password to randomize character order
+    password = password.sort(() => Math.random() - 0.5).join('');
+
+    return password;
+  };
+  useEffect(() => {
+    axios
+      .get('https://restcountries.com/v3.1/all')
+      .then(() => {
+        // Countries data fetched (not used but API call may be needed for future use)
+      })
+      .catch(() => {
+        // Error fetching country data
+      });
+  }, []);
   // Phone number validation
-    const validatePhoneNumber = (phoneNumber, countryCode) => {
-        try {
-            const parsedNumber = phoneUtil.parseAndKeepRawInput(phoneNumber, countryCode.toUpperCase());
-            const isValid = phoneUtil.isValidNumber(parsedNumber);
-            setIsValidPhone(isValid);
-        } catch (error) {
-            setIsValidPhone(false);
-        }
-    };
+  const validatePhoneNumber = (phoneNumber, countryCode) => {
+    try {
+      const parsedNumber = phoneUtil.parseAndKeepRawInput(
+        phoneNumber,
+        countryCode.toUpperCase()
+      );
+      const isValid = phoneUtil.isValidNumber(parsedNumber);
+      setIsValidPhone(isValid);
+    } catch (error) {
+      setIsValidPhone(false);
+    }
+  };
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
@@ -137,77 +143,81 @@ const Account = () => {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
+    // Check required fields
+    const requiredFields = [
+      'employee_first_name',
+      'employee_last_name',
+      'email',
+      'password',
+      'dob',
+      'phoneNumber',
+      'department_name',
+      'designation_name',
+      'street_address',
+      'city',
+      'state',
+      'country',
+      'zipCode',
+    ];
 
-  // Check required fields
-  const requiredFields = [
-    'employee_first_name',
-    'employee_last_name',
-    'email',
-    'password',
-    'dob',
-    'phoneNumber',
-    'department_name',
-    'designation_name',
-    'street_address',
-    'city',
-    'state',
-    'country',
-    'zipCode',
-  ];
+    const emptyFields = requiredFields.filter(
+      (field) => !employeeDetails[field]
+    );
 
-  const emptyFields = requiredFields.filter((field) => !employeeDetails[field]);
+    // If there are empty fields, show error toast
+    if (emptyFields.length > 0) {
+      toast.error(
+        `Please fill out the following fields: ${emptyFields.join(', ')}`
+      );
+      return;
+    }
 
-  // If there are empty fields, show error toast
-  if (emptyFields.length > 0) {
-    toast.error(`Please fill out the following fields: ${emptyFields.join(', ')}`);
-    return;
-  }
+    // Check email format
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@nu\.edu\.pk$/;
+    if (!emailPattern.test(employeeDetails.email)) {
+      toast.error(
+        'Please enter a valid email address (e.g., username@nu.edu.pk)'
+      );
+      return;
+    }
 
-  // Check email format
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@nu\.edu\.pk$/;
-  if (!emailPattern.test(employeeDetails.email)) {
-    toast.error('Please enter a valid email address (e.g., username@nu.edu.pk)');
-    return;
-  }
+    // Check phone number validation
+    if (!isValidPhone) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
 
-  // Check phone number validation
-  if (!isValidPhone) {
-    toast.error('Please enter a valid phone number');
-    return;
-  }
-
-  // Submit form if all validations pass
-  try {
-    employeeDetails.file = file;
-    await axios.post('/api/admin/employee/create', employeeDetails,
-      { headers: { 'Content-Type': 'multipart/form-data' } });
-    toast.success('New employee added successfully.');
-    // Clear all fields after successful submission
-    setEmployeeDetails({
-       email: '',
-    password: '',
-    dob: '',
-    phone: '',
-    department_name: '',
-    designation_name: '',
-    street_address: '',
-    city: '',
-    state: '',
-    country: '',
-    zipCode: '',
-    status: 1,
-    file: null,
-    phoneNumber: '',// or '' if you're using a file input
-    });
-    
-  } catch (error) {
-    toast.error('Failed to add new employee.');
-  }
-};
-
+    // Submit form if all validations pass
+    try {
+      employeeDetails.file = file;
+      await axios.post('/api/admin/employee/create', employeeDetails, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('New employee added successfully.');
+      // Clear all fields after successful submission
+      setEmployeeDetails({
+        email: '',
+        password: '',
+        dob: '',
+        phone: '',
+        department_name: '',
+        designation_name: '',
+        street_address: '',
+        city: '',
+        state: '',
+        country: '',
+        zipCode: '',
+        status: 1,
+        file: null,
+        phoneNumber: '', // or '' if you're using a file input
+      });
+    } catch (error) {
+      toast.error('Failed to add new employee.');
+    }
+  };
 
   return (
     <div
@@ -236,7 +246,11 @@ const handleSubmit = async (e) => {
                       src={profileImage}
                       alt="Profile"
                       className="rounded-circle mb-2"
-                      style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                      }}
                     />
                   </div>
 
@@ -275,14 +289,19 @@ const handleSubmit = async (e) => {
                   )}
 
                   <h6 className="card-title">{employeeDetails.name}</h6>
-                  <p className="card-text text-muted" style={{ fontSize: '0.9rem' }}>
+                  <p
+                    className="card-text text-muted"
+                    style={{ fontSize: '0.9rem' }}
+                  >
                     {employeeDetails.designation}
                   </p>
 
                   {/* Email */}
                   <div className="mb-3 text-start">
-                    <label htmlFor="email" className="form-label">Email</label>
-                   <input
+                    <label htmlFor="email" className="form-label">
+                      Email
+                    </label>
+                    <input
                       type="email"
                       className="form-control"
                       id="email"
@@ -290,13 +309,13 @@ const handleSubmit = async (e) => {
                       onChange={handleChange}
                       required
                     />
-
-      
                   </div>
 
                   {/* Password */}
                   <div className="mb-3 text-start">
-                    <label htmlFor="password" className="form-label">Password</label>
+                    <label htmlFor="password" className="form-label">
+                      Password
+                    </label>
                     <div className="input-group">
                       <input
                         type={showPassword ? 'text' : 'password'}
@@ -320,7 +339,9 @@ const handleSubmit = async (e) => {
                     className="mt-3 p-2 border border-2 border-dashed rounded d-block"
                   >
                     <FaUpload className="text-muted mb-1" size={18} />
-                    <p className="mb-0" style={{ fontSize: '0.8rem' }}>ID Card</p>
+                    <p className="mb-0" style={{ fontSize: '0.8rem' }}>
+                      ID Card
+                    </p>
                     <input
                       type="file"
                       id="idCardUpload"
@@ -334,7 +355,9 @@ const handleSubmit = async (e) => {
                     className="mt-3 p-2 border border-2 border-dashed rounded d-block"
                   >
                     <FaUpload className="text-muted mb-1" size={18} />
-                    <p className="mb-0" style={{ fontSize: '0.8rem' }}>Address Proof</p>
+                    <p className="mb-0" style={{ fontSize: '0.8rem' }}>
+                      Address Proof
+                    </p>
                     <input
                       type="file"
                       id="addressProofUpload"
@@ -346,81 +369,97 @@ const handleSubmit = async (e) => {
               </div>
             </div>
 
-           <div className="col-md-9">
-  <div className="card" style={{ height: '100%' }}>
-    <div className="card-body">
-      <form onSubmit={handleSubmit}>
-        {/* Row for First Name and Last Name */}
-        <div className="row mb-3">
-          {/* First Name Field */}
-          <div className="col-md-6">
-            <label htmlFor="employee_first_name" className="form-label">First Name</label>
-            <input
-              type="text"
-              className="form-control"
-              id="employee_first_name"
-              value={employeeDetails.employee_first_name}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Last Name Field */}
-          <div className="col-md-6">
-            <label htmlFor="employee_last_name" className="form-label">Last Name</label>
-            <input
-              type="text"
-              className="form-control"
-              id="employee_last_name"
-              value={employeeDetails.employee_last_name}
-              onChange={handleChange}
-            />
+            <div className="col-md-9">
+              <div className="card" style={{ height: '100%' }}>
+                <div className="card-body">
+                  <form onSubmit={handleSubmit}>
+                    {/* Row for First Name and Last Name */}
+                    <div className="row mb-3">
+                      {/* First Name Field */}
+                      <div className="col-md-6">
+                        <label
+                          htmlFor="employee_first_name"
+                          className="form-label"
+                        >
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="employee_first_name"
+                          value={employeeDetails.employee_first_name}
+                          onChange={handleChange}
+                        />
                       </div>
-                      
-                    </div>
-                    
-                            
 
-                  
-                  
+                      {/* Last Name Field */}
+                      <div className="col-md-6">
+                        <label
+                          htmlFor="employee_last_name"
+                          className="form-label"
+                        >
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="employee_last_name"
+                          value={employeeDetails.employee_last_name}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
 
                     {/* Other Fields */}
-                   <div className="row mb-2">
-  <div className="col-md-6">
-    <label htmlFor="dob" className="form-label">Date of Birth</label>
-    <input
-      type="date"
-      className="form-control"
-      id="dob"
-      value={employeeDetails.dob}
-      onChange={handleChange}
-    />
-  </div>
-  <div className="col-md-6">
-    <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
-    <PhoneInput
-      country={'us'} // Default country
-      value={employeeDetails.phoneNumber}
-      onChange={(phoneNumber, country) => {
-        validatePhoneNumber(phoneNumber, country.countryCode); // Validate with country code
-        employeeDetails.phoneNumber=phoneNumber; //
-      }}
-      inputClass="form-control form-control-sm"
-      id="phoneNumber"
-      disableDropdown={false} // Allow the dropdown for country selection
-      enableSearch={true} // Allow search in the country dropdown
-      disableCountryCode={false} // Make sure the country code is editable
-      specialLabel="Phone Number" // Label for phone input
-      limitMaxLength={true} // Enforce the length limit based on the country format
-    />
-    {!isValidPhone && <div className="text-danger">Invalid phone number</div>}
-  </div>
-</div>
-
+                    <div className="row mb-2">
+                      <div className="col-md-6">
+                        <label htmlFor="dob" className="form-label">
+                          Date of Birth
+                        </label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          id="dob"
+                          value={employeeDetails.dob}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label htmlFor="phoneNumber" className="form-label">
+                          Phone Number
+                        </label>
+                        <PhoneInput
+                          country={'us'} // Default country
+                          value={employeeDetails.phoneNumber}
+                          onChange={(phoneNumber, country) => {
+                            validatePhoneNumber(
+                              phoneNumber,
+                              country.countryCode
+                            ); // Validate with country code
+                            employeeDetails.phoneNumber = phoneNumber; //
+                          }}
+                          inputClass="form-control form-control-sm"
+                          id="phoneNumber"
+                          disableDropdown={false} // Allow the dropdown for country selection
+                          enableSearch={true} // Allow search in the country dropdown
+                          disableCountryCode={false} // Make sure the country code is editable
+                          specialLabel="Phone Number" // Label for phone input
+                          limitMaxLength={true} // Enforce the length limit based on the country format
+                        />
+                        {!isValidPhone && (
+                          <div className="text-danger">
+                            Invalid phone number
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Dropdowns */}
                     <div className="row mb-2">
                       <div className="col-md-6">
-                        <label htmlFor="department" className="form-label">Department</label>
+                        <label htmlFor="department" className="form-label">
+                          Department
+                        </label>
                         <select
                           className="form-select"
                           id="department_name"
@@ -436,7 +475,9 @@ const handleSubmit = async (e) => {
                         </select>
                       </div>
                       <div className="col-md-6">
-                        <label htmlFor="designation" className="form-label">Designation</label>
+                        <label htmlFor="designation" className="form-label">
+                          Designation
+                        </label>
                         <select
                           className="form-select"
                           id="designation_name"
@@ -445,7 +486,10 @@ const handleSubmit = async (e) => {
                         >
                           <option value="">Select Designation</option>
                           {designations.map((desig) => (
-                            <option key={desig.id} value={desig.designation_name}>
+                            <option
+                              key={desig.id}
+                              value={desig.designation_name}
+                            >
                               {desig.designation_name}
                             </option>
                           ))}
@@ -456,7 +500,9 @@ const handleSubmit = async (e) => {
                     {/* Address Fields */}
                     <div className="row mb-2">
                       <div className="col-md-6">
-                        <label htmlFor="street_address" className="form-label">Street Address</label>
+                        <label htmlFor="street_address" className="form-label">
+                          Street Address
+                        </label>
                         <input
                           type="text"
                           className="form-control"
@@ -466,7 +512,9 @@ const handleSubmit = async (e) => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label htmlFor="city" className="form-label">City</label>
+                        <label htmlFor="city" className="form-label">
+                          City
+                        </label>
                         <input
                           type="text"
                           className="form-control"
@@ -479,7 +527,9 @@ const handleSubmit = async (e) => {
 
                     <div className="row mb-2">
                       <div className="col-md-6">
-                        <label htmlFor="state" className="form-label">State</label>
+                        <label htmlFor="state" className="form-label">
+                          State
+                        </label>
                         <input
                           type="text"
                           className="form-control"
@@ -489,7 +539,9 @@ const handleSubmit = async (e) => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label htmlFor="country" className="form-label">Country</label>
+                        <label htmlFor="country" className="form-label">
+                          Country
+                        </label>
                         <input
                           type="text"
                           className="form-control"
@@ -502,7 +554,9 @@ const handleSubmit = async (e) => {
 
                     <div className="row mb-2">
                       <div className="col-md-6">
-                        <label htmlFor="zipCode" className="form-label">Zip Code</label>
+                        <label htmlFor="zipCode" className="form-label">
+                          Zip Code
+                        </label>
                         <input
                           type="text"
                           className="form-control"
@@ -512,7 +566,9 @@ const handleSubmit = async (e) => {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label htmlFor="status" className="form-label">Status</label>
+                        <label htmlFor="status" className="form-label">
+                          Status
+                        </label>
                         <select
                           className="form-select"
                           id="status"
@@ -524,8 +580,6 @@ const handleSubmit = async (e) => {
                         </select>
                       </div>
                     </div>
-
-
 
                     <div className="text-end">
                       <button type="submit" className="btn btn-primary">

@@ -16,7 +16,9 @@ const ADocuments = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState('Month');
-  const [selectedDepartment, setSelectedDepartment] = useState('Human Resources (HR)');
+  const [selectedDepartment, setSelectedDepartment] = useState(
+    'Human Resources (HR)'
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState([]);
@@ -38,10 +40,13 @@ const ADocuments = () => {
   }, [fetchDocuments]);
 
   // Filter documents based on filters
-  const filteredDocuments = documents.filter(doc => {
+  const filteredDocuments = documents.filter((doc) => {
     const documentYear = new Date(doc.document_receiveDate).getFullYear();
-    const departmentFilter = selectedDepartment === 'Department' || doc.department === selectedDepartment;
-    const monthFilter = selectedMonth === 'Month' || doc.month === selectedMonth;
+    const departmentFilter =
+      selectedDepartment === 'Department' ||
+      doc.department === selectedDepartment;
+    const monthFilter =
+      selectedMonth === 'Month' || doc.month === selectedMonth;
     const yearFilter = documentYear === parseInt(selectedYear, 10);
     return departmentFilter && monthFilter && yearFilter;
   });
@@ -49,7 +54,10 @@ const ADocuments = () => {
   const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredDocuments.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -57,17 +65,20 @@ const ADocuments = () => {
 
   const downloadDocument = async (documentId) => {
     try {
-      const response = await axios.get(`/api/admin/my-documents/download/${documentId}`,{
-        responseType: 'blob',
-      });
+      const response = await axios.get(
+        `/api/admin/my-documents/download/${documentId}`,
+        {
+          responseType: 'blob',
+        }
+      );
 
-       const contentType = response.headers['content-type']; // MIME type
-        const contentDisposition = response.headers['content-disposition']; // File name info
-        const fileName = contentDisposition
-            ? contentDisposition.split('filename=')[1]?.replace(/['"]/g, '') // Extract file name
-            : 'downloaded-document';
+      const contentType = response.headers['content-type']; // MIME type
+      const contentDisposition = response.headers['content-disposition']; // File name info
+      const fileName = contentDisposition
+        ? contentDisposition.split('filename=')[1]?.replace(/['"]/g, '') // Extract file name
+        : 'downloaded-document';
 
-        // Create a Blob with the appropriate type
+      // Create a Blob with the appropriate type
       const blob = new Blob([response.data], { type: contentType });
       //const blob = new Blob([response.data], { type: 'application/pdf' });
       const link = document.createElement('a');
@@ -85,11 +96,17 @@ const ADocuments = () => {
     return <Loader />;
   }
 
-  const departments = ['Department', ...new Set(documents.map(doc => doc.department))];
-  const months = ['Month', ...new Set(documents.map(doc => doc.month))];
+  const departments = [
+    'Department',
+    ...new Set(documents.map((doc) => doc.department)),
+  ];
+  const months = ['Month', ...new Set(documents.map((doc) => doc.month))];
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <div
+      className="d-flex"
+      style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}
+    >
       <SideMenu />
       <div className="flex-grow-1" style={{ padding: '20px' }}>
         <Header title="Documents Management" />
@@ -127,11 +144,13 @@ const ADocuments = () => {
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
               >
-                {Array.from({ length: 10 }, (_, i) => currentYear - i).map(year => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
+                {Array.from({ length: 10 }, (_, i) => currentYear - i).map(
+                  (year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  )
+                )}
               </Form.Select>
             </div>
           </div>
@@ -151,38 +170,45 @@ const ADocuments = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map(doc => (
+                  {currentItems.map((doc) => (
                     <tr key={doc.document_ID}>
                       <td>{doc.name}</td>
                       <td>{doc.document_type}</td>
                       <td>
-                        {new Date(doc.document_receiveDate).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </td>
-                <td>
-                <OverlayTrigger
-                  placement="top"
-                  overlay={
-                    <Tooltip>
-                      {doc.signature_signedAt
-                        ? `Signed At: ${new Date(doc.signature_signedAt).toLocaleDateString('en-GB', {
+                        {new Date(doc.document_receiveDate).toLocaleDateString(
+                          'en-GB',
+                          {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
-                          })}`
-                        : 'Not signed yet'}
-                    </Tooltip>
-                  }
-                >
-                  <span className={`status ${doc.signature_status.toLowerCase()}`}>
-                    {doc.signature_status}
-                  </span>
-                </OverlayTrigger>
-              </td>
-                     
+                          }
+                        )}
+                      </td>
+                      <td>
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={
+                            <Tooltip>
+                              {doc.signature_signedAt
+                                ? `Signed At: ${new Date(
+                                    doc.signature_signedAt
+                                  ).toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}`
+                                : 'Not signed yet'}
+                            </Tooltip>
+                          }
+                        >
+                          <span
+                            className={`status ${doc.signature_status.toLowerCase()}`}
+                          >
+                            {doc.signature_status}
+                          </span>
+                        </OverlayTrigger>
+                      </td>
+
                       <td>{doc.department}</td>
                       <td className="text-center align-middle">
                         <Dropdown align="end">
@@ -190,7 +216,9 @@ const ADocuments = () => {
                             <BsThreeDotsVertical />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="dropdown-menu-end">
-                            <Dropdown.Item onClick={() => downloadDocument(doc.document_ID)}>
+                            <Dropdown.Item
+                              onClick={() => downloadDocument(doc.document_ID)}
+                            >
                               <AiOutlineDownload /> Download
                             </Dropdown.Item>
                           </Dropdown.Menu>

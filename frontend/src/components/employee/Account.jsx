@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Image, Badge } from 'react-bootstrap';
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Table,
+  Image,
+  Badge,
+} from 'react-bootstrap';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import axios from 'axios';
@@ -9,7 +17,8 @@ import Loader from '../Loader';
 const EmpAccount = () => {
   const [employeeData, setEmployeeData] = useState();
   const [loading, setLoading] = useState(true);
-  const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+  const backendURL =
+    process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1250);
@@ -20,7 +29,7 @@ const EmpAccount = () => {
     const fetchEmployeeData = async () => {
       try {
         const token = localStorage.getItem('authToken');
-  
+
         const response = await axios.get(`/api/employees/employee`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -66,7 +75,10 @@ const EmpAccount = () => {
   const isActive = employee_status === 1;
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
+    <div
+      className="d-flex"
+      style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}
+    >
       <SideMenu />
       <div className="flex-grow-1 p-3">
         <Header title="Account" />
@@ -98,7 +110,10 @@ const EmpAccount = () => {
                     transform: 'translateX(-50%)',
                   }}
                 />
-                <Card.Body style={{ marginTop: '60px' }} className="text-center">
+                <Card.Body
+                  style={{ marginTop: '60px' }}
+                  className="text-center"
+                >
                   <Card.Title style={{ fontSize: '1.2rem' }}>
                     {employee_first_name} {employee_last_name}
                   </Card.Title>
@@ -117,7 +132,9 @@ const EmpAccount = () => {
                     <td className="text-muted">Employee ID</td>
                     <td>{employeeID}</td>
                     <td className="text-muted">Name</td>
-                    <td>{employee_first_name} {employee_last_name}</td>
+                    <td>
+                      {employee_first_name} {employee_last_name}
+                    </td>
                   </tr>
                   <tr>
                     <td className="text-muted">Date Of Birth</td>
@@ -141,7 +158,9 @@ const EmpAccount = () => {
                     <td className="text-muted">Joining Date</td>
                     <td>{employee_joining_date}</td>
                     <td className="text-muted">City/State</td>
-                    <td>{city}, {state}</td>
+                    <td>
+                      {city}, {state}
+                    </td>
                   </tr>
                   <tr>
                     <td className="text-muted">Country</td>
@@ -167,7 +186,11 @@ const EmpAccount = () => {
                 <div>
                   <Badge
                     bg={isActive ? 'success' : 'danger'}
-                    style={{ fontSize: '0.85rem', padding: '5px 10px', marginBottom: '10px' }}
+                    style={{
+                      fontSize: '0.85rem',
+                      padding: '5px 10px',
+                      marginBottom: '10px',
+                    }}
                   >
                     {isActive ? 'Active' : 'Disabled'}
                   </Badge>
@@ -175,8 +198,9 @@ const EmpAccount = () => {
                     <p>You are currently active and can access all features.</p>
                   ) : (
                     <p>
-                      Your profile is disabled. You cannot mark attendance, apply for leaves, or perform work-related actions.
-                      Please contact the administrator for assistance.
+                      Your profile is disabled. You cannot mark attendance,
+                      apply for leaves, or perform work-related actions. Please
+                      contact the administrator for assistance.
                     </p>
                   )}
                 </div>

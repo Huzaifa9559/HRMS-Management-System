@@ -14,36 +14,41 @@ const ViewDepartments = () => {
   const location = useLocation();
 
   // Fallback for department if undefined
-  const department =
-    location.state?.department || { name: 'Unknown', designations: 0, employees: 0 };
+  const department = location.state?.department || {
+    name: 'Unknown',
+    designations: 0,
+    employees: 0,
+  };
 
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [designationName, setDesignationName] = useState('');
   const [designations, setDesignations] = useState([]);
 
-    useEffect(() => {
+  useEffect(() => {
     const fetchDesignations = async () => {
       const departmentId = window.location.pathname.split('/').pop();
       try {
-        const response = await axios.get(`/api/admin/designation/view/${departmentId}`);
+        const response = await axios.get(
+          `/api/admin/designation/view/${departmentId}`
+        );
         setDesignations(response.data.data);
       } catch {
         // Error fetching designations
       }
     };
     fetchDesignations();
-    }, [designationName]);
-
+  }, [designationName]);
 
   const filteredDesignations = designations.filter((designation) =>
     designation.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateDesignation = async() => {
+  const handleCreateDesignation = async () => {
     if (designationName) {
       const designationExists = designations.find(
-        (d) => d.name === designationName);
+        (d) => d.name === designationName
+      );
       if (designationExists) {
         toast.error('Designation already exists!');
         setShowModal(false);
@@ -51,10 +56,12 @@ const ViewDepartments = () => {
       }
       try {
         const departmentId = window.location.pathname.split('/').pop();
-          await axios.post('/api/admin/designation/create', { name: designationName,id:departmentId });
-      }
-      catch {
-          // Error creating designation
+        await axios.post('/api/admin/designation/create', {
+          name: designationName,
+          id: departmentId,
+        });
+      } catch {
+        // Error creating designation
       }
       toast.success(`Designation "${designationName}" created successfully!`, {
         position: 'top-right',
@@ -130,9 +137,19 @@ const ViewDepartments = () => {
   };
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
+    <div
+      className="d-flex"
+      style={{
+        backgroundColor: '#f9f9f9',
+        minHeight: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       <SideMenu />
-      <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+      <div
+        className="flex-grow-1 d-flex flex-column p-3"
+        style={{ overflowY: 'auto' }}
+      >
         <Header title="Organization" />
         <div>
           <div style={styles.titleAndButtons}>
@@ -145,7 +162,10 @@ const ViewDepartments = () => {
                 <BiChevronLeft size={20} color="#ffffff" />
                 Back
               </button>
-              <button style={{ ...styles.button, ...styles.createButton }} onClick={() => setShowModal(true)}>
+              <button
+                style={{ ...styles.button, ...styles.createButton }}
+                onClick={() => setShowModal(true)}
+              >
                 Create Designation
               </button>
             </div>

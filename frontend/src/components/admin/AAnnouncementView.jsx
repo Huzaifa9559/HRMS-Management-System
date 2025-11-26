@@ -14,7 +14,9 @@ const AnnouncementView = () => {
     const fetchAnnouncement = async () => {
       const announcementId = window.location.pathname.split('/').pop();
       try {
-        const response = await axios.get(`/api/admin/announcements/view/${announcementId}`);
+        const response = await axios.get(
+          `/api/admin/announcements/view/${announcementId}`
+        );
         setAnnouncement(response.data.data);
       } catch {
         // Error fetching announcement
@@ -24,7 +26,12 @@ const AnnouncementView = () => {
     fetchAnnouncement();
   }, []);
 
-  if (!announcement) return <div><Loader /></div>;
+  if (!announcement)
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
 
   return (
     <>

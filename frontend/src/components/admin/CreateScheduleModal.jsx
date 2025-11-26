@@ -21,7 +21,10 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
 
   // Handle month selection
   const handleMonthChange = (e) => {
-    const value = Array.from(e.target.selectedOptions, (option) => option.value);
+    const value = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
     setNewSchedule((prevState) => ({
       ...prevState,
       months: value,
@@ -57,53 +60,57 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
   };
 
   // Handle form submission
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // Validate input
-  if (!newSchedule.employeeId || newSchedule.months.length === 0 || newSchedule.schedule.length === 0) {
-    toast.error('Please fill in all required fields.');
-    return;
-  }
-
-  // Format the time to the standard format (e.g., "HH:mm") before sending
-  const formattedSchedule = newSchedule.schedule.map((day) => {
-    const { time } = day;
-    
-    if (time) {
-      // Normalize the time input (remove any spaces around the hyphen)
-      const normalizedTime = time.replace(/\s*-\s*/, '-'); // Replaces spaces around the hyphen
-      
-      const [startTime, endTime] = normalizedTime.split('-'); // Split based on the hyphen
-
-      // Function to ensure proper time format (HH:mm)
-      const formatTime = (timeStr) => {
-        const [hours, minutes] = timeStr.split(':');
-        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-      };
-
-      return {
-        ...day,
-        time: `${formatTime(startTime)} - ${formatTime(endTime)}`,
-      };
+    // Validate input
+    if (
+      !newSchedule.employeeId ||
+      newSchedule.months.length === 0 ||
+      newSchedule.schedule.length === 0
+    ) {
+      toast.error('Please fill in all required fields.');
+      return;
     }
 
-    return day;
-  });
+    // Format the time to the standard format (e.g., "HH:mm") before sending
+    const formattedSchedule = newSchedule.schedule.map((day) => {
+      const { time } = day;
 
-  // Update the schedule with formatted times
-  const updatedSchedule = { ...newSchedule, schedule: formattedSchedule };
+      if (time) {
+        // Normalize the time input (remove any spaces around the hyphen)
+        const normalizedTime = time.replace(/\s*-\s*/, '-'); // Replaces spaces around the hyphen
 
-  try {
-    await axios.post('/api/admin/work-schedule', updatedSchedule);
-    onSave(updatedSchedule); // Pass data back to parent component if needed
-    onHide(); // Close the modal
-  } catch {
-    toast.error("Schedule already exists or error creating new work schedule");
-  }
-};
+        const [startTime, endTime] = normalizedTime.split('-'); // Split based on the hyphen
 
+        // Function to ensure proper time format (HH:mm)
+        const formatTime = (timeStr) => {
+          const [hours, minutes] = timeStr.split(':');
+          return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+        };
 
+        return {
+          ...day,
+          time: `${formatTime(startTime)} - ${formatTime(endTime)}`,
+        };
+      }
+
+      return day;
+    });
+
+    // Update the schedule with formatted times
+    const updatedSchedule = { ...newSchedule, schedule: formattedSchedule };
+
+    try {
+      await axios.post('/api/admin/work-schedule', updatedSchedule);
+      onSave(updatedSchedule); // Pass data back to parent component if needed
+      onHide(); // Close the modal
+    } catch {
+      toast.error(
+        'Schedule already exists or error creating new work schedule'
+      );
+    }
+  };
 
   return (
     <Modal show={show} onHide={onHide} size="lg">
@@ -159,12 +166,18 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
           {newSchedule.schedule.map((entry, index) => (
             <div key={index} className="mb-3">
               <Row>
-                <Form.Group as={Col} controlId={`formDay${index}`} className="mb-3">
+                <Form.Group
+                  as={Col}
+                  controlId={`formDay${index}`}
+                  className="mb-3"
+                >
                   <Form.Label>Day</Form.Label>
                   <Form.Control
                     as="select"
                     value={entry.day}
-                    onChange={(e) => handleScheduleChange(index, 'day', e.target.value)}
+                    onChange={(e) =>
+                      handleScheduleChange(index, 'day', e.target.value)
+                    }
                     required
                   >
                     <option value="">Select Day</option>
@@ -178,23 +191,35 @@ const CreateScheduleModal = ({ show, onHide, onSave }) => {
                   </Form.Control>
                 </Form.Group>
 
-                <Form.Group as={Col} controlId={`formScheduleTime${index}`} className="mb-3">
+                <Form.Group
+                  as={Col}
+                  controlId={`formScheduleTime${index}`}
+                  className="mb-3"
+                >
                   <Form.Label>Time</Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="e.g., 9:00 - 18:00"
                     value={entry.time}
-                    onChange={(e) => handleScheduleChange(index, 'time', e.target.value)}
+                    onChange={(e) =>
+                      handleScheduleChange(index, 'time', e.target.value)
+                    }
                     required
                   />
                 </Form.Group>
 
-                <Form.Group as={Col} controlId={`formScheduleLocation${index}`} className="mb-3">
+                <Form.Group
+                  as={Col}
+                  controlId={`formScheduleLocation${index}`}
+                  className="mb-3"
+                >
                   <Form.Label>Location</Form.Label>
                   <Form.Control
                     as="select"
                     value={entry.location}
-                    onChange={(e) => handleScheduleChange(index, 'location', e.target.value)}
+                    onChange={(e) =>
+                      handleScheduleChange(index, 'location', e.target.value)
+                    }
                     required
                   >
                     <option value="">Select location</option>

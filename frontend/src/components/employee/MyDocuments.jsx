@@ -33,7 +33,6 @@ export default function MyDocuments() {
       });
       setMyDocuments(response.data.data);
     } catch (error) {
-      
       toast.error('Failed to load documents.');
     } finally {
       setLoading(false);
@@ -44,7 +43,7 @@ export default function MyDocuments() {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  const filteredDocuments = myDocuments.filter(doc => {
+  const filteredDocuments = myDocuments.filter((doc) => {
     const documentYear = new Date(doc.document_receiveDate).getFullYear();
     return documentYear === parseInt(selectedYear, 10);
   });
@@ -52,14 +51,17 @@ export default function MyDocuments() {
   const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredDocuments.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedYear]);
 
   const openSignatureModal = (documentId) => {
-    const document = myDocuments.find(doc => doc.document_ID === documentId);
+    const document = myDocuments.find((doc) => doc.document_ID === documentId);
     if (document?.signature_status) {
       toast.error('This document is already signed.');
     } else {
@@ -82,7 +84,6 @@ export default function MyDocuments() {
         setShowSignatureModal(false);
         fetchDocuments(); // Refresh the document list
       } catch (error) {
-        
         toast.error('Failed to save the signature.');
       }
     }
@@ -96,10 +97,13 @@ export default function MyDocuments() {
   const downloadDocument = async (documentId) => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get(`/api/employees/my-documents/download/${documentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
-      });
+      const response = await axios.get(
+        `/api/employees/my-documents/download/${documentId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const link = document.createElement('a');
@@ -109,7 +113,6 @@ export default function MyDocuments() {
       link.remove();
       toast.success('Document downloaded successfully.');
     } catch (error) {
-      
       toast.error('Failed to download the document.');
     }
   };
@@ -117,7 +120,10 @@ export default function MyDocuments() {
   if (loading) return <Loader />;
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <div
+      className="d-flex"
+      style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}
+    >
       <SideMenu />
       <div className="flex-grow-1" style={{ padding: '20px' }}>
         <Header title="My Documents" />
@@ -129,11 +135,13 @@ export default function MyDocuments() {
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
             >
-              {Array.from({ length: 10 }, (_, i) => currentYear - i).map(year => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
+              {Array.from({ length: 10 }, (_, i) => currentYear - i).map(
+                (year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                )
+              )}
             </Form.Select>
           </div>
           <Card>
@@ -148,21 +156,26 @@ export default function MyDocuments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map(doc => (
+                  {currentItems.map((doc) => (
                     <tr key={doc.document_ID}>
                       <td>{doc.document_type}</td>
                       <td>
-                        {new Date(doc.document_receiveDate).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
+                        {new Date(doc.document_receiveDate).toLocaleDateString(
+                          'en-GB',
+                          {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          }
+                        )}
                       </td>
                       <td>
                         {doc.signature_status ? (
                           <span className="badge bg-success">Signed</span>
                         ) : (
-                          <span className="badge bg-warning text-dark">Not Signed</span>
+                          <span className="badge bg-warning text-dark">
+                            Not Signed
+                          </span>
                         )}
                       </td>
                       <td className="text-center">
@@ -171,10 +184,16 @@ export default function MyDocuments() {
                             <BsThreeDotsVertical />
                           </Dropdown.Toggle>
                           <Dropdown.Menu>
-                            <Dropdown.Item onClick={() => openSignatureModal(doc.document_ID)}>
+                            <Dropdown.Item
+                              onClick={() =>
+                                openSignatureModal(doc.document_ID)
+                              }
+                            >
                               <AiOutlineEdit /> Sign Document
                             </Dropdown.Item>
-                            <Dropdown.Item onClick={() => downloadDocument(doc.document_ID)}>
+                            <Dropdown.Item
+                              onClick={() => downloadDocument(doc.document_ID)}
+                            >
                               <AiOutlineDownload /> Download
                             </Dropdown.Item>
                           </Dropdown.Menu>
@@ -200,7 +219,11 @@ export default function MyDocuments() {
         </div>
       </div>
 
-      <Modal show={showSignatureModal} onHide={() => setShowSignatureModal(false)} centered>
+      <Modal
+        show={showSignatureModal}
+        onHide={() => setShowSignatureModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Sign Document</Modal.Title>
         </Modal.Header>
@@ -208,7 +231,11 @@ export default function MyDocuments() {
           <SignatureCanvas
             ref={sigCanvas}
             penColor="black"
-            canvasProps={{ width: 400, height: 200, className: 'signature-canvas' }}
+            canvasProps={{
+              width: 400,
+              height: 200,
+              className: 'signature-canvas',
+            }}
           />
         </Modal.Body>
         <Modal.Footer>

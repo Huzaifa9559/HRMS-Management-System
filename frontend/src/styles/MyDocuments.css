@@ -1,21 +1,21 @@
 .status-box {
-    display: inline-block;
-    padding: 3px 6px;
-    /* Reduced padding for smaller boxes */
-    border-radius: 4px;
-    color: white;
-    /* Text color */
-    font-weight: bold;
-    font-size: 0.85rem;
-    /* Slightly smaller font size */
+  display: inline-block;
+  padding: 3px 6px;
+  /* Reduced padding for smaller boxes */
+  border-radius: 4px;
+  color: white;
+  /* Text color */
+  font-weight: bold;
+  font-size: 0.85rem;
+  /* Slightly smaller font size */
 }
 
 .signed {
-    background-color: green;
-    /* Green background for signed */
+  background-color: green;
+  /* Green background for signed */
 }
 
 .not-signed {
-    background-color: red;
-    /* Red background for not signed */
+  background-color: red;
+  /* Red background for not signed */
 }

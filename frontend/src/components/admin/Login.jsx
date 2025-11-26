@@ -7,7 +7,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function Login() {
   const navigate = useNavigate();
-  const {loginAsAdmin } = useAuth();
+  const { loginAsAdmin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -53,8 +53,14 @@ export default function Login() {
       return;
     }
 
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,}$/.test(password)) {
-      setPasswordAlert('Password must be alphanumeric and contain at least one lowercase letter, one uppercase letter, one number, and one symbol');
+    if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,}$/.test(
+        password
+      )
+    ) {
+      setPasswordAlert(
+        'Password must be alphanumeric and contain at least one lowercase letter, one uppercase letter, one number, and one symbol'
+      );
       return;
     }
 
@@ -65,7 +71,8 @@ export default function Login() {
     }
 
     try {
-      const backendURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+      const backendURL =
+        process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${backendURL}/api/admin/auth/login`, {
         method: 'POST',
         headers: {
@@ -84,7 +91,6 @@ export default function Login() {
     } catch (err) {
       setError('An error occurred. Please try again.');
     }
-
   };
 
   const togglePasswordVisibility = () => {
@@ -95,26 +101,62 @@ export default function Login() {
     <div className="container-fluid vh-100">
       <div className="row h-100 align-items-center">
         {/* Left side */}
-        <div className="col-lg-6 d-flex justify-content-center align-items-center text-white p-4 p-lg-5"
+        <div
+          className="col-lg-6 d-flex justify-content-center align-items-center text-white p-4 p-lg-5"
           style={{
             backgroundColor: '#0066ff',
             position: 'relative',
             overflow: 'hidden',
             height: '100%',
-          }}>
-
+          }}
+        >
           {/* Top-left logo */}
-          <div style={{
-            position: 'absolute',
-            top: '20px',
-            left: '20px',
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-            <svg className="bi" width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <rect x="5" y="5" width="15" height="15" rx="4" ry="4" fill="white" transform="rotate(20 12 12)" />
-              <rect x="25" y="10" width="10" height="10" rx="3" ry="3" fill="lightgreen" transform="rotate(10 25 15)" />
-              <rect x="15" y="30" width="15" height="15" rx="4" ry="4" fill="red" transform="rotate(-10 20 36)" />
+          <div
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '20px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <svg
+              className="bi"
+              width="48"
+              height="48"
+              viewBox="0 0 48 48"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect
+                x="5"
+                y="5"
+                width="15"
+                height="15"
+                rx="4"
+                ry="4"
+                fill="white"
+                transform="rotate(20 12 12)"
+              />
+              <rect
+                x="25"
+                y="10"
+                width="10"
+                height="10"
+                rx="3"
+                ry="3"
+                fill="lightgreen"
+                transform="rotate(10 25 15)"
+              />
+              <rect
+                x="15"
+                y="30"
+                width="15"
+                height="15"
+                rx="4"
+                ry="4"
+                fill="red"
+                transform="rotate(-10 20 36)"
+              />
             </svg>
             <span className="ms-2 fs-4 fw-bold">HRMS</span>
           </div>
@@ -133,10 +175,20 @@ export default function Login() {
               strokeLinejoin="round"
               className="login-svg"
             >
-              <rect x="40" y="40" width="120" height="120" rx="10" className="door" />
+              <rect
+                x="40"
+                y="40"
+                width="120"
+                height="120"
+                rx="10"
+                className="door"
+              />
               <path d="M100 80 L100 120" className="door-line" />
               <circle cx="90" cy="100" r="20" className="user-head" />
-              <path d="M90 120 Q90 140 110 140 L130 140" className="user-body" />
+              <path
+                d="M90 120 Q90 140 110 140 L130 140"
+                className="user-body"
+              />
               <path d="M70 100 L50 100" className="arm-left" />
               <path d="M110 100 L130 100" className="arm-right" />
             </svg>
@@ -149,7 +201,9 @@ export default function Login() {
             <h2 className="mb-4 text-center">ADMIN LOGIN</h2>
             <form onSubmit={handleLogin}>
               <div className="mb-3">
-                <label htmlFor="email" className="form-label">Email</label>
+                <label htmlFor="email" className="form-label">
+                  Email
+                </label>
                 <input
                   type="email"
                   placeholder="Enter your email"
@@ -168,7 +222,9 @@ export default function Login() {
               </div>
 
               <div className="mb-3">
-                <label htmlFor="password" className="form-label">Password</label>
+                <label htmlFor="password" className="form-label">
+                  Password
+                </label>
                 <div className="input-group">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -204,7 +260,9 @@ export default function Login() {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
-                <label className="form-check-label" htmlFor="rememberMe">Remember me</label>
+                <label className="form-check-label" htmlFor="rememberMe">
+                  Remember me
+                </label>
               </div>
 
               {error && (
@@ -214,11 +272,15 @@ export default function Login() {
                 </div>
               )}
 
-              <button type="submit" className="btn btn-primary w-100">Log In</button>
+              <button type="submit" className="btn btn-primary w-100">
+                Log In
+              </button>
             </form>
 
             <div className="mt-3 d-flex justify-content-end">
-              <a href="/forgot-password" className="text-decoration-none">Forgot Password?</a>
+              <a href="/forgot-password" className="text-decoration-none">
+                Forgot Password?
+              </a>
             </div>
           </div>
         </div>
@@ -238,11 +300,13 @@ export default function Login() {
           transform-origin: 110px 100px;
         }
 
-        .user-body, .arm-right {
+        .user-body,
+        .arm-right {
           transition: transform 0.3s ease;
         }
 
-        .door, .door-line {
+        .door,
+        .door-line {
           stroke-dasharray: 300;
           stroke-dashoffset: 300;
           animation: draw 2s linear forwards;

@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function ADashboard() {
   const [loading, setLoading] = useState(true);
-  const [showLeaveTable, setShowLeaveTable] = useState(false); 
+  const [showLeaveTable, setShowLeaveTable] = useState(false);
   const navigate = useNavigate();
 
   // States for toggling card collapsibility
@@ -20,7 +20,7 @@ export default function ADashboard() {
   const [totalDesignations, setTotalDesignations] = useState(0);
   const [totalEmployees, setTotalEmployees] = useState(0);
   const [leaveData, setLeaveData] = useState([]);
-  
+
   useEffect(() => {
     const run = async () => {
       try {
@@ -36,8 +36,7 @@ export default function ADashboard() {
         const res4 = await axios.get('/api/admin/leave');
         const firstFiveRecords = res4.data.data.slice(0, 5); // Get the first 5 records
         setLeaveData(firstFiveRecords);
-      }
-      catch {
+      } catch {
         // Error fetching previous data
       }
     };
@@ -52,9 +51,19 @@ export default function ADashboard() {
   }
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
+    <div
+      className="d-flex"
+      style={{
+        backgroundColor: '#f9f9f9',
+        minHeight: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       <SideMenu />
-      <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+      <div
+        className="flex-grow-1 d-flex flex-column p-3"
+        style={{ overflowY: 'auto' }}
+      >
         <Header title="Dashboard" />
         <Container fluid>
           {/* Cards Section */}
@@ -67,8 +76,14 @@ export default function ADashboard() {
               >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
-                    <Card.Title style={{ fontWeight: 'normal' }}>Departments</Card.Title>
-                    {showDepartments && <Card.Text className="h5 mt-2">{totalDepartments}</Card.Text>}
+                    <Card.Title style={{ fontWeight: 'normal' }}>
+                      Departments
+                    </Card.Title>
+                    {showDepartments && (
+                      <Card.Text className="h5 mt-2">
+                        {totalDepartments}
+                      </Card.Text>
+                    )}
                   </div>
                   <Box size={28} color="#4CAF50" />
                 </Card.Body>
@@ -82,8 +97,14 @@ export default function ADashboard() {
               >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
-                    <Card.Title style={{ fontWeight: 'normal' }}>Designations</Card.Title>
-                    {showDesignations && <Card.Text className="h5 mt-2">{totalDesignations }</Card.Text>}
+                    <Card.Title style={{ fontWeight: 'normal' }}>
+                      Designations
+                    </Card.Title>
+                    {showDesignations && (
+                      <Card.Text className="h5 mt-2">
+                        {totalDesignations}
+                      </Card.Text>
+                    )}
                   </div>
                   <Briefcase size={28} color="#9C27B0" />
                 </Card.Body>
@@ -97,8 +118,14 @@ export default function ADashboard() {
               >
                 <Card.Body className="d-flex justify-content-between align-items-center">
                   <div>
-                    <Card.Title style={{ fontWeight: 'normal' }}>Total Active Employees</Card.Title>
-                    {showEmployees && <Card.Text className="h5 mt-2">{ totalEmployees}</Card.Text>}
+                    <Card.Title style={{ fontWeight: 'normal' }}>
+                      Total Active Employees
+                    </Card.Title>
+                    {showEmployees && (
+                      <Card.Text className="h5 mt-2">
+                        {totalEmployees}
+                      </Card.Text>
+                    )}
                   </div>
                   <Users size={28} color="#FF5722" />
                 </Card.Body>
@@ -109,78 +136,128 @@ export default function ADashboard() {
           {/* Leave Table */}
           <Row>
             <Col>
-              <Card className="hover-card" style={{ backgroundColor: '#ffffff', width: '100%' }}>
-              <Card.Header
-                style={{
+              <Card
+                className="hover-card"
+                style={{ backgroundColor: '#ffffff', width: '100%' }}
+              >
+                <Card.Header
+                  style={{
                     backgroundColor: '#ffffff',
                     fontSize: '1.5rem',
                     display: 'flex',
                     justifyContent: 'space-between', // Align header elements horizontally
                     alignItems: 'center', // Vertically center elements
                     cursor: 'pointer',
-                }}
-                onClick={() => setShowLeaveTable(!showLeaveTable)}
+                  }}
+                  onClick={() => setShowLeaveTable(!showLeaveTable)}
                 >
-                <div>
+                  <div>
                     <div>Leave</div>
                     <div
-                    style={{
+                      style={{
                         fontSize: '0.9rem',
                         fontWeight: 'normal',
                         marginTop: '5px',
                         color: '#6c757d',
-                    }}
+                      }}
                     >
-                    Recent Employee's Leave Requests
+                      Recent Employee's Leave Requests
                     </div>
-                </div>
-                <button
+                  </div>
+                  <button
                     className="btn btn-outline-primary btn-sm"
                     style={{
                       fontSize: '0.85rem',
                       padding: '5px 12px', // Adjust padding for better spacing
                     }}
                     onClick={() => navigate('/admin/leave')}
-                >
+                  >
                     View All
-                </button>
+                  </button>
                 </Card.Header>
 
-
                 {showLeaveTable && (
-                  <Card.Body style={{ maxHeight: '300px', overflowY: 'auto', padding: '10px' }}>
+                  <Card.Body
+                    style={{
+                      maxHeight: '300px',
+                      overflowY: 'auto',
+                      padding: '10px',
+                    }}
+                  >
                     <Table responsive size="sm" className="leave-table">
                       <thead>
                         <tr>
-                          <th style={{ color: 'black', fontSize: '1.02rem', fontWeight: 'bold', backgroundColor: '#ffffff' }}>Employee</th>
-                          <th style={{ color: 'black', fontSize: '1.02rem', fontWeight: 'bold', backgroundColor: '#ffffff' }}>Department</th>
-                          <th style={{ color: 'black', fontSize: '1.02rem', fontWeight: 'bold', backgroundColor: '#ffffff' }}>Days</th>
-                          <th style={{ color: 'black', fontSize: '1.02rem', fontWeight: 'bold', backgroundColor: '#ffffff' }}>Status</th>
+                          <th
+                            style={{
+                              color: 'black',
+                              fontSize: '1.02rem',
+                              fontWeight: 'bold',
+                              backgroundColor: '#ffffff',
+                            }}
+                          >
+                            Employee
+                          </th>
+                          <th
+                            style={{
+                              color: 'black',
+                              fontSize: '1.02rem',
+                              fontWeight: 'bold',
+                              backgroundColor: '#ffffff',
+                            }}
+                          >
+                            Department
+                          </th>
+                          <th
+                            style={{
+                              color: 'black',
+                              fontSize: '1.02rem',
+                              fontWeight: 'bold',
+                              backgroundColor: '#ffffff',
+                            }}
+                          >
+                            Days
+                          </th>
+                          <th
+                            style={{
+                              color: 'black',
+                              fontSize: '1.02rem',
+                              fontWeight: 'bold',
+                              backgroundColor: '#ffffff',
+                            }}
+                          >
+                            Status
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {leaveData.map((leave, index) => (
                           <tr key={index} style={{ padding: '10px 0' }}>
-                            <td style={{ padding: '20px 10px' }}>{leave.employee_name}</td>
-                            <td style={{ padding: '20px 10px' }}>{leave.department_name}</td>
-                            <td style={{ padding: '20px 10px' }}>{leave.days}</td>
+                            <td style={{ padding: '20px 10px' }}>
+                              {leave.employee_name}
+                            </td>
+                            <td style={{ padding: '20px 10px' }}>
+                              {leave.department_name}
+                            </td>
+                            <td style={{ padding: '20px 10px' }}>
+                              {leave.days}
+                            </td>
                             <td
                               style={{
-                                  color:
-                                    leave.leave_status === 0
-                                      ? 'blue' // Blue for Pending
-                                      : leave.leave_status === 1
+                                color:
+                                  leave.leave_status === 0
+                                    ? 'blue' // Blue for Pending
+                                    : leave.leave_status === 1
                                       ? 'green' // Green for Approved
                                       : leave.leave_status === 2
-                                      ? 'red' // Orange for Rejecting
-                                      : 'orange', // Red for Rejected
-                                }}
+                                        ? 'red' // Orange for Rejecting
+                                        : 'orange', // Red for Rejected
+                              }}
                             >
                               {leave.leave_status === 1
-                                    ? 'Approved'
-                                    : leave.leave_status === 0
-                                    ? 'Pending'
-                                    : leave.leave_status === 2
+                                ? 'Approved'
+                                : leave.leave_status === 0
+                                  ? 'Pending'
+                                  : leave.leave_status === 2
                                     ? 'Rejected'
                                     : 'Unknown'}
                             </td>

@@ -18,9 +18,15 @@ function ViewDetailsOverlay({ show, onHide, leaveDetails }) {
         <Modal.Title className="w-100 text-center">Leave Details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p><strong>Leave Type:</strong> {leaveDetails.leave_type}</p>
-        <p><strong>Filed on:</strong> {leaveDetails.leave_filedOn}</p>
-        <p><strong>Reason:</strong> {leaveDetails.leave_reason}</p>
+        <p>
+          <strong>Leave Type:</strong> {leaveDetails.leave_type}
+        </p>
+        <p>
+          <strong>Filed on:</strong> {leaveDetails.leave_filedOn}
+        </p>
+        <p>
+          <strong>Reason:</strong> {leaveDetails.leave_reason}
+        </p>
       </Modal.Body>
     </Modal>
   );
@@ -32,7 +38,6 @@ function NewLeaveRequestOverlay({ show, onHide }) {
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Prepare the leave request data
@@ -41,14 +46,13 @@ function NewLeaveRequestOverlay({ show, onHide }) {
       const token = Cookies.get('token'); // Get the token for authorization
       await axios.post('/api/employees/leave/leave-request', leaveRequestData, {
         headers: {
-          'Authorization': `Bearer ${token}`, // Include the token in the request headers
-        }
+          Authorization: `Bearer ${token}`, // Include the token in the request headers
+        },
       });
       onHide(); // Close the modal after successful submission
 
       toast.success('Leave request submitted successfully!'); // Show success notification
       isSubmit = 1;
- 
     } catch (error) {
       toast.error('Failed to submit leave request. Please try again.'); // Show error notification
     }
@@ -61,12 +65,16 @@ function NewLeaveRequestOverlay({ show, onHide }) {
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton>
-        <Modal.Title className="w-100 text-center">New Leave Request</Modal.Title>
+        <Modal.Title className="w-100 text-center">
+          New Leave Request
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Leave Type <span style={{ color: 'red' }}>*</span></Form.Label>
+            <Form.Label>
+              Leave Type <span style={{ color: 'red' }}>*</span>
+            </Form.Label>
             <Row>
               <Col>
                 <div className="position-relative">
@@ -74,7 +82,8 @@ function NewLeaveRequestOverlay({ show, onHide }) {
                     variant="outline-primary"
                     className="w-100 text-start"
                     style={{
-                      borderColor: leaveType === 'Medical' ? '#0d6efd' : '#c1e0ff',
+                      borderColor:
+                        leaveType === 'Medical' ? '#0d6efd' : '#c1e0ff',
                       color: leaveType === 'Medical' ? '#007bff' : '#007bff',
                       backgroundColor: 'transparent',
                       position: 'relative',
@@ -107,7 +116,8 @@ function NewLeaveRequestOverlay({ show, onHide }) {
                     variant="outline-primary"
                     className="w-100 text-start"
                     style={{
-                      borderColor: leaveType === 'Unpaid' ? '#0d6efd' : '#c1e0ff',
+                      borderColor:
+                        leaveType === 'Unpaid' ? '#0d6efd' : '#c1e0ff',
                       color: leaveType === 'Unpaid' ? '#007bff' : '#007bff',
                       backgroundColor: 'transparent',
                       position: 'relative',
@@ -140,7 +150,9 @@ function NewLeaveRequestOverlay({ show, onHide }) {
           <Row className="mb-3">
             <Col>
               <Form.Group>
-                <Form.Label>Leave Date (start) <span style={{ color: 'red' }}>*</span></Form.Label>
+                <Form.Label>
+                  Leave Date (start) <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
                 <Form.Control
                   type="date"
                   value={startDate}
@@ -151,7 +163,9 @@ function NewLeaveRequestOverlay({ show, onHide }) {
             </Col>
             <Col>
               <Form.Group>
-                <Form.Label>Leave Date (end) <span style={{ color: 'red' }}>*</span></Form.Label>
+                <Form.Label>
+                  Leave Date (end) <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
                 <Form.Control
                   type="date"
                   value={endDate}
@@ -206,8 +220,8 @@ export default function Leave() {
         const token = localStorage.getItem('authToken');
         const response = await axios.get(`/api/employees/leave/leave-details`, {
           headers: {
-            'Authorization': `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
-          }
+            Authorization: `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
+          },
         });
         setAllLeaveData(response.data.data);
       } catch (error) {
@@ -249,25 +263,21 @@ export default function Leave() {
     switch (leave.leave_status) {
       case 0:
         variant = { backgroundColor: '#e1ecff', color: '#006eff' };
-        temp = "Pending";
+        temp = 'Pending';
         break;
       case 2:
         variant = { backgroundColor: '#ffe6e6', color: '#ff4d4d' };
-        temp = "Rejected";
+        temp = 'Rejected';
         break;
       case 1:
         variant = { backgroundColor: '#d4f8e8', color: '#28a745' };
-        temp = "Approved";
+        temp = 'Approved';
         break;
       default:
         variant = { backgroundColor: '#f0f0f0', color: '#000' };
     }
 
-    return (
-      <div style={{ ...style, ...variant }}>
-        {temp}
-      </div>
-    );
+    return <div style={{ ...style, ...variant }}>{temp}</div>;
   };
 
   if (loading) {
@@ -276,7 +286,10 @@ export default function Leave() {
   // Calculate the current leaves to display based on pagination
   const indexOfLastLeave = currentPage * itemsPerPage;
   const indexOfFirstLeave = indexOfLastLeave - itemsPerPage;
-  const currentLeaves = getFilteredData().slice(indexOfFirstLeave, indexOfLastLeave);
+  const currentLeaves = getFilteredData().slice(
+    indexOfFirstLeave,
+    indexOfLastLeave
+  );
   // Calculate total pages
   const totalPages = Math.ceil(getFilteredData().length / itemsPerPage);
 
@@ -286,7 +299,10 @@ export default function Leave() {
   };
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
+    <div
+      className="d-flex"
+      style={{ backgroundColor: '#f9f9f9', minHeight: '100vh' }}
+    >
       <SideMenu />
       <div className="flex-grow-1 p-3">
         <Header title="Leave Management" />
@@ -294,7 +310,12 @@ export default function Leave() {
           {/* Tabs to switch between different views */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
-              {['Leave Requests', 'My Pending', 'My Approved', 'My Rejected'].map((tab) => (
+              {[
+                'Leave Requests',
+                'My Pending',
+                'My Approved',
+                'My Rejected',
+              ].map((tab) => (
                 <Button
                   key={tab}
                   variant={activeTab === tab ? 'primary' : 'light'}
@@ -306,8 +327,13 @@ export default function Leave() {
               ))}
             </div>
             <div>
-              <Button variant="success" className="me-2" onClick={() => setShowNewLeaveRequest(true)}>Apply Leave</Button>
-
+              <Button
+                variant="success"
+                className="me-2"
+                onClick={() => setShowNewLeaveRequest(true)}
+              >
+                Apply Leave
+              </Button>
             </div>
           </div>
 
@@ -329,7 +355,13 @@ export default function Leave() {
                   <td>{index + 1 + indexOfFirstLeave}</td>
                   <td>{leave.leave_fromDate}</td>
                   <td>{leave.leave_toDate}</td>
-                  <td>{Math.ceil((new Date(leave.leave_toDate) - new Date(leave.leave_fromDate)) / (1000 * 60 * 60 * 24))}</td>
+                  <td>
+                    {Math.ceil(
+                      (new Date(leave.leave_toDate) -
+                        new Date(leave.leave_fromDate)) /
+                        (1000 * 60 * 60 * 24)
+                    )}
+                  </td>
                   <td>{renderStatusButton(leave)}</td>
                   <td>
                     {/* View Details Button with cyan outline */}
@@ -381,43 +413,45 @@ export default function Leave() {
           </div>
         </div>
         <style jsx>{`
-        .pagination-container {
-          display: flex;
-          gap: 5px;
-        }
+          .pagination-container {
+            display: flex;
+            gap: 5px;
+          }
 
-        .pagination-btn {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          border: 1px solid #ddd;
-          background-color: #f9f9f9;
-          color: #007bff;
-          font-size: 0.9rem;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: background-color 0.3s ease, color 0.3s ease;
-        }
+          .pagination-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            color: #007bff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition:
+              background-color 0.3s ease,
+              color 0.3s ease;
+          }
 
-        .pagination-btn:hover {
-          background-color: #007bff;
-          color: #fff;
-        }
+          .pagination-btn:hover {
+            background-color: #007bff;
+            color: #fff;
+          }
 
-        .pagination-btn.active {
-          background-color: #007bff;
-          color: #fff;
-          font-weight: bold;
-        }
+          .pagination-btn.active {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+          }
 
-        .pagination-btn:disabled {
-          cursor: not-allowed;
-          opacity: 0.5;
-        }
-      `}</style>
+          .pagination-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+          }
+        `}</style>
       </div>
 
       {/* View Details Modal */}

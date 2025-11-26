@@ -28,11 +28,17 @@ describe('LoginComponent', () => {
         <LoginComponent />
       </MemoryRouter>
     );
-    
+
     expect(screen.getByText(/welcome to hrms/i)).toBeInTheDocument();
-    expect(screen.getByText(/please select your login type/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /log in as employee/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /log in as admin/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/please select your login type/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /log in as employee/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /log in as admin/i })
+    ).toBeInTheDocument();
   });
 
   it('should show validation error for empty email', async () => {
@@ -41,8 +47,10 @@ describe('LoginComponent', () => {
         <LoginComponent />
       </MemoryRouter>
     );
-    
-    const employeeButton = screen.getByRole('button', { name: /log in as employee/i });
+
+    const employeeButton = screen.getByRole('button', {
+      name: /log in as employee/i,
+    });
     fireEvent.click(employeeButton);
 
     expect(global.mockNavigate).toHaveBeenCalledWith('/login/employee');
@@ -54,8 +62,10 @@ describe('LoginComponent', () => {
         <LoginComponent />
       </MemoryRouter>
     );
-    
-    const adminButton = screen.getByRole('button', { name: /log in as admin/i });
+
+    const adminButton = screen.getByRole('button', {
+      name: /log in as admin/i,
+    });
     fireEvent.click(adminButton);
 
     expect(global.mockNavigate).toHaveBeenCalledWith('/login/admin');

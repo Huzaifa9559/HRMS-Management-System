@@ -15,11 +15,14 @@ const AnnouncementView = () => {
       const announcementId = window.location.pathname.split('/').pop();
       try {
         const token = localStorage.getItem('authToken');
-        const response = await axios.get(`/api/employees/announcements/view/${announcementId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `/api/employees/announcements/view/${announcementId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setAnnouncement(response.data.data);
       } catch {
         // Error fetching announcement
@@ -29,7 +32,12 @@ const AnnouncementView = () => {
     fetchAnnouncement();
   }, []);
 
-  if (!announcement) return <div><Loader /></div>;
+  if (!announcement)
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
 
   return (
     <>

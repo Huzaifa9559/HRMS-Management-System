@@ -1,60 +1,59 @@
 .loader-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  
-  .loader {
-    position: relative;
-    width: 80px; 
-    height: 80px;
-  }
-  
-  .loader .outer-circle,
-  .loader .inner-circle {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 2px solid transparent; /* Thinner border */
-    border-top-color: #0d6efd; /* Blue color */
-    border-bottom-color: #00F5FF; /* Turquoise color */
-    animation-timing-function: linear;
-  }
-  
-  .loader .outer-circle {
-    border-width: 2px;
-    animation: rotateOuter 2s infinite linear;
-  }
-  
-  .loader .inner-circle {
-    width: 70%;
-    height: 70%;
-    top: 15%;
-    left: 15%;
-    border-width: 1.5px;
-    animation: rotateInner 1s infinite linear reverse;
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-  
-  /* Keyframes for the rotating circles */
-  @keyframes rotateOuter {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+.loader {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.loader .outer-circle,
+.loader .inner-circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid transparent; /* Thinner border */
+  border-top-color: #0d6efd; /* Blue color */
+  border-bottom-color: #00f5ff; /* Turquoise color */
+  animation-timing-function: linear;
+}
+
+.loader .outer-circle {
+  border-width: 2px;
+  animation: rotateOuter 2s infinite linear;
+}
+
+.loader .inner-circle {
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+  border-width: 1.5px;
+  animation: rotateInner 1s infinite linear reverse;
+}
+
+/* Keyframes for the rotating circles */
+@keyframes rotateOuter {
+  from {
+    transform: rotate(0deg);
   }
-  
-  @keyframes rotateInner {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
   }
+}
+
+@keyframes rotateInner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

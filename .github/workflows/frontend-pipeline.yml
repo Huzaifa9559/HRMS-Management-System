@@ -56,25 +56,32 @@ jobs:
           name: frontend-coverage
         continue-on-error: true
 
-      - name: Start frontend application
+      - name: Build frontend application
         working-directory: ./frontend
-        run: |
-          BROWSER=none npm start > /dev/null 2>&1 &
-          echo $! > .react-server.pid
+        run: npm run build
         env:
           CI: true
           REACT_APP_BACKEND_URL: http://localhost:8000
-          PORT: 3000
+
+      - name: Install serve package
+        run: npm install -g serve
+
+      - name: Start frontend application (production build)
+        working-directory: ./frontend
+        run: |
+          serve -s build -l 3000 > /dev/null 2>&1 &
+          echo $! > .react-server.pid
+          sleep 3
 
       - name: Wait for frontend to be ready
         run: |
           echo "Waiting for frontend to start..."
           n=0
-          until curl -f http://localhost:3000 > /dev/null 2>&1 || [ $n -ge 60 ]; do
-            sleep 2
+          until curl -f http://localhost:3000 > /dev/null 2>&1 || [ $n -ge 30 ]; do
+            sleep 1
             n=$((n+1))
           done
-          if [ $n -ge 60 ]; then
+          if [ $n -ge 30 ]; then
             echo "Frontend failed to start"
             exit 1
           fi
@@ -113,7 +120,7 @@ jobs:
             kill $(cat .react-server.pid) 2>/dev/null || true
             rm -f .react-server.pid
           fi
-          pkill -f "react-scripts start" || true
+          pkill -f "serve -s build" || true
 
   # Linting Job
   lint:
@@ -531,31 +538,31 @@ jobs:
 
             # Clean up unused Docker resources
             echo "🧹 Cleaning up unused Docker resources..."
-            
+
             # Show disk usage before cleanup
             echo "📊 Disk usage before cleanup:"
             docker system df
-            
+
             # Remove stopped containers
             echo "🗑️  Removing stopped containers..."
             docker container prune -f
-            
+
             # Remove unused images (but keep images that are in use)
             echo "🗑️  Removing unused images..."
             docker image prune -af --filter "until=24h" || docker image prune -af
-            
+
             # Remove unused volumes (but keep named volumes)
             echo "🗑️  Removing unused volumes..."
             docker volume prune -f
-            
+
             # Remove unused networks (but keep hrms-network)
             echo "🗑️  Removing unused networks..."
             docker network prune -f
-            
+
             # Show disk usage after cleanup
             echo "📊 Disk usage after cleanup:"
             docker system df
-            
+
             echo "✅ Docker cleanup completed"
 
       - name: Create parent directories on server

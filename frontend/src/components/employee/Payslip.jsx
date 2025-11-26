@@ -22,14 +22,16 @@ export default function Payslips() {
       setLoading(true);
       try {
         const token = localStorage.getItem('authToken');
-        const response = await axios.get(`/api/employees/payslips/${selectedYear}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `/api/employees/payslips/${selectedYear}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setPayslips(response.data.data || []);
       } catch (error) {
-        
         toast.error('Failed to fetch payslips. Please try again later.');
       } finally {
         setLoading(false);
@@ -54,10 +56,13 @@ export default function Payslips() {
   const handleDownload = async (payslipId) => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get(`/api/employees/payslips/download/${payslipId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
-      });
+      const response = await axios.get(
+        `/api/employees/payslips/download/${payslipId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const link = document.createElement('a');
@@ -68,7 +73,6 @@ export default function Payslips() {
       link.remove();
       toast.success('Payslip downloaded successfully.');
     } catch (error) {
-      
       toast.error('Failed to download payslip. Please try again.');
     }
   };
@@ -81,7 +85,10 @@ export default function Payslips() {
   if (loading) return <Loader />;
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <div
+      className="d-flex"
+      style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}
+    >
       <SideMenu />
       <div className="flex-grow-1" style={{ padding: '20px' }}>
         <Header title="Payslips" />
@@ -93,11 +100,13 @@ export default function Payslips() {
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
             >
-              {Array.from({ length: 10 }, (_, i) => currentYear - i).map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
+              {Array.from({ length: 10 }, (_, i) => currentYear - i).map(
+                (year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                )
+              )}
             </Form.Select>
           </div>
           <Card>
@@ -115,7 +124,9 @@ export default function Payslips() {
                     <tr key={payslip.payslipID}>
                       <td>{payslip.payslip_monthName}</td>
                       <td>
-                        {new Date(payslip.payslip_receiveDate).toLocaleDateString('en-GB', {
+                        {new Date(
+                          payslip.payslip_receiveDate
+                        ).toLocaleDateString('en-GB', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',

@@ -26,7 +26,9 @@ const ViewAttendance = () => {
   useEffect(() => {
     const fetchDepartmentAttendance = async () => {
       try {
-        const response = await axios.get(`/api/admin/attendance/view-attendance/${departmentId}`);
+        const response = await axios.get(
+          `/api/admin/attendance/view-attendance/${departmentId}`
+        );
         setEmployees(response.data.data[0]);
       } catch {
         // Error fetching department attendance
@@ -133,9 +135,19 @@ const ViewAttendance = () => {
   }
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
+    <div
+      className="d-flex"
+      style={{
+        backgroundColor: '#f9f9f9',
+        minHeight: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       <SideMenu />
-      <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+      <div
+        className="flex-grow-1 d-flex flex-column p-3"
+        style={{ overflowY: 'auto' }}
+      >
         <Header title="Attendance" />
         <div>
           <div style={styles.titleAndButtons}>
@@ -179,7 +191,11 @@ const ViewAttendance = () => {
                   <td style={styles.td}>
                     <button
                       style={styles.button}
-                      onClick={() => navigate('/admin/view-employee-attendance', { state: { employeeId: employee.employeeId } })}
+                      onClick={() =>
+                        navigate('/admin/view-employee-attendance', {
+                          state: { employeeId: employee.employeeId },
+                        })
+                      }
                     >
                       Show Details
                     </button>
@@ -191,8 +207,18 @@ const ViewAttendance = () => {
 
           <div style={styles.pagination}>
             <button
-              style={currentPage === 1 ? { ...styles.pageButton, cursor: 'not-allowed', opacity: 0.6 } : styles.pageButton}
-              onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+              style={
+                currentPage === 1
+                  ? {
+                      ...styles.pageButton,
+                      cursor: 'not-allowed',
+                      opacity: 0.6,
+                    }
+                  : styles.pageButton
+              }
+              onClick={() =>
+                currentPage > 1 && handlePageChange(currentPage - 1)
+              }
               disabled={currentPage === 1}
             >
               Previous
@@ -200,15 +226,29 @@ const ViewAttendance = () => {
             {[...Array(totalPages)].map((_, index) => (
               <button
                 key={index}
-                style={currentPage === index + 1 ? { ...styles.pageButton, ...styles.activePageButton } : styles.pageButton}
+                style={
+                  currentPage === index + 1
+                    ? { ...styles.pageButton, ...styles.activePageButton }
+                    : styles.pageButton
+                }
                 onClick={() => handlePageChange(index + 1)}
               >
                 {index + 1}
               </button>
             ))}
             <button
-              style={currentPage === totalPages ? { ...styles.pageButton, cursor: 'not-allowed', opacity: 0.6 } : styles.pageButton}
-              onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+              style={
+                currentPage === totalPages
+                  ? {
+                      ...styles.pageButton,
+                      cursor: 'not-allowed',
+                      opacity: 0.6,
+                    }
+                  : styles.pageButton
+              }
+              onClick={() =>
+                currentPage < totalPages && handlePageChange(currentPage + 1)
+              }
               disabled={currentPage === totalPages}
             >
               Next

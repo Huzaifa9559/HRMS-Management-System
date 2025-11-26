@@ -11,7 +11,7 @@ import axios from 'axios';
 const ITEMS_PER_PAGE = 6;
 
 export default function Announcements() {
-  const [selectedDepartment, setSelectedDepartment] = useState("Technology");
+  const [selectedDepartment, setSelectedDepartment] = useState('Technology');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [myAnnouncements, setMyAnnouncements] = useState([]);
@@ -45,12 +45,15 @@ export default function Announcements() {
   const fetchAnnouncements = async (department) => {
     try {
       const token = localStorage.getItem('authToken');
-  
-      const response = await axios.get(`/api/employees/announcements?department=${department}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+
+      const response = await axios.get(
+        `/api/employees/announcements?department=${department}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setMyAnnouncements(response.data.data);
     } catch {
       setMyAnnouncements([]);
@@ -83,13 +86,21 @@ export default function Announcements() {
   }
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <div
+      className="d-flex"
+      style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}
+    >
       <SideMenu />
       <div className="flex-grow-1" style={{ padding: '20px' }}>
         <Header title="Announcements" />
         <div className="mt-4">
-          <div className="d-flex justify-content-between align-items-center" style={{ marginTop: '40px', marginBottom: '10px' }}>
-            <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>Announcements List</h5>
+          <div
+            className="d-flex justify-content-between align-items-center"
+            style={{ marginTop: '40px', marginBottom: '10px' }}
+          >
+            <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>
+              Announcements List
+            </h5>
             <Form.Select
               style={{ width: '150px' }}
               value={selectedDepartment}
@@ -120,12 +131,17 @@ export default function Announcements() {
                       <td>{doc.announcement_date}</td>
                       <td className="text-center">
                         <Dropdown align="end">
-                          <Dropdown.Toggle variant="link" className="p-0 custom-dropdown-toggle">
+                          <Dropdown.Toggle
+                            variant="link"
+                            className="p-0 custom-dropdown-toggle"
+                          >
                             <BsThreeDotsVertical />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="custom-dropdown-menu">
                             <Dropdown.Item
-                              onClick={() => handleViewClick(doc.announcementID)}
+                              onClick={() =>
+                                handleViewClick(doc.announcementID)
+                              }
                               className="d-flex align-items-center gap-2"
                             >
                               <AiOutlineEye /> View

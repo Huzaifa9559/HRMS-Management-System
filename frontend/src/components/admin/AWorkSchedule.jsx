@@ -14,7 +14,8 @@ const backendURL = process.env.REACT_APP_BACKEND_URL;
 const WorkSchedule = () => {
   const [scheduleData, setScheduleData] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
+  const [selectedDepartment, setSelectedDepartment] =
+    useState('All Departments');
   const [selectedMonth, setSelectedMonth] = useState('January');
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -42,7 +43,9 @@ const WorkSchedule = () => {
   useEffect(() => {
     const fetchScheduleData = async () => {
       try {
-        const response = await axios.get(`/api/admin/work-schedule/${selectedMonth}`);
+        const response = await axios.get(
+          `/api/admin/work-schedule/${selectedMonth}`
+        );
         setScheduleData(response.data.data);
       } catch {
         toast.error('Error fetching schedule data.');
@@ -67,11 +70,20 @@ const WorkSchedule = () => {
     'December',
   ];
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const days = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
 
   const filteredData = scheduleData.filter((employee) => {
     const departmentMatch =
-      selectedDepartment === 'All Departments' || employee.department_name === selectedDepartment;
+      selectedDepartment === 'All Departments' ||
+      employee.department_name === selectedDepartment;
     return departmentMatch;
   });
 
@@ -90,7 +102,10 @@ const WorkSchedule = () => {
   const handleSave = async () => {
     try {
       // Update the schedule on the backend
-      await axios.put(`/api/admin/work-schedule/${selectedEmployee.id}/${selectedMonth}`, editedSchedule);
+      await axios.put(
+        `/api/admin/work-schedule/${selectedEmployee.id}/${selectedMonth}`,
+        editedSchedule
+      );
 
       // Update the local state
       setScheduleData((prevData) =>
@@ -110,7 +125,10 @@ const WorkSchedule = () => {
 
   const handleCreateNewSchedule = (newSchedule) => {
     // Update state with the newly created schedule
-    setScheduleData((prevData) => [...prevData, { id: prevData.length + 1, ...newSchedule }]);
+    setScheduleData((prevData) => [
+      ...prevData,
+      { id: prevData.length + 1, ...newSchedule },
+    ]);
     setShowCreateModal(false);
     toast.success('New work schedule created successfully!', {
       position: 'top-right',
@@ -123,7 +141,10 @@ const WorkSchedule = () => {
     const format12Hour = (timeString) => {
       const [hours, minutes, seconds] = timeString.split(':');
       const date = new Date(0, 0, 0, hours, minutes, seconds);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     };
 
     return `${format12Hour(startTime)} - ${format12Hour(endTime)}`;
@@ -134,9 +155,19 @@ const WorkSchedule = () => {
   }
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
+    <div
+      className="d-flex"
+      style={{
+        backgroundColor: '#f9f9f9',
+        minHeight: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       <SideMenu />
-      <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+      <div
+        className="flex-grow-1 d-flex flex-column p-3"
+        style={{ overflowY: 'auto' }}
+      >
         <Header title="Work Schedule" />
         <div className="p-4">
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -149,7 +180,10 @@ const WorkSchedule = () => {
                 onChange={(e) => setSelectedDepartment(e.target.value)}
               >
                 {departments.map((department) => (
-                  <option key={department.department_name} value={department.department_name}>
+                  <option
+                    key={department.department_name}
+                    value={department.department_name}
+                  >
                     {department.department_name}
                   </option>
                 ))}
@@ -166,7 +200,10 @@ const WorkSchedule = () => {
                   </option>
                 ))}
               </select>
-              <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+              <Button
+                variant="primary"
+                onClick={() => setShowCreateModal(true)}
+              >
                 <PlusCircle className="me-2" />
                 Create New WorkSchedule
               </Button>
@@ -198,7 +235,11 @@ const WorkSchedule = () => {
                           <td>
                             <div className="d-flex align-items-center gap-2">
                               <img
-                                src={employee.image ? `${backendURL}/uploads/employees/${employee.image}` : null}
+                                src={
+                                  employee.image
+                                    ? `${backendURL}/uploads/employees/${employee.image}`
+                                    : null
+                                }
                                 alt={employee.name}
                                 className="rounded-circle"
                                 width="40"
@@ -206,23 +247,34 @@ const WorkSchedule = () => {
                               />
                               <div>
                                 <div className="fw-medium">{employee.name}</div>
-                                <div className="text-muted small">{employee.role}</div>
+                                <div className="text-muted small">
+                                  {employee.role}
+                                </div>
                               </div>
                             </div>
                           </td>
                           {days.map((day) => {
-                            const daySchedule = employee.schedule.find((s) => s.day === day);
+                            const daySchedule = employee.schedule.find(
+                              (s) => s.day === day
+                            );
                             return (
                               <td key={day} className="text-center">
                                 {daySchedule ? (
                                   <>
-                                    <div className="fw-medium" style={{ fontSize: '0.8rem' }}>
+                                    <div
+                                      className="fw-medium"
+                                      style={{ fontSize: '0.8rem' }}
+                                    >
                                       {formatTimeTo12Hour(daySchedule.time)}
                                     </div>
-                                    <div className="text-muted small">{daySchedule.location}</div>
+                                    <div className="text-muted small">
+                                      {daySchedule.location}
+                                    </div>
                                   </>
                                 ) : (
-                                  <div className="text-muted small">No Schedule</div>
+                                  <div className="text-muted small">
+                                    No Schedule
+                                  </div>
                                 )}
                               </td>
                             );
@@ -269,14 +321,22 @@ const WorkSchedule = () => {
                         <Form.Control
                           type="text"
                           value={s.time}
-                          onChange={(e) => handleScheduleChange(index, 'time', e.target.value)}
+                          onChange={(e) =>
+                            handleScheduleChange(index, 'time', e.target.value)
+                          }
                         />
                       </td>
                       <td>
                         <Form.Control
                           type="text"
                           value={s.location}
-                          onChange={(e) => handleScheduleChange(index, 'location', e.target.value)}
+                          onChange={(e) =>
+                            handleScheduleChange(
+                              index,
+                              'location',
+                              e.target.value
+                            )
+                          }
                         />
                       </td>
                     </tr>

@@ -124,13 +124,26 @@ const LeaveManagement = () => {
           }
         `}
       </style>
-      <div className="d-flex" style={{ backgroundColor: '#f9f9f9', minHeight: '100vh', overflow: 'hidden' }}>
+      <div
+        className="d-flex"
+        style={{
+          backgroundColor: '#f9f9f9',
+          minHeight: '100vh',
+          overflow: 'hidden',
+        }}
+      >
         <SideMenu />
-        <div className="flex-grow-1 d-flex flex-column p-3" style={{ overflowY: 'auto' }}>
+        <div
+          className="flex-grow-1 d-flex flex-column p-3"
+          style={{ overflowY: 'auto' }}
+        >
           <Header title="Leave Management" />
           <main style={{ padding: '20px' }}>
             {/* Button Group */}
-            <div className="d-flex justify-content-start align-items-center mb-4" style={{ gap: '15px' }}>
+            <div
+              className="d-flex justify-content-start align-items-center mb-4"
+              style={{ gap: '15px' }}
+            >
               <button
                 className={`leave-button ${filter === 'All' ? 'active' : ''}`}
                 onClick={() => setFilter('All')}
@@ -175,7 +188,9 @@ const LeaveManagement = () => {
                       <td>{leave.employee_name}</td>
                       <td>{leave.department_name}</td>
                       <td>
-                        <span className={`px-3 py-1 rounded ${getStatusColor(leave.leave_status_label)}`}>
+                        <span
+                          className={`px-3 py-1 rounded ${getStatusColor(leave.leave_status_label)}`}
+                        >
                           {leave.leave_status_label}
                         </span>
                       </td>
@@ -183,7 +198,11 @@ const LeaveManagement = () => {
                       <td>
                         <button
                           className="btn btn-link"
-                          onClick={() => navigate(`/admin/view-employee-leave/${leave.leaveID}/${leave.employeeID}`)}
+                          onClick={() =>
+                            navigate(
+                              `/admin/view-employee-leave/${leave.leaveID}/${leave.employeeID}`
+                            )
+                          }
                         >
                           <Eye className="h-5 w-5" />
                         </button>
@@ -194,7 +213,10 @@ const LeaveManagement = () => {
               </table>
 
               {/* Pagination */}
-              <div className="d-flex justify-content-center align-items-center mt-4" style={{ gap: '15px' }}>
+              <div
+                className="d-flex justify-content-center align-items-center mt-4"
+                style={{ gap: '15px' }}
+              >
                 <button
                   className="btn btn-sm btn-secondary"
                   onClick={goToPreviousPage}
@@ -202,7 +224,9 @@ const LeaveManagement = () => {
                 >
                   Previous
                 </button>
-                <span className="text-muted">Page {currentPage} of {totalPages}</span>
+                <span className="text-muted">
+                  Page {currentPage} of {totalPages}
+                </span>
                 <button
                   className="btn btn-sm btn-secondary"
                   onClick={goToNextPage}

@@ -12,7 +12,8 @@ const ITEMS_PER_PAGE = 10;
 export default function AllEmployeesPayslips() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
+  const [selectedDepartment, setSelectedDepartment] =
+    useState('All Departments');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [payslips, setPayslips] = useState([]);
@@ -38,7 +39,8 @@ export default function AllEmployeesPayslips() {
   const filteredPayslips = useMemo(() => {
     return payslips.filter(
       (payslip) =>
-        (selectedDepartment === 'All Departments' || payslip.department === selectedDepartment) &&
+        (selectedDepartment === 'All Departments' ||
+          payslip.department === selectedDepartment) &&
         (!selectedYear || payslip.payslip_year === Number(selectedYear))
     );
   }, [payslips, selectedDepartment, selectedYear]);
@@ -47,7 +49,10 @@ export default function AllEmployeesPayslips() {
   const totalPages = Math.ceil(filteredPayslips.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = filteredPayslips.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredPayslips.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   // Reset to the first page when filters change
   useEffect(() => {
@@ -57,9 +62,12 @@ export default function AllEmployeesPayslips() {
   // Handle document download
   const handleDownload = async (payslipId) => {
     try {
-      const response = await axios.get(`/api/admin/payslips/download/${payslipId}`, {
-        responseType: 'blob',
-      });
+      const response = await axios.get(
+        `/api/admin/payslips/download/${payslipId}`,
+        {
+          responseType: 'blob',
+        }
+      );
       const contentType = response.headers['content-type']; // MIME type
       const contentDisposition = response.headers['content-disposition']; // File name info
       const fileName = contentDisposition
@@ -88,14 +96,19 @@ export default function AllEmployeesPayslips() {
   ];
 
   return (
-    <div className="d-flex" style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <div
+      className="d-flex"
+      style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}
+    >
       <SideMenu />
       <div className="flex-grow-1" style={{ padding: '20px' }}>
         <Header title="All Employees Payslips" />
         <div className="mt-4">
           {/* Filters */}
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>All Employees Payslips</h5>
+            <h5 style={{ fontWeight: '500', color: '#4b4b4b' }}>
+              All Employees Payslips
+            </h5>
             <div className="d-flex">
               <Form.Select
                 style={{ marginRight: '10px' }}
@@ -113,11 +126,13 @@ export default function AllEmployeesPayslips() {
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
               >
-                {Array.from({ length: 10 }, (_, i) => currentYear - i).map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
+                {Array.from({ length: 10 }, (_, i) => currentYear - i).map(
+                  (year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  )
+                )}
               </Form.Select>
             </div>
           </div>
@@ -141,11 +156,14 @@ export default function AllEmployeesPayslips() {
                       <td>{payslip.department}</td>
                       <td>{payslip.month}</td>
                       <td>
-                        {new Date(payslip.receiveDate).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
+                        {new Date(payslip.receiveDate).toLocaleDateString(
+                          'en-GB',
+                          {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          }
+                        )}
                       </td>
                       <td className="text-end">
                         <button
