@@ -13,18 +13,19 @@ services:
       - ./certbot/www:/var/www/certbot:ro
     networks:
       - hrms-network
-    # Note: depends_on removed - frontend/backend are in separate compose files
-    # They connect via the shared hrms-network, so nginx can reach them by container name
-    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+    # simple, no reload loop needed for now
+    command: ["nginx", "-g", "daemon off;"]
 
-  # Certbot for SSL certificates
+  # Certbot for SSL certificates (used by CI / manual runs)
   certbot:
     image: certbot/certbot
     container_name: hrms-certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - hrms-network
+    # ❗ IMPORTANT: no entrypoint / command override here
 
 networks:
   hrms-network:
