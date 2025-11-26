@@ -127,7 +127,7 @@ jobs:
           port: ${{ secrets.DO_PORT || 22 }}
           script: |
             # Determine the base directory
-            BASE_DIR="/opt/hrms"
+            BASE_DIR="/home/huzaifa/hrms"
             if [ ! -d "$BASE_DIR" ]; then
               BASE_DIR="$HOME/hrms"
               if [ ! -d "$BASE_DIR" ]; then
