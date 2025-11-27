@@ -405,7 +405,30 @@ jobs:
             }
             cd "$BASE_DIR" || exit 1
 
+            # Helper to safely write env values (handles spaces/special chars)
+            write_env() {
+              key="$1"
+              value="$2"
+              needs_quoting=false
+
+              case "$value" in
+                *[!A-Za-z0-9._-]*)
+                  needs_quoting=true
+                  ;;
+              esac
+
+              if [ "$needs_quoting" = true ]; then
+                escaped_value=$(printf '%s' "$value" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\$/\\$/g; s/`/\\`/g')
+                echo "${key}=\"${escaped_value}\"" >> "$BASE_DIR/frontend/.env"
+              else
+                echo "${key}=${value}" >> "$BASE_DIR/frontend/.env"
+              fi
+            }
+
             # Create .env file from GitHub Secrets (automated)
+            ENV_FILE="$BASE_DIR/frontend/.env"
+            : > "$ENV_FILE"
+
             {
               echo "# =========================================="
               echo "# HRMS Application Environment Variables"
@@ -413,39 +436,57 @@ jobs:
               echo "# =========================================="
               echo ""
               echo "# Application Configuration"
-              echo "NODE_ENV=production"
-              echo ""
+            } >> "$ENV_FILE"
+            write_env "NODE_ENV" "production"
+            echo "" >> "$ENV_FILE"
+
+            {
               echo "# Database Configuration"
-              echo "DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}"
-              echo "DB_NAME=${DB_NAME}"
-              echo "DB_USER=${DB_USER}"
-              echo "DB_PASSWORD=${DB_PASSWORD}"
-              echo "DB_PORT=${DB_PORT}"
-              echo "DB_DIALECT=${DB_DIALECT}"
-              echo ""
+            } >> "$ENV_FILE"
+            write_env "DB_ROOT_PASSWORD" "${DB_ROOT_PASSWORD}"
+            write_env "DB_NAME" "${DB_NAME}"
+            write_env "DB_USER" "${DB_USER}"
+            write_env "DB_PASSWORD" "${DB_PASSWORD}"
+            write_env "DB_PORT" "${DB_PORT}"
+            write_env "DB_DIALECT" "${DB_DIALECT}"
+            echo "" >> "$ENV_FILE"
+
+            {
               echo "# Security & Authentication"
-              echo "JWT_SECRET=${JWT_SECRET}"
-              echo ""
+            } >> "$ENV_FILE"
+            write_env "JWT_SECRET" "${JWT_SECRET}"
+            echo "" >> "$ENV_FILE"
+
+            {
               echo "# Email Configuration (SendGrid)"
-              echo "SENDGRID_API_KEY=${SENDGRID_API_KEY}"
-              echo "EMAIL_FROM=${EMAIL_FROM}"
-              echo "EMAIL_FROM_NAME=${EMAIL_FROM_NAME}"
-              echo ""
+            } >> "$ENV_FILE"
+            write_env "SENDGRID_API_KEY" "${SENDGRID_API_KEY}"
+            write_env "EMAIL_FROM" "${EMAIL_FROM}"
+            write_env "EMAIL_FROM_NAME" "${EMAIL_FROM_NAME}"
+            echo "" >> "$ENV_FILE"
+
+            {
               echo "# URL Configuration"
-              echo "FRONTEND_URL=${FRONTEND_URL}"
-              echo "DOMAIN=${DOMAIN}"
-              echo "BACKEND_URL=${BACKEND_URL}"
-              echo ""
+            } >> "$ENV_FILE"
+            write_env "FRONTEND_URL" "${FRONTEND_URL}"
+            write_env "DOMAIN" "${DOMAIN}"
+            write_env "BACKEND_URL" "${BACKEND_URL}"
+            echo "" >> "$ENV_FILE"
+
+            {
               echo "# Frontend Environment Variables (React - for docker-compose)"
-              echo "REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}"
-              echo "REACT_APP_FRONTEND_URL=${REACT_APP_FRONTEND_URL}"
-              echo ""
+            } >> "$ENV_FILE"
+            write_env "REACT_APP_BACKEND_URL" "${REACT_APP_BACKEND_URL}"
+            write_env "REACT_APP_FRONTEND_URL" "${REACT_APP_FRONTEND_URL}"
+            echo "" >> "$ENV_FILE"
+
+            {
               echo "# AWS S3 Configuration (File Storage)"
-              echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
-              echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
-              echo "AWS_REGION=${AWS_REGION}"
-              echo "AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}"
-            } > "$BASE_DIR/frontend/.env"
+            } >> "$ENV_FILE"
+            write_env "AWS_ACCESS_KEY_ID" "${AWS_ACCESS_KEY_ID}"
+            write_env "AWS_SECRET_ACCESS_KEY" "${AWS_SECRET_ACCESS_KEY}"
+            write_env "AWS_REGION" "${AWS_REGION}"
+            write_env "AWS_S3_BUCKET_NAME" "${AWS_S3_BUCKET_NAME}"
 
             # Set secure permissions
             chmod 600 "$BASE_DIR/frontend/.env"
