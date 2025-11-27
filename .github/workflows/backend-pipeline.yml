@@ -756,7 +756,12 @@ jobs:
             fi
 
             # Create shared network if it doesn't exist
-            docker network create hrms-network --driver bridge 2>/dev/null || true
+            if ! docker network inspect hrms-network >/dev/null 2>&1; then
+              echo "📡 Creating hrms-network..."
+              docker network create hrms-network --driver bridge
+            else
+              echo "✅ hrms-network already exists"
+            fi
 
             # Ensure backend directory and docker-compose.yml exist
             if [ ! -d "backend" ]; then
@@ -784,7 +789,9 @@ jobs:
             echo "🧹 Cleaning up existing containers..."
 
             # Stop and remove containers using docker-compose with explicit project name
-            $DOCKER_COMPOSE_CMD -p hrms down --remove-orphans -v 2>/dev/null || true
+            # Note: We use --remove-orphans but NOT -v to preserve MySQL data volume
+            # If you need a fresh database, you can manually remove the volume
+            $DOCKER_COMPOSE_CMD -p hrms down --remove-orphans 2>/dev/null || true
 
             # Force remove any containers with conflicting names (in case they're orphaned)
             docker rm -f hrms-mysql hrms-backend 2>/dev/null || true
@@ -829,19 +836,51 @@ jobs:
               sleep 2
             done
 
+            # Give MySQL a moment to fully stabilize after health check
+            echo "⏳ Waiting additional 3 seconds for MySQL to fully stabilize..."
+            sleep 3
+
+            # Verify MySQL is accessible from network
+            echo "🔍 Verifying MySQL network connectivity..."
+            if $DOCKER_COMPOSE_CMD -p hrms exec -T mysql mysqladmin ping -h "localhost" -u"$MYSQL_ADMIN_USER" --password="$MYSQL_ADMIN_PASSWORD" --silent 2>/dev/null; then
+              echo "✅ MySQL is accessible and ready for migrations"
+            else
+              echo "❌ MySQL is not accessible"
+              exit 1
+            fi
+
             # Run migrations in a one-off backend container
             # Note: docker compose run creates a temporary container with a unique name
             # This is expected behavior - the container name will be something like "hrms-backend-<hash>"
             echo "🔄 Running database migrations (npm run migrate:safe)..."
+            echo "📋 Migration container will use:"
+            echo "   - DB_HOST=mysql"
+            echo "   - DB_USER=${DB_USER}"
+            echo "   - DB_NAME=${DB_NAME}"
+            echo "   - Network: hrms-network"
+
+            # Pass all necessary environment variables to the migration container
+            # The container needs to be on the same network and have all DB credentials
+            # Note: docker compose run automatically uses the network from docker-compose.yml
             if $DOCKER_COMPOSE_CMD -p hrms run --rm \
               -e DOCKER_ENV=true \
+              -e NODE_ENV=production \
               -e DB_HOST=mysql \
+              -e DB_USER="${DB_USER}" \
+              -e DB_PASSWORD="${DB_PASSWORD}" \
+              -e DB_NAME="${DB_NAME}" \
+              -e DB_PORT=3306 \
+              -e DB_DIALECT=mysql \
               backend sh -lc "npm run migrate:safe"; then
               echo "✅ Migrations completed successfully"
             else
               echo "❌ Migration failed. Not starting new backend container."
-              echo "📋 Checking container logs..."
-              $DOCKER_COMPOSE_CMD -p hrms logs backend --tail=50 || true
+              echo "📋 Checking MySQL container status..."
+              $DOCKER_COMPOSE_CMD -p hrms ps mysql || true
+              echo "📋 Checking MySQL logs..."
+              $DOCKER_COMPOSE_CMD -p hrms logs mysql --tail=30 || true
+              echo "📋 Testing network connectivity..."
+              docker network inspect hrms-network || true
               exit 1
             fi
 
