@@ -13,6 +13,7 @@ import Header from './Header';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Loader from '../Loader';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const EmpAccount = () => {
   const [employeeData, setEmployeeData] = useState();
@@ -64,8 +65,9 @@ const EmpAccount = () => {
     employee_image,
   } = employeeData || {};
 
+  // Handle both S3 URLs and local file paths
   const imageURL = employee_image
-    ? `${backendURL}/uploads/employees/${employee_image}`
+    ? getImageUrl(employee_image, backendURL)
     : null;
 
   if (loading) {

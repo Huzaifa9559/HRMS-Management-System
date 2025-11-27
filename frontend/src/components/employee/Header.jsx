@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Image, OverlayTrigger, Popover } from 'react-bootstrap';
 import { PersonCircle, Key, BoxArrowRight } from 'react-bootstrap-icons';
 import axios from 'axios';
+import { getImageUrl } from '../../utils/imageUtils';
 
 export default function Header({ title }) {
   const navigate = useNavigate();
@@ -17,7 +18,8 @@ export default function Header({ title }) {
             Authorization: `Bearer ${token}`, // Replace YOUR_TOKEN_HERE with the actual token
           },
         });
-        setEmployeeData(response.data.data);
+        // API returns { imageUrl: ... }
+        setEmployeeData(response.data.data?.imageUrl || response.data.data);
 
         const response2 = await axios.get(`/api/employees/employee`, {
           headers: {
@@ -35,9 +37,12 @@ export default function Header({ title }) {
 
   const backendURL =
     process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-  const imageURL = employeeData
-    ? `${backendURL}/uploads/employees/${employeeData}`
-    : null;
+  // Handle both S3 URLs and local file paths
+  // employeeData can be either a string (URL or key) or an object with imageUrl
+  const imageValue = typeof employeeData === 'string' 
+    ? employeeData 
+    : employeeData?.imageUrl || employeeData;
+  const imageURL = imageValue ? getImageUrl(imageValue, backendURL) : null;
 
   const profileDetails = {
     name: profileData.name,

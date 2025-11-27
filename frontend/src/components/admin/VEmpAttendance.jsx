@@ -4,6 +4,7 @@ import Header from './Header';
 import Loader from '../Loader';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { getImageUrl } from '../../utils/imageUtils';
 
 export default function DashboardLayout() {
   const [year, setYear] = useState(`${new Date().getFullYear()}`);
@@ -76,7 +77,7 @@ export default function DashboardLayout() {
 
   const backendURL = process.env.REACT_APP_BACKEND_URL;
   const imageURL = employeeData.employee_image
-    ? `${backendURL}/uploads/employees/${employeeData.employee_image}`
+    ? getImageUrl(employeeData.employee_image, backendURL)
     : null;
 
   // const employeeData = {

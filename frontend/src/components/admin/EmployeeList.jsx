@@ -20,6 +20,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { getImageUrl } from '../../utils/imageUtils';
 
 export default function EmployeeList() {
   // State Variables
@@ -220,7 +221,7 @@ export default function EmployeeList() {
                     variant="top"
                     src={
                       employee.employee_image
-                        ? `${backendURL}/uploads/employees/${employee.employee_image}`
+                        ? getImageUrl(employee.employee_image, backendURL)
                         : 'https://via.placeholder.com/150'
                     }
                     className="rounded-circle mx-auto mt-3"

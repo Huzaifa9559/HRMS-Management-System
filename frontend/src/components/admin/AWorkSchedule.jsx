@@ -8,6 +8,7 @@ import Loader from '../Loader';
 import { PlusCircle } from 'react-bootstrap-icons';
 import CreateScheduleModal from './CreateScheduleModal';
 import axios from 'axios';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const backendURL = process.env.REACT_APP_BACKEND_URL;
 
@@ -237,7 +238,7 @@ const WorkSchedule = () => {
                               <img
                                 src={
                                   employee.image
-                                    ? `${backendURL}/uploads/employees/${employee.image}`
+                                    ? getImageUrl(employee.image, backendURL)
                                     : null
                                 }
                                 alt={employee.name}

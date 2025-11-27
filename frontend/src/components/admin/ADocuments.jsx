@@ -98,9 +98,17 @@ const ADocuments = () => {
 
   const departments = [
     'Department',
-    ...new Set(documents.map((doc) => doc.department)),
+    ...new Set(documents.map((doc) => doc.department).filter(Boolean)),
   ];
-  const months = ['Month', ...new Set(documents.map((doc) => doc.month))];
+  // Filter out null/undefined months and ensure we have valid month names
+  const months = [
+    'Month',
+    ...new Set(
+      documents
+        .map((doc) => doc.month)
+        .filter((month) => month && month !== 'Month')
+    ),
+  ];
 
   return (
     <div

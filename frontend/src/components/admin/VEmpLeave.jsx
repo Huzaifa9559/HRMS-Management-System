@@ -7,6 +7,7 @@ import { Bell, User } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from '../Loader';
+import { getImageUrl } from '../../utils/imageUtils';
 
 export default function LeaveManagement() {
   const { leaveID, employeeId } = useParams();
@@ -69,7 +70,7 @@ export default function LeaveManagement() {
   };
   const backendURL = process.env.REACT_APP_BACKEND_URL;
   const imageURL = employeeData.employee_image
-    ? `${backendURL}/uploads/employees/${employeeData.employee_image}`
+    ? getImageUrl(employeeData.employee_image, backendURL)
     : null;
   const isProcessed = () => {
     if (leaveData.leave_status === 0) {

@@ -1,5 +1,6 @@
 name: Nginx Reverse Proxy Deployment
 
+
 on:
   push:
     branches:

@@ -7,6 +7,7 @@ import { FaUpload } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from '../Loader';
+import { getImageUrl } from '../../utils/imageUtils';
 const Account = () => {
   const [profileImage, setProfileImage] = useState(
     'https://tse3.mm.bing.net/th?id=OIP.zSBNiaIRxqsRKRy5WWTDpAHaHa&pid=Api&P=0&h=220'
@@ -60,7 +61,7 @@ const Account = () => {
         const backendURL =
           process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
         const imageURL = employeeRes.data.data.employee_image
-          ? `${backendURL}/uploads/employees/${employeeRes.data.data.employee_image}`
+          ? getImageUrl(employeeRes.data.data.employee_image, backendURL)
           : null;
         setProfileImage(imageURL);
       } catch (error) {

@@ -15,6 +15,7 @@ import axios from 'axios';
 
 import { toast } from 'react-toastify';
 import Loader from '../Loader';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const EmpAccount = () => {
   const [employeeData, setEmployeeData] = useState();
@@ -61,7 +62,7 @@ const EmpAccount = () => {
   } = employeeData || {};
 
   const imageURL = employee_image
-    ? `${backendURL}/uploads/employees/${employee_image}`
+    ? getImageUrl(employee_image, backendURL)
     : 'https://via.placeholder.com/150';
 
   if (loading) {
