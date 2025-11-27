@@ -5,7 +5,7 @@ const Payslip = {};
 
 Payslip.getEmployeePayslips = async function (employeeId, year) {
   const query = `
-    SELECT payslipID, payslip_monthName, payslip_receiveDate
+    SELECT payslipID, payslip_monthName, payslip_receiveDate, payslip_fileName
     FROM Payslip
     WHERE employeeID = ? AND payslip_year = ?;
     `;

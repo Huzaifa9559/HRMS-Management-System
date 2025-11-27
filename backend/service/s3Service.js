@@ -1,13 +1,31 @@
 const AWS = require('aws-sdk');
 
 // Configure AWS S3
+// Default to eu-north-1 based on bucket location
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION || 'eu-north-1',
 });
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
+// Default to eu-north-1 based on bucket location
+const AWS_REGION = process.env.AWS_REGION || 'eu-north-1';
+
+/**
+ * Construct direct S3 URL for a file
+ * @param {string} s3Key - S3 key (path) of the file
+ * @returns {string} Direct S3 URL
+ */
+function getDirectS3Url(s3Key) {
+  if (!BUCKET_NAME || !s3Key) {
+    return null;
+  }
+  
+  // Construct the direct S3 URL
+  // Format: https://bucket-name.s3.region.amazonaws.com/key
+  return `https://${BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${s3Key}`;
+}
 
 /**
  * Upload file to S3
@@ -127,9 +145,9 @@ async function fileExistsInS3(s3Key) {
 /**
  * Get file stream from S3 for downloading
  * @param {string} s3Key - S3 key (path) of the file
- * @returns {Promise<AWS.S3.GetObjectOutput>}
+ * @returns {Stream} - Readable stream from S3
  */
-async function getFileStream(s3Key) {
+function getFileStream(s3Key) {
   if (!BUCKET_NAME) {
     throw new Error('AWS_S3_BUCKET_NAME is not configured');
   }
@@ -154,6 +172,7 @@ async function getFileStream(s3Key) {
 module.exports = {
   uploadToS3,
   getSignedUrl,
+  getDirectS3Url,
   deleteFromS3,
   fileExistsInS3,
   getFileStream,

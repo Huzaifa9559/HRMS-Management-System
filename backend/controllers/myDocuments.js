@@ -9,6 +9,8 @@ const { getSignedUrl, fileExistsInS3 } = require('../service/s3Service');
 const path = require('path');
 const fs = require('fs');
 
+// Note: No longer needed - URLs are now stored directly in the database
+
 exports.getEmployeeMyDocuments = async (req, res) => {
   const token = extractToken(req, res);
   if (!token) return;
@@ -23,6 +25,10 @@ exports.getEmployeeMyDocuments = async (req, res) => {
         'No documents found for this myDocuments'
       );
     }
+    
+    // Note: getDocumentsByEmployeeId doesn't return document_fileName,
+    // so we don't need to convert URLs here. If needed, update the model query.
+    
     return sendResponse(
       res,
       httpStatus.OK,
@@ -47,51 +53,103 @@ exports.downloadDocument = async (req, res) => {
   try {
     const document = await myDocuments.getDocumentNameById(documentId);
 
-    if (!document || !document[0].document_fileName) {
+    if (!document || !document[0]?.document_fileName) {
       return res.status(404).send('Document not found');
     }
 
     const documentFileName = document[0].document_fileName;
+    let s3Key = null;
 
-    // Check if file is stored in S3 (starts with 'documents/')
-    if (documentFileName.startsWith('documents/')) {
-      // S3 file - generate signed URL
+    // Check if it's already a full URL (S3 URL)
+    if (documentFileName.startsWith('http://') || documentFileName.startsWith('https://')) {
+      // Extract S3 key from URL: https://bucket.s3.region.amazonaws.com/documents/...
       try {
-        const exists = await fileExistsInS3(documentFileName);
+        const urlParts = documentFileName.split('.amazonaws.com/');
+        if (urlParts.length > 1) {
+          s3Key = urlParts[1].split('?')[0]; // Remove query params if any
+        } else {
+          // If we can't parse, try to extract from the path
+          const urlObj = new URL(documentFileName);
+          s3Key = urlObj.pathname.substring(1); // Remove leading slash
+        }
+      } catch (error) {
+        console.error('Error parsing S3 URL:', error);
+        return res.status(400).send('Invalid file URL');
+      }
+    } else if (documentFileName.startsWith('documents/')) {
+      // Old format key
+      s3Key = documentFileName;
+    }
+
+    // If we have an S3 key, stream from S3
+    if (s3Key) {
+      try {
+        const exists = await fileExistsInS3(s3Key);
         if (!exists) {
           return res.status(404).send('File not found in S3');
         }
 
-        const signedUrl = await getSignedUrl(documentFileName, 3600); // 1 hour expiry
-        return res.redirect(signedUrl);
-      } catch (error) {
-        console.error('Error generating S3 signed URL:', error);
-        return res.status(500).send('Error generating download URL');
-      }
-    } else {
-      // Local file - fallback for old files
-      const filePath = path.join(
-        __dirname,
-        '../uploads/myDocuments',
-        documentFileName
-      );
+        const { getFileStream } = require('../service/s3Service');
+        const fileStream = getFileStream(s3Key);
+        
+        // Get file extension for content type
+        const ext = path.extname(s3Key).toLowerCase();
+        const contentTypeMap = {
+          '.pdf': 'application/pdf',
+          '.doc': 'application/msword',
+          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          '.xls': 'application/vnd.ms-excel',
+          '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
+        const contentType = contentTypeMap[ext] || 'application/octet-stream';
 
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${path.basename(documentFileName)}"`
-      );
+        res.setHeader('Content-Type', contentType);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${path.basename(s3Key)}"`
+        );
 
-      fs.access(filePath, fs.constants.F_OK, (err) => {
-        if (err) {
-          return res.status(404).send('File not found');
-        }
-        res.download(filePath, (err) => {
-          if (err) {
-            return res.status(500).send('Error downloading the file');
+        fileStream.pipe(res);
+        fileStream.on('error', (error) => {
+          console.error('Error streaming file from S3:', error);
+          if (!res.headersSent) {
+            res.status(500).send('Error downloading the file');
           }
         });
-      });
+        res.on('close', () => {
+          if (fileStream && !fileStream.destroyed) {
+            fileStream.destroy();
+          }
+        });
+        return;
+      } catch (error) {
+        console.error('Error streaming from S3:', error);
+        return res.status(500).send('Error downloading the file');
+      }
     }
+
+    // Local file - fallback for old files
+    const filePath = path.join(
+      __dirname,
+      '../uploads/myDocuments',
+      documentFileName
+    );
+
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${path.basename(documentFileName)}"`
+    );
+
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+      if (err) {
+        return res.status(404).send('File not found');
+      }
+      res.download(filePath, (err) => {
+        if (err) {
+          return res.status(500).send('Error downloading the file');
+        }
+      });
+    });
   } catch (error) {
     console.error('Error fetching document:', error);
     return res.status(500).send('Server error');
@@ -144,15 +202,21 @@ exports.uploadDocument = async (req, res) => {
 
   try {
     // Get file key (S3 key or local filename)
-    // For S3: file.key contains the S3 key
-    // For local: file.filename contains the local filename
-    const fileName = file.key || file.filename;
+    let fileUrl = null;
+    if (file.key && file.key.startsWith('documents/')) {
+      // S3 file - generate full URL
+      const { getDirectS3Url } = require('../service/s3Service');
+      fileUrl = getDirectS3Url(file.key);
+    } else {
+      // Local file - use filename
+      fileUrl = file.filename;
+    }
 
     // Create a new document entry in the database
     const newDoc = {
       employeeId: employeeId,
       title: title,
-      fileName: fileName, // Save S3 key or local filename
+      fileName: fileUrl, // Save full URL or local filename
       uploadedAt: new Date(),
     };
 
@@ -225,10 +289,19 @@ exports.getAllEmployeesDocuments = async (req, res) => {
       );
     }
 
+    // URLs are already stored in database, return directly
+    // Also add a documentUrl field for easier frontend access
+    const documentsWithUrls = allDocuments.map((document) => {
+      if (document.document_fileName) {
+        document.documentUrl = document.document_fileName;
+      }
+      return document;
+    });
+
     return sendResponse(
       res,
       httpStatus.OK,
-      allDocuments,
+      documentsWithUrls,
       'All documents retrieved successfully'
     );
   } catch (error) {

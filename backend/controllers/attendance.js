@@ -4,6 +4,42 @@ const sendResponse = require('../utils/responseUtil');
 const httpStatus = require('../utils/httpStatus');
 const { extractToken } = require('../utils/authUtil'); // Import the extractToken function
 
+/**
+ * Helper function to convert employee image to URL
+ * Handles both old format (key) and new format (full URL)
+ * Also fixes URLs with wrong region
+ * @param {string} imageValue - The image value from database (could be key or URL)
+ * @returns {string} - Full URL or original value
+ */
+function getEmployeeImageUrl(imageValue) {
+  if (!imageValue) {
+    return null;
+  }
+
+  // If it's already a full URL, check if region is correct
+  if (imageValue.startsWith('http://') || imageValue.startsWith('https://')) {
+    // Check if URL has wrong region (us-east-1) and fix it
+    if (imageValue.includes('.s3.us-east-1.amazonaws.com/')) {
+      // Replace wrong region with correct region
+      return imageValue.replace(
+        '.s3.us-east-1.amazonaws.com/',
+        '.s3.eu-north-1.amazonaws.com/'
+      );
+    }
+    // If region is correct or not in standard format, return as is
+    return imageValue;
+  }
+
+  // If it's an old format key (starts with folder name), convert to URL
+  if (imageValue.startsWith('employees/')) {
+    const { getDirectS3Url } = require('../service/s3Service');
+    return getDirectS3Url(imageValue);
+  }
+
+  // For local files, return as is
+  return imageValue;
+}
+
 exports.getEmployeeAttendanceRecords = async (req, res) => {
   const token = extractToken(req, res); // Use the utility function
   if (!token) return; // Exit if token extraction failed
@@ -21,10 +57,19 @@ exports.getEmployeeAttendanceRecords = async (req, res) => {
         'No attendance records found for this Attendance'
       );
     }
+
+    // Convert images to URLs (handles both old key format and new URL format)
+    const recordsWithUrls = attendanceRecords.map((record) => {
+      if (record.employee_image) {
+        record.employee_image = getEmployeeImageUrl(record.employee_image);
+      }
+      return record;
+    });
+
     return sendResponse(
       res,
       httpStatus.OK,
-      attendanceRecords,
+      recordsWithUrls,
       'Attendance records retrieved successfully'
     );
   } catch (error) {
@@ -231,10 +276,19 @@ exports.viewEmployeeAttendanceRecords = async (req, res) => {
         'No attendance records found for this Attendance'
       );
     }
+
+    // Convert images to URLs (handles both old key format and new URL format)
+    const recordsWithUrls = attendanceRecords.map((record) => {
+      if (record.employee_image) {
+        record.employee_image = getEmployeeImageUrl(record.employee_image);
+      }
+      return record;
+    });
+
     return sendResponse(
       res,
       httpStatus.OK,
-      attendanceRecords,
+      recordsWithUrls,
       'Attendance records retrieved successfully'
     );
   } catch (error) {
@@ -261,10 +315,19 @@ exports.viewAttendanceStats = async (req, res) => {
         'No attendance records found for this Attendance'
       );
     }
+
+    // Convert images to URLs (handles both old key format and new URL format)
+    const recordsWithUrls = attendanceRecords.map((record) => {
+      if (record.employee_image) {
+        record.employee_image = getEmployeeImageUrl(record.employee_image);
+      }
+      return record;
+    });
+
     return sendResponse(
       res,
       httpStatus.OK,
-      attendanceRecords,
+      recordsWithUrls,
       'Attendance records retrieved successfully'
     );
   } catch (error) {

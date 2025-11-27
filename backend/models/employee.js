@@ -404,15 +404,38 @@ Employee.updateEmployeeById = async function (employeeId, updatedData) {
     }
 
     if (updatedData.employee_image) {
-      await sequelize.query(
-        `UPDATE employee_images
-                SET employee_image_fileName=?
-                WHERE employeeID=? `,
+      // Check if image record exists
+      const [existingImage] = await sequelize.query(
+        `SELECT employeeImageID FROM employee_images WHERE employeeID = ?`,
         {
-          replacements: [updatedData.employee_image, employeeId],
-          transaction: t, // Using the transaction here
+          replacements: [employeeId],
+          type: Sequelize.QueryTypes.SELECT,
+          transaction: t,
         }
       );
+
+      if (existingImage) {
+        // Update existing image record
+        await sequelize.query(
+          `UPDATE employee_images
+                  SET employee_image_fileName=?
+                  WHERE employeeID=? `,
+          {
+            replacements: [updatedData.employee_image, employeeId],
+            transaction: t,
+          }
+        );
+      } else {
+        // Insert new image record if it doesn't exist
+        await sequelize.query(
+          `INSERT INTO employee_images (employeeID, employee_image_fileName)
+                  VALUES (?, ?)`,
+          {
+            replacements: [employeeId, updatedData.employee_image],
+            transaction: t,
+          }
+        );
+      }
     }
 
     if (updatedData.designation_name) {

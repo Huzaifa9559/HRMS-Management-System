@@ -70,9 +70,9 @@ myDocuments.getAllDocuments = async function () {
         d.employeeID, 
         CONCAT(e.employee_first_name, ' ', e.employee_last_name) AS name, 
         s.signature_signedAt,
-        MONTHNAME(d.document_receiveDate) AS month,
+        COALESCE(MONTHNAME(d.document_receiveDate), 'Unknown') AS month,
         YEAR(d.document_receiveDate) AS year,
-        deP.department_name AS department
+        COALESCE(dep.department_name, 'Unknown') AS department
     FROM Documents d
     LEFT JOIN Signatures s ON d.document_ID = s.document_ID
     LEFT JOIN Employee e ON d.employeeID = e.employeeID

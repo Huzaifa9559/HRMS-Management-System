@@ -5,6 +5,42 @@ const httpStatus = require('../utils/httpStatus');
 const { extractToken } = require('../utils/authUtil');
 const { sendCreateAccountLink } = require('../service/emailService');
 
+/**
+ * Helper function to convert employee image to URL
+ * Handles both old format (key) and new format (full URL)
+ * Also fixes URLs with wrong region
+ * @param {string} imageValue - The image value from database (could be key or URL)
+ * @returns {string} - Full URL or original value
+ */
+function getEmployeeImageUrl(imageValue) {
+  if (!imageValue) {
+    return null;
+  }
+
+  // If it's already a full URL, check if region is correct
+  if (imageValue.startsWith('http://') || imageValue.startsWith('https://')) {
+    // Check if URL has wrong region (us-east-1) and fix it
+    if (imageValue.includes('.s3.us-east-1.amazonaws.com/')) {
+      // Replace wrong region with correct region
+      return imageValue.replace(
+        '.s3.us-east-1.amazonaws.com/',
+        '.s3.eu-north-1.amazonaws.com/'
+      );
+    }
+    // If region is correct or not in standard format, return as is
+    return imageValue;
+  }
+
+  // If it's an old format key (starts with folder name), convert to URL
+  if (imageValue.startsWith('employees/')) {
+    const { getDirectS3Url } = require('../service/s3Service');
+    return getDirectS3Url(imageValue);
+  }
+
+  // For local files, return as is
+  return imageValue;
+}
+
 exports.EmployeeDetailsById = async (req, res) => {
   const token = extractToken(req, res); // Use the utility function
   if (!token) return;
@@ -19,6 +55,12 @@ exports.EmployeeDetailsById = async (req, res) => {
         'Employee not found'
       );
     }
+
+    // Convert image to URL (handles both old key format and new URL format)
+    if (employee.employee_image) {
+      employee.employee_image = getEmployeeImageUrl(employee.employee_image);
+    }
+
     return sendResponse(
       res,
       httpStatus.OK,
@@ -100,10 +142,19 @@ exports.getEmployeesDetails = async (req, res) => {
         'No employees found'
       );
     }
+
+    // Convert images to URLs (handles both old key format and new URL format)
+    const employeesWithUrls = employees.map((employee) => {
+      if (employee.employee_image) {
+        employee.employee_image = getEmployeeImageUrl(employee.employee_image);
+      }
+      return employee;
+    });
+
     return sendResponse(
       res,
       httpStatus.OK,
-      employees,
+      employeesWithUrls,
       'Employees retrieved successfully'
     );
   } catch (error) {
@@ -194,6 +245,12 @@ exports.getEmployeeDetailByID = async (req, res) => {
         'Employee not found'
       );
     }
+
+    // Convert image to URL (handles both old key format and new URL format)
+    if (employee.employee_image) {
+      employee.employee_image = getEmployeeImageUrl(employee.employee_image);
+    }
+
     return sendResponse(
       res,
       httpStatus.OK,
@@ -237,10 +294,10 @@ exports.getEmployeeImageFileName = async (req, res) => {
       );
     }
 
-    const imageFileName =
+    const imageUrl =
       typeof imageRecord === 'string' ? imageRecord : imageRecord.imageFileName;
 
-    if (!imageFileName) {
+    if (!imageUrl) {
       return sendResponse(
         res,
         httpStatus.NOT_FOUND,
@@ -248,34 +305,15 @@ exports.getEmployeeImageFileName = async (req, res) => {
         'Employee image not found'
       );
     }
-    let imageUrl = imageFileName;
 
-    // If image is stored in S3, generate signed URL
-    if (imageFileName.startsWith('employees/')) {
-      try {
-        const {
-          getSignedUrl,
-          fileExistsInS3,
-        } = require('../service/s3Service');
-        const exists = await fileExistsInS3(imageFileName);
-        if (exists) {
-          imageUrl = await getSignedUrl(imageFileName, 3600); // 1 hour expiry
-        }
-      } catch (error) {
-        console.error(
-          'Error generating S3 signed URL for employee image:',
-          error
-        );
-        // Fall back to filename if S3 URL generation fails
-      }
-    }
+    // Convert image to URL (handles both old key format and new URL format)
+    const finalImageUrl = getEmployeeImageUrl(imageUrl);
 
     return sendResponse(
       res,
       httpStatus.OK,
       {
-        imageFileName: imageFileName,
-        imageUrl: imageUrl,
+        imageUrl: finalImageUrl,
       },
       'Employee image retrieved successfully'
     );
@@ -294,16 +332,27 @@ exports.getEmployeeImageFileName = async (req, res) => {
 exports.addEmployee = async (req, res) => {
   try {
     const file = req.file;
-    // Get S3 key or local filename
-    const filename = file ? file.key || file.filename : null;
-    const employees = await Employee.createNewEmployee(req.body, filename);
+    let imageUrl = null;
 
-    if (!employees || employees.length === 0) {
+    if (file) {
+      // If file is uploaded to S3, generate the full URL
+      if (file.key && file.key.startsWith('employees/')) {
+        const { getDirectS3Url } = require('../service/s3Service');
+        imageUrl = getDirectS3Url(file.key);
+      } else {
+        // Local file - use filename
+        imageUrl = file.filename;
+      }
+    }
+
+    const result = await Employee.createNewEmployee(req.body, imageUrl);
+
+    if (!result || !result.success) {
       return sendResponse(
         res,
-        httpStatus.NOT_FOUND,
+        httpStatus.INTERNAL_SERVER_ERROR,
         null,
-        'No employees found'
+        'Failed to create employee'
       );
     }
 
@@ -315,14 +364,19 @@ exports.addEmployee = async (req, res) => {
       // Continue even if email fails - employee is already created
     }
 
-    return sendResponse(res, httpStatus.OK, null, 'Added successfully');
+    return sendResponse(
+      res,
+      httpStatus.OK,
+      { employeeID: result.employeeID },
+      'Employee added successfully'
+    );
   } catch (error) {
-    console.error(error);
+    console.error('Error adding employee:', error);
     return sendResponse(
       res,
       httpStatus.INTERNAL_SERVER_ERROR,
       null,
-      'Error:',
+      'Error creating employee',
       error.message
     );
   }
@@ -342,8 +396,14 @@ exports.editEmployee = async (req, res) => {
 
   try {
     if (file) {
-      // Get S3 key or local filename
-      updatedData.employee_image = file.key || file.filename;
+      // If file is uploaded to S3, generate the full URL
+      if (file.key && file.key.startsWith('employees/')) {
+        const { getDirectS3Url } = require('../service/s3Service');
+        updatedData.employee_image = getDirectS3Url(file.key);
+      } else {
+        // Local file - use filename
+        updatedData.employee_image = file.filename;
+      }
     }
     const employee = await Employee.updateEmployeeById(employeeId, updatedData); // Update employee details
     if (!employee) {
