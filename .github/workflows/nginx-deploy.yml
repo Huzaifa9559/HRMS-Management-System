@@ -176,22 +176,30 @@ jobs:
             }
 
             # Check if SSL certificates exist using Docker (avoids permission issues)
+            # if ! has_cert; then
+            #   echo "⚠️  SSL certificates not found yet, using HTTP-only config for now"
+            #   if [ -f "nginx.conf.initial" ]; then
+            #     cp nginx.conf.initial nginx.conf
+            #   fi
+            # else
+            #   echo "✅ SSL certificates found, using SSL-enabled config"
+            #   if [ -f "nginx.conf.backup" ]; then
+            #     cp nginx.conf.backup nginx.conf
+            #   elif [ -f "nginx.conf" ] && ! grep -q "ssl_certificate" nginx.conf 2>/dev/null; then
+            #     echo "⚠️  SSL certificates exist but nginx.conf doesn't have SSL config"
+            #     echo "   Using HTTP-only config for now"
+            #     if [ -f "nginx.conf.initial" ]; then
+            #       cp nginx.conf.initial nginx.conf
+            #     fi
+            #   fi
+            # fi
+
             if ! has_cert; then
-              echo "⚠️  SSL certificates not found yet, using HTTP-only config for now"
-              if [ -f "nginx.conf.initial" ]; then
-                cp nginx.conf.initial nginx.conf
-              fi
+              echo "⚠️  No SSL cert yet - using HTTP-only config"
+              cp nginx.conf.initial nginx.conf
             else
-              echo "✅ SSL certificates found, using SSL-enabled config"
-              if [ -f "nginx.conf.backup" ]; then
-                cp nginx.conf.backup nginx.conf
-              elif [ -f "nginx.conf" ] && ! grep -q "ssl_certificate" nginx.conf 2>/dev/null; then
-                echo "⚠️  SSL certificates exist but nginx.conf doesn't have SSL config"
-                echo "   Using HTTP-only config for now"
-                if [ -f "nginx.conf.initial" ]; then
-                  cp nginx.conf.initial nginx.conf
-                fi
-              fi
+              echo "✅ SSL certs found - using main nginx.conf from repo"
+              # DO NOT touch nginx.conf here; it's already written by the previous step
             fi
 
             # Start/restart nginx container
