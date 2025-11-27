@@ -1,6 +1,5 @@
 name: Backend CI/CD Pipeline
 
-
 on:
   push:
     branches:
@@ -788,19 +787,45 @@ jobs:
 
             # Clean up any existing containers to avoid conflicts
             # IMPORTANT: Only clean up backend-related containers, NOT nginx or frontend
+            # CRITICAL: Preserve MySQL data volume to prevent data loss
             echo "🧹 Cleaning up existing backend containers..."
+
+            # Check if MySQL volume exists before cleanup
+            echo "📦 Checking MySQL data volume..."
+            MYSQL_VOLUME_NAME="hrms_mysql_data"
+            if docker volume inspect "$MYSQL_VOLUME_NAME" >/dev/null 2>&1; then
+              echo "✅ MySQL data volume exists: $MYSQL_VOLUME_NAME"
+              VOLUME_EXISTS=true
+            else
+              echo "⚠️  MySQL data volume not found: $MYSQL_VOLUME_NAME"
+              VOLUME_EXISTS=false
+            fi
 
             # Stop and remove containers using docker-compose with explicit project name
             # This only affects containers defined in backend/docker-compose.yml
-            # Note: We use --remove-orphans but NOT -v to preserve MySQL data volume
-            # If you need a fresh database, you can manually remove the volume
+            # CRITICAL: We use --remove-orphans but NOT -v to preserve MySQL data volume
+            # The -v flag would remove volumes, which would delete all database data!
+            echo "🛑 Stopping backend containers (preserving volumes)..."
             $DOCKER_COMPOSE_CMD -p hrms down --remove-orphans 2>/dev/null || true
 
             # Force remove only backend-related containers (not nginx or frontend)
             # Explicitly target only hrms-mysql and hrms-backend
             # Do NOT remove: hrms-nginx, hrms-frontend, hrms-certbot
+            # Note: docker rm does NOT remove volumes, only containers
             echo "Removing backend containers: hrms-mysql, hrms-backend"
             docker rm -f hrms-mysql hrms-backend 2>/dev/null || true
+
+            # Verify MySQL volume still exists after cleanup
+            if docker volume inspect "$MYSQL_VOLUME_NAME" >/dev/null 2>&1; then
+              echo "✅ MySQL data volume preserved: $MYSQL_VOLUME_NAME"
+            else
+              if [ "$VOLUME_EXISTS" = "true" ]; then
+                echo "❌ WARNING: MySQL data volume was removed! This should not happen."
+                echo "   The volume should have been preserved."
+              else
+                echo "ℹ️  MySQL data volume will be created on first start"
+              fi
+            fi
 
             # Verify we're NOT touching nginx or frontend containers
             echo "✅ Preserving nginx and frontend containers (hrms-nginx, hrms-frontend, hrms-certbot)"
@@ -815,6 +840,19 @@ jobs:
             # Ensure MySQL service is running
             echo "🚀 Ensuring MySQL service is running..."
             $DOCKER_COMPOSE_CMD -p hrms up -d mysql
+
+            # Verify MySQL volume is being used
+            echo "📦 Verifying MySQL data volume..."
+            sleep 2  # Give MySQL a moment to start
+            if docker volume inspect hrms_mysql_data >/dev/null 2>&1; then
+              echo "✅ MySQL data volume is present: hrms_mysql_data"
+              VOLUME_INFO=$(docker volume inspect hrms_mysql_data --format '{{.Mountpoint}}' 2>/dev/null || echo "")
+              if [ -n "$VOLUME_INFO" ]; then
+                echo "   Volume mount point: $VOLUME_INFO"
+              fi
+            else
+              echo "⚠️  MySQL data volume not found, it will be created"
+            fi
 
             # Wait for MySQL to be ready (using root or DB user)
             MYSQL_ADMIN_USER="root"

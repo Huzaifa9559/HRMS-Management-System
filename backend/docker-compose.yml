@@ -97,6 +97,7 @@ services:
 volumes:
   mysql_data:
     driver: local
+    name: hrms_mysql_data # Explicit name to ensure persistence across deployments
 
 networks:
   hrms-network:
