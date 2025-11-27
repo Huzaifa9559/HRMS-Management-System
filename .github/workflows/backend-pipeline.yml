@@ -1,7 +1,5 @@
 name: Backend CI/CD Pipeline
 
-
-
 on:
   push:
     branches:
@@ -788,22 +786,27 @@ jobs:
             set +a
 
             # Clean up any existing containers to avoid conflicts
-            echo "🧹 Cleaning up existing containers..."
+            # IMPORTANT: Only clean up backend-related containers, NOT nginx or frontend
+            echo "🧹 Cleaning up existing backend containers..."
 
             # Stop and remove containers using docker-compose with explicit project name
+            # This only affects containers defined in backend/docker-compose.yml
             # Note: We use --remove-orphans but NOT -v to preserve MySQL data volume
             # If you need a fresh database, you can manually remove the volume
             $DOCKER_COMPOSE_CMD -p hrms down --remove-orphans 2>/dev/null || true
 
-            # Force remove any containers with conflicting names (in case they're orphaned)
+            # Force remove only backend-related containers (not nginx or frontend)
+            # Explicitly target only hrms-mysql and hrms-backend
+            # Do NOT remove: hrms-nginx, hrms-frontend, hrms-certbot
+            echo "Removing backend containers: hrms-mysql, hrms-backend"
             docker rm -f hrms-mysql hrms-backend 2>/dev/null || true
 
-            # Also check for containers with the project name prefix and remove them
-            EXISTING_CONTAINERS=$(docker ps -a --filter "name=hrms-" --format "{{.Names}}" 2>/dev/null || true)
-            if [ -n "$EXISTING_CONTAINERS" ]; then
-              echo "Found existing containers: $EXISTING_CONTAINERS"
-              echo "$EXISTING_CONTAINERS" | xargs -r docker rm -f 2>/dev/null || true
-            fi
+            # Verify we're NOT touching nginx or frontend containers
+            echo "✅ Preserving nginx and frontend containers (hrms-nginx, hrms-frontend, hrms-certbot)"
+
+            # Show what containers are still running (should include nginx and frontend)
+            echo "📋 Remaining containers:"
+            docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "hrms-|NAMES" || true
 
             # Small delay to ensure cleanup is complete
             sleep 2
