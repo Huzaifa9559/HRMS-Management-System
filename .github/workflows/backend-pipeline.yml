@@ -830,11 +830,18 @@ jobs:
             done
 
             # Run migrations in a one-off backend container
+            # Note: docker compose run creates a temporary container with a unique name
+            # This is expected behavior - the container name will be something like "hrms-backend-<hash>"
             echo "🔄 Running database migrations (npm run migrate:safe)..."
-            if $DOCKER_COMPOSE_CMD -p hrms run --rm backend sh -lc "npm run migrate:safe"; then
+            if $DOCKER_COMPOSE_CMD -p hrms run --rm \
+              -e DOCKER_ENV=true \
+              -e DB_HOST=mysql \
+              backend sh -lc "npm run migrate:safe"; then
               echo "✅ Migrations completed successfully"
             else
               echo "❌ Migration failed. Not starting new backend container."
+              echo "📋 Checking container logs..."
+              $DOCKER_COMPOSE_CMD -p hrms logs backend --tail=50 || true
               exit 1
             fi
 

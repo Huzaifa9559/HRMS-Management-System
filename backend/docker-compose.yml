@@ -49,6 +49,7 @@ services:
       # Application Configuration
       - NODE_ENV=production
       - PORT=8000
+      - DOCKER_ENV=true
 
       # Database Configuration
       - DB_HOST=mysql

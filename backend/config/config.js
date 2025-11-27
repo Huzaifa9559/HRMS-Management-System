@@ -7,12 +7,17 @@ if (dbHost === 'mysql' && !process.env.DOCKER_ENV) {
   dbHost = 'localhost';
 }
 
+// Default to 127.0.0.1 if DB_HOST is not set
+if (!dbHost) {
+  dbHost = '127.0.0.1';
+}
+
 module.exports = {
   development: {
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    host:  "127.0.0.1",
+    host: dbHost || '127.0.0.1',
     port: process.env.DB_PORT || 3306,
     dialect: process.env.DB_DIALECT || 'mysql',
   },
@@ -20,7 +25,7 @@ module.exports = {
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    host:  "127.0.0.1",
+    host: dbHost || '127.0.0.1',
     port: process.env.DB_PORT || 3306,
     dialect: process.env.DB_DIALECT || 'mysql',
   },
@@ -28,7 +33,7 @@ module.exports = {
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    host: "127.0.0.1",
+    host: dbHost || '127.0.0.1',
     port: process.env.DB_PORT || 3306,
     dialect: process.env.DB_DIALECT || 'mysql',
   },
