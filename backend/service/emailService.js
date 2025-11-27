@@ -8,7 +8,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Email configuration
 const EMAIL_FROM = process.env.EMAIL_FROM || 'no-reply@kitor.io';
-const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'Xylobit HRMS';
+const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'HRMS Platform';
 
 exports.sendResetLink = (email, id) => {
   return new Promise((resolve, reject) => {
@@ -55,14 +55,14 @@ exports.sendCreateAccountLink = (email, password) => {
     const msg = {
       to: email,
       from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
-      subject: 'Invitation to Join Xylobit HRMS Platform',
+      subject: 'Invitation to Join HRMS Platform',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
-          <img src="https://your-company-logo-url.com/logo.png" alt="Xylobit Logo" style="width: 150px; display: block; margin: auto;">
-          <h2 style="text-align: center; color: #4CAF50;">Welcome to Xylobit HRMS</h2>
+          <img src="https://hrms-storage-bucket9559.s3.eu-north-1.amazonaws.com/Generated+Image+November+27%2C+2025+-+7_31PM.png" alt="Logo" style="width: 150px; display: block; margin: auto;">
+          <h2 style="text-align: center; color: #4CAF50;">Welcome to HRMS Platform</h2>
           <p>Dear Employee,</p>
           <p>
-            You have been invited to join Xylobit's HRMS platform. Click the button below to create your account and access your employee portal:
+            You have been invited to join HRMS platform. Click the button below to create your account and access your employee portal:
           </p>
           <div style="text-align: center; margin: 20px 0;">
             <a href="${link}"
@@ -76,10 +76,10 @@ exports.sendCreateAccountLink = (email, password) => {
             <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
             <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
           </div>
-          <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:support@xylobit.com">support@xylobit.com</a>.</p>
+          <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:support@hrms.com">support@hrms.com</a>.</p>
           <hr>
           <p style="font-size: 12px; text-align: center; color: #666;">
-            Xylobit | USA | +1 255 225 255
+            HRMS Platform | USA | +1 255 225 255
           </p>
         </div>
       `,

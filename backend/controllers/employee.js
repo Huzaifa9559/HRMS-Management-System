@@ -227,9 +227,8 @@ exports.getEmployeeImageFileName = async (req, res) => {
   }
 
   try {
-    const employeeImageFileName =
-      await Employee.getEmployeeImageFileNameById(employeeId);
-    if (!employeeImageFileName || !employeeImageFileName.imageFileName) {
+    const imageRecord = await Employee.getEmployeeImageFileNameById(employeeId);
+    if (!imageRecord) {
       return sendResponse(
         res,
         httpStatus.NOT_FOUND,
@@ -238,7 +237,17 @@ exports.getEmployeeImageFileName = async (req, res) => {
       );
     }
 
-    const imageFileName = employeeImageFileName.imageFileName;
+    const imageFileName =
+      typeof imageRecord === 'string' ? imageRecord : imageRecord.imageFileName;
+
+    if (!imageFileName) {
+      return sendResponse(
+        res,
+        httpStatus.NOT_FOUND,
+        null,
+        'Employee image not found'
+      );
+    }
     let imageUrl = imageFileName;
 
     // If image is stored in S3, generate signed URL
