@@ -128,28 +128,28 @@ exports.downloadDocument = async (req, res) => {
       }
     }
 
-    // Local file - fallback for old files
-    const filePath = path.join(
-      __dirname,
-      '../uploads/myDocuments',
-      documentFileName
-    );
+      // Local file - fallback for old files
+      const filePath = path.join(
+        __dirname,
+        '../uploads/myDocuments',
+        documentFileName
+      );
 
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${path.basename(documentFileName)}"`
-    );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${path.basename(documentFileName)}"`
+      );
 
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        return res.status(404).send('File not found');
-      }
-      res.download(filePath, (err) => {
+      fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {
-          return res.status(500).send('Error downloading the file');
+          return res.status(404).send('File not found');
         }
+        res.download(filePath, (err) => {
+          if (err) {
+            return res.status(500).send('Error downloading the file');
+          }
+        });
       });
-    });
   } catch (error) {
     console.error('Error fetching document:', error);
     return res.status(500).send('Server error');

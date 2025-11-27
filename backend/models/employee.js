@@ -416,12 +416,12 @@ Employee.updateEmployeeById = async function (employeeId, updatedData) {
 
       if (existingImage) {
         // Update existing image record
-        await sequelize.query(
-          `UPDATE employee_images
-                  SET employee_image_fileName=?
-                  WHERE employeeID=? `,
-          {
-            replacements: [updatedData.employee_image, employeeId],
+      await sequelize.query(
+        `UPDATE employee_images
+                SET employee_image_fileName=?
+                WHERE employeeID=? `,
+        {
+          replacements: [updatedData.employee_image, employeeId],
             transaction: t,
           }
         );
@@ -433,8 +433,8 @@ Employee.updateEmployeeById = async function (employeeId, updatedData) {
           {
             replacements: [employeeId, updatedData.employee_image],
             transaction: t,
-          }
-        );
+        }
+      );
       }
     }
 
