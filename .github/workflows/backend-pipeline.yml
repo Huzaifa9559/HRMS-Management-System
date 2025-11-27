@@ -1,5 +1,6 @@
 name: Backend CI/CD Pipeline
 
+
 on:
   push:
     branches:
@@ -849,6 +850,25 @@ jobs:
               exit 1
             fi
 
+            # Verify .env file has correct DB_HOST
+            echo "🔍 Verifying .env file configuration..."
+            if [ -f ".env" ]; then
+              ENV_DB_HOST=$(grep "^DB_HOST=" .env | cut -d'=' -f2 | tr -d '"' || echo "")
+              if [ "$ENV_DB_HOST" != "mysql" ]; then
+                echo "⚠️  Warning: .env file has DB_HOST=$ENV_DB_HOST, expected 'mysql'"
+                echo "   Updating .env file to use DB_HOST=mysql..."
+                sed -i 's/^DB_HOST=.*/DB_HOST=mysql/' .env || {
+                  echo "   Adding DB_HOST=mysql to .env..."
+                  echo "DB_HOST=mysql" >> .env
+                }
+                echo "✅ .env file updated"
+              else
+                echo "✅ .env file has correct DB_HOST=mysql"
+              fi
+            else
+              echo "⚠️  .env file not found, but environment variables will be passed directly"
+            fi
+
             # Run migrations in a one-off backend container
             # Note: docker compose run creates a temporary container with a unique name
             # This is expected behavior - the container name will be something like "hrms-backend-<hash>"
@@ -857,21 +877,42 @@ jobs:
             echo "   - DB_HOST=mysql"
             echo "   - DB_USER=${DB_USER}"
             echo "   - DB_NAME=${DB_NAME}"
+            echo "   - DOCKER_ENV=true"
             echo "   - Network: hrms-network"
 
+            # Debug: Check what DB_HOST is set to in the environment
+            echo "🔍 Debug: Current DB_HOST in shell: ${DB_HOST:-not set}"
+            echo "🔍 Debug: Current DOCKER_ENV in shell: ${DOCKER_ENV:-not set}"
+
             # Pass all necessary environment variables to the migration container
+            # IMPORTANT: Environment variables passed with -e take precedence over .env file
             # The container needs to be on the same network and have all DB credentials
             # Note: docker compose run automatically uses the network from docker-compose.yml
+            # We also set DEBUG=true temporarily to see what's happening
             if $DOCKER_COMPOSE_CMD -p hrms run --rm \
               -e DOCKER_ENV=true \
               -e NODE_ENV=production \
+              -e DEBUG=true \
               -e DB_HOST=mysql \
               -e DB_USER="${DB_USER}" \
               -e DB_PASSWORD="${DB_PASSWORD}" \
               -e DB_NAME="${DB_NAME}" \
               -e DB_PORT=3306 \
               -e DB_DIALECT=mysql \
-              backend sh -lc "npm run migrate:safe"; then
+              backend sh -lc "
+                echo '🔍 Debug: Environment variables inside container:'
+                echo '   DB_HOST='\''${DB_HOST:-not set}'\'
+                echo '   DOCKER_ENV='\''${DOCKER_ENV:-not set}'\'
+                echo '   DB_USER='\''${DB_USER:-not set}'\'
+                echo '   DB_NAME='\''${DB_NAME:-not set}'\'
+                echo '   NODE_ENV='\''${NODE_ENV:-not set}'\'
+                echo '   DB_PORT='\''${DB_PORT:-not set}'\'
+                echo ''
+                echo '🔍 Testing MySQL connection from container...'
+                nc -zv mysql 3306 2>&1 || echo '⚠️  nc test failed (this is OK if nc is not installed)'
+                echo ''
+                npm run migrate:safe
+              "; then
               echo "✅ Migrations completed successfully"
             else
               echo "❌ Migration failed. Not starting new backend container."
