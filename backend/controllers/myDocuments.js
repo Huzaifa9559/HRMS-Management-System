@@ -5,7 +5,7 @@ const sendResponse = require('../utils/responseUtil');
 const httpStatus = require('../utils/httpStatus');
 const { sequelize } = require('../config/sequelizeConfig');
 const { extractToken } = require('../utils/authUtil');
-const { getSignedUrl, fileExistsInS3 } = require('../service/s3Service');
+const { fileExistsInS3 } = require('../service/s3Service');
 const path = require('path');
 const fs = require('fs');
 
