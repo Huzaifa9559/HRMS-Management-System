@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - hamzas_actions
     paths:
       - "frontend/**"
       - ".github/workflows/frontend-pipeline.yml"
