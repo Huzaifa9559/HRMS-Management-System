@@ -246,47 +246,47 @@ jobs:
         run: npm run lint:format
         continue-on-error: true
 
-  # Security Scanning (SCA - Software Composition Analysis)
-  security-scan:
-    name: Security Vulnerability Scan
-    runs-on: ubuntu-latest
+  # # Security Scanning (SCA - Software Composition Analysis)
+  # security-scan:
+  #   name: Security Vulnerability Scan
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: "npm"
+  #         cache-dependency-path: backend/package-lock.json
 
-      - name: Install dependencies
-        working-directory: ./backend
-        run: npm ci
+  #     - name: Install dependencies
+  #       working-directory: ./backend
+  #       run: npm ci
 
-      - name: Run npm audit
-        working-directory: ./backend
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
+  #     - name: Run npm audit
+  #       working-directory: ./backend
+  #       run: npm audit --audit-level=moderate
+  #       continue-on-error: true
 
-      - name: Install Snyk
-        continue-on-error: true
-        run: npm install -g snyk
+  #     - name: Install Snyk
+  #       continue-on-error: true
+  #       run: npm install -g snyk
 
-      - name: Run Snyk security scan
-        continue-on-error: true
-        working-directory: ./backend
-        run: |
-          if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
-            snyk auth ${{ secrets.SNYK_TOKEN }} || true
-            snyk test --severity-threshold=high || true
-          else
-            echo "Snyk token not configured, skipping scan"
-          fi
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  #     - name: Run Snyk security scan
+  #       continue-on-error: true
+  #       working-directory: ./backend
+  #       run: |
+  #         if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
+  #           snyk auth ${{ secrets.SNYK_TOKEN }} || true
+  #           snyk test --severity-threshold=high || true
+  #         else
+  #           echo "Snyk token not configured, skipping scan"
+  #         fi
+  #       env:
+  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   # Security Scanning (SCA - Software Composition Analysis)
   security-scan:
