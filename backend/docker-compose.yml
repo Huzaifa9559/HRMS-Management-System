@@ -6,13 +6,13 @@ services:
     image: mysql:8.0
     container_name: hrms-mysql
     restart: unless-stopped
-    ports:
-      - '${DB_PORT:-3306}:3306'
+    expose:
+      - 3306
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-rootpassword}
-      - MYSQL_DATABASE=${DB_NAME:-hrms_db}
-      - MYSQL_USER=${DB_USER:-hrms_user}
-      - MYSQL_PASSWORD=${DB_PASSWORD:-hrms_password}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
@@ -28,7 +28,7 @@ services:
           'localhost',
           '-u',
           'root',
-          '-p${DB_ROOT_PASSWORD:-rootpassword}',
+          '-p${DB_ROOT_PASSWORD}',
         ]
       interval: 10s
       timeout: 5s
@@ -43,8 +43,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    ports:
-      - '8000:8000'
     environment:
       # Application Configuration
       - NODE_ENV=production
@@ -53,9 +51,9 @@ services:
 
       # Database Configuration
       - DB_HOST=mysql
-      - DB_USER=${DB_USER:-hrms_user}
-      - DB_PASSWORD=${DB_PASSWORD:-hrms_password}
-      - DB_NAME=${DB_NAME:-hrms_db}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
       - DB_PORT=3306
       - DB_DIALECT=mysql
 
@@ -64,8 +62,8 @@ services:
 
       # Email Configuration (SendGrid)
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}
-      - EMAIL_FROM=${EMAIL_FROM:-no-reply@kitor.io}
-      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Xylobit HRMS}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME}
 
       # URL Configuration
       - FRONTEND_URL=${FRONTEND_URL}
