@@ -4,13 +4,15 @@ name: Backend CI/CD Pipeline
 on:
   push:
     branches:
-      [tameema]
+      -main
+      -tameema
     paths:
       - "backend/**"
       - ".github/workflows/backend-pipeline.yml"
   pull_request:
     branches:
-      [tameema]
+      -main
+      -tameema
     paths:
       - "backend/**"
       - ".github/workflows/backend-pipeline.yml"
