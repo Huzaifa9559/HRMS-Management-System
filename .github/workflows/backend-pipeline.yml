@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - hamzas_actions
     paths:
       - "backend/**"
       - ".github/workflows/backend-pipeline.yml"
