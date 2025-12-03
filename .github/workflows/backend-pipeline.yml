@@ -288,45 +288,42 @@ jobs:
   #       env:
   #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-  # Security Scanning (SCA - Software Composition Analysis)
+ # Security Scanning (SCA - Software Composition Analysis)
   security-scan:
     name: Security Vulnerability Scan
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
+  
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+  
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
-
+  
       - name: Install dependencies
         working-directory: ./backend
         run: npm ci
-
-      # Built-in npm audit (optional, SCA light)
+  
+      # Optional light scan
       - name: Run npm audit
         working-directory: ./backend
         run: npm audit --audit-level=moderate || true
-
-      # Snyk SCA
+  
       - name: Install Snyk CLI
         run: npm install -g snyk
-
-      - name: Authenticate Snyk
-        run: snyk auth "$SNYK_TOKEN"
-
+  
+      # Main Snyk dependency scan
       - name: Run Snyk test (dependencies)
         working-directory: ./backend
         run: snyk test --severity-threshold=high || true
-
-      # Optional: send a snapshot to Snyk dashboard
+  
+      # Optional: push snapshot to Snyk UI
       - name: Monitor project in Snyk
         working-directory: ./backend
         run: snyk monitor || true
