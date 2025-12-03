@@ -10,7 +10,7 @@ on:
       - ".github/workflows/backend-pipeline.yml"
   pull_request:
     branches:
-      - main
+      - tameema
     paths:
       - "backend/**"
       - ".github/workflows/backend-pipeline.yml"
