@@ -322,7 +322,7 @@ jobs:
         run: npm install -g snyk
 
       - name: Authenticate Snyk
-        run: snyk auth "$SNYK_TOKEN"
+        run: snyk config set api=$SNYK_TOKEN
 
       - name: Run Snyk test (dependencies)
         working-directory: ./backend
