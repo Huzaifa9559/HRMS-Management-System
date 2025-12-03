@@ -324,17 +324,20 @@ jobs:
       - name: Verify Snyk token
         run: |
           if [ -z "$SNYK_TOKEN" ]; then
-            echo "❌ ERROR: SNYK_TOKEN is not set"
-            exit 1
+            echo "⚠️  WARNING: SNYK_TOKEN is not set. Snyk scans will be skipped."
+            echo "   To enable Snyk security scanning, add SNYK_TOKEN to GitHub Secrets."
+            exit 0
           fi
           echo "✅ SNYK_TOKEN is set (length: ${#SNYK_TOKEN})"
 
       - name: Run Snyk test (dependencies)
+        if: env.SNYK_TOKEN != ''
         working-directory: ./backend
         run: snyk test --api=$SNYK_TOKEN --severity-threshold=high || true
 
       # Optional: send a snapshot to Snyk dashboard
       - name: Monitor project in Snyk
+        if: env.SNYK_TOKEN != ''
         working-directory: ./backend
         run: snyk monitor --api=$SNYK_TOKEN || true
 
