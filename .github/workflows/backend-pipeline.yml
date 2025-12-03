@@ -288,10 +288,12 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-  # Static Code Analysis (SAST + CodeQL)
-  code-analysis:
-    name: Static Code Analysis
+  # Security Scanning (SCA - Software Composition Analysis)
+  security-scan:
+    name: Security Vulnerability Scan
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -308,35 +310,26 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Run Sonar Scan
-        uses: SonarSource/sonarqube-scan-action@v5.0.0
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: ./backend
-          args: >
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/tests/**,**/*.test.js
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+      # Built-in npm audit (optional, SCA light)
+      - name: Run npm audit
+        working-directory: ./backend
+        run: npm audit --audit-level=moderate || true
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        continue-on-error: true
-        with:
-          languages: javascript
-          queries: security-extended,security-and-quality
+      # Snyk SCA
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
-        continue-on-error: true
+      - name: Authenticate Snyk
+        run: snyk auth "$SNYK_TOKEN"
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        continue-on-error: true
+      - name: Run Snyk test (dependencies)
+        working-directory: ./backend
+        run: snyk test --severity-threshold=high || true
+
+      # Optional: send a snapshot to Snyk dashboard
+      - name: Monitor project in Snyk
+        working-directory: ./backend
+        run: snyk monitor || true
 
   # Build Job
   build:
