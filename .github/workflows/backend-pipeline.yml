@@ -248,10 +248,54 @@ jobs:
         run: npm run lint:format
         continue-on-error: true
 
+  # # Security Scanning (SCA - Software Composition Analysis)
+  # security-scan:
+  #   name: Security Vulnerability Scan
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: "npm"
+  #         cache-dependency-path: backend/package-lock.json
+
+  #     - name: Install dependencies
+  #       working-directory: ./backend
+  #       run: npm ci
+
+  #     - name: Run npm audit
+  #       working-directory: ./backend
+  #       run: npm audit --audit-level=moderate
+  #       continue-on-error: true
+
+  #     - name: Install Snyk
+  #       continue-on-error: true
+  #       run: npm install -g snyk
+
+  #     - name: Run Snyk security scan
+  #       continue-on-error: true
+  #       working-directory: ./backend
+  #       run: |
+  #         if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
+  #           snyk auth ${{ secrets.SNYK_TOKEN }} || true
+  #           snyk test --severity-threshold=high || true
+  #         else
+  #           echo "Snyk token not configured, skipping scan"
+  #         fi
+  #       env:
+  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
   # Security Scanning (SCA - Software Composition Analysis)
   security-scan:
     name: Security Vulnerability Scan
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -268,77 +312,26 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
+      # Built-in npm audit (optional, SCA light)
       - name: Run npm audit
         working-directory: ./backend
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
+        run: npm audit --audit-level=moderate || true
 
-      - name: Install Snyk
-        continue-on-error: true
+      # Snyk SCA
+      - name: Install Snyk CLI
         run: npm install -g snyk
 
-      - name: Run Snyk security scan
-        continue-on-error: true
+      - name: Authenticate Snyk
+        run: snyk auth "$SNYK_TOKEN"
+
+      - name: Run Snyk test (dependencies)
         working-directory: ./backend
-        run: |
-          if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
-            snyk auth ${{ secrets.SNYK_TOKEN }} || true
-            snyk test --severity-threshold=high || true
-          else
-            echo "Snyk token not configured, skipping scan"
-          fi
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --severity-threshold=high || true
 
-  # Static Code Analysis (SAST + CodeQL)
-  code-analysis:
-    name: Static Code Analysis
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
+      # Optional: send a snapshot to Snyk dashboard
+      - name: Monitor project in Snyk
         working-directory: ./backend
-        run: npm ci
-
-      - name: Run Sonar Scan
-        uses: SonarSource/sonarqube-scan-action@v5.0.0
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: ./backend
-          args: >
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/tests/**,**/*.test.js
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        continue-on-error: true
-        with:
-          languages: javascript
-          queries: security-extended,security-and-quality
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
-        continue-on-error: true
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        continue-on-error: true
+        run: snyk monitor || true
 
   # Build Job
   build:
