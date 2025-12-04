@@ -294,10 +294,21 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # If your Snyk org is on eu.snyk.io, uncomment this:
+      # SNYK_API: https://api.eu.snyk.io
   
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+  
+      - name: Debug SNYK token presence
+        run: |
+          if [ -z "${SNYK_TOKEN}" ]; then
+            echo "❌ SNYK_TOKEN is empty or not set"
+            exit 1
+          else
+            echo "✅ SNYK_TOKEN is set (length: ${#SNYK_TOKEN})"
+          fi
   
       - name: Setup Node.js
         uses: actions/setup-node@v4
