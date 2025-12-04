@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-
+//testing for scanning
 // Create the Auth Context
 const AuthContext = createContext();
 
