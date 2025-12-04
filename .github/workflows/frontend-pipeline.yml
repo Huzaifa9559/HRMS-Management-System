@@ -204,6 +204,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for SonarCloud to properly detect branch information
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -215,15 +217,33 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci
+#keep or no?
+      - name: Run unit tests with coverage
+        working-directory: ./frontend
+        run: npm run test:unit -- --coverage --watchAll=false
+        env:
+          CI: true
+          REACT_APP_BACKEND_URL: http://localhost:8000
+        continue-on-error: true
 
       - name: Run SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          projectBaseDir: ./frontend
         env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
 
       - name: Run CodeQL Analysis
+      #keep or no?
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+        continue-on-error: true
+
+      - name: Perform CodeQL Analysis
+      ##
         uses: github/codeql-action/analyze@v2
         continue-on-error: true
 
