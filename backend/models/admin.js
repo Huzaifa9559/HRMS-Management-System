@@ -1,7 +1,5 @@
 const { sequelize } = require('../config/sequelizeConfig');
 
-#testing sonar
-
 // Define the Admin model
 const Admin = {};
 
