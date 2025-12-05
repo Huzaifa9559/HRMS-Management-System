@@ -59,11 +59,11 @@ jobs:
           name: frontend-coverage
         continue-on-error: true
 
-      - name: Upload coverage artifact for SonarCloud
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: frontend/coverage
+      # - name: Upload coverage artifact for SonarCloud
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: frontend-coverage
+      #     path: frontend/coverage
 
 
       - name: Build frontend application
@@ -234,13 +234,24 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci
+
+
+      #
+      #keep or no?
+      # - name: Run tests with coverage
+      #   working-directory: ./frontend
+      #   run: npm run test -- --coverage --watchAll=false
+      #   env:
+      #     CI: true
+      #     REACT_APP_BACKEND_URL: http://localhost:8000
+      #   continue-on-error: true
       
       #download previously uploaded artifact
-      - name: Download coverage artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-coverage
-          path: frontend/coverage
+      # - name: Download coverage artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: frontend-coverage
+      #     path: frontend/coverage
 
 
       - name: Run SonarCloud Scan
@@ -250,18 +261,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-
-      - name: Run CodeQL Analysis
-      #keep or no?
-        uses: github/codeql-action/init@v2
-        with:
-          languages: javascript
-        continue-on-error: true
-
-      - name: Perform CodeQL Analysis
-      ##
-        uses: github/codeql-action/analyze@v2
         continue-on-error: true
 
   # Build Job

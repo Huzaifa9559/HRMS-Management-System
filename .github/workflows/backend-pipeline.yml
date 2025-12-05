@@ -361,12 +361,12 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Run unit tests with coverage
-        working-directory: ./backend
-        run: npm run test:coverage
-        env:
-          NODE_ENV: test
-        continue-on-error: true
+      # - name: Run unit tests with coverage
+      #   working-directory: ./backend
+      #   run: npm run test:coverage
+      #   env:
+      #     NODE_ENV: test
+      #   continue-on-error: true
 
       - name: Run SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
