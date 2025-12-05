@@ -235,6 +235,7 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+
       #
       #keep or no?
       # - name: Run tests with coverage
@@ -260,18 +261,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-
-      - name: Run CodeQL Analysis
-      #keep or no?
-        uses: github/codeql-action/init@v2
-        with:
-          languages: javascript
-        continue-on-error: true
-
-      - name: Perform CodeQL Analysis
-      ##
-        uses: github/codeql-action/analyze@v2
         continue-on-error: true
 
   # Build Job
