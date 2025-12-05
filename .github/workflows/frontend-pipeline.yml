@@ -59,6 +59,13 @@ jobs:
           name: frontend-coverage
         continue-on-error: true
 
+      # - name: Upload coverage artifact for SonarCloud
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: frontend-coverage
+      #     path: frontend/coverage
+
+
       - name: Build frontend application
         working-directory: ./frontend
         run: npm run build
@@ -154,14 +161,28 @@ jobs:
         run: npm run lint:format
         continue-on-error: true
 
-  # Security Scanning (SCA)
+  # Security Scanning (SCA - Software Composition Analysis)
   security-scan:
     name: Security Vulnerability Scan
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # If your Snyk org is on eu.snyk.io, uncomment this:
+      # SNYK_API: https://api.eu.snyk.io
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Sanity check that the token is really available to this job
+      - name: Debug SNYK token presence
+        run: |
+          if [ -z "${SNYK_TOKEN}" ]; then
+            echo "❌ SNYK_TOKEN is empty or not set"
+            exit 1
+          else
+            echo "✅ SNYK_TOKEN is set (length: ${#SNYK_TOKEN})"
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -174,27 +195,23 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # Optional light scan with npm audit
       - name: Run npm audit
         working-directory: ./frontend
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
+        run: npm audit --audit-level=moderate || true
 
-      - name: Install Snyk
-        continue-on-error: true
+      - name: Install Snyk CLI
         run: npm install -g snyk
 
-      - name: Run Snyk security scan
-        continue-on-error: true
+      # Main Snyk dependency scan
+      - name: Run Snyk test (dependencies)
         working-directory: ./frontend
-        run: |
-          if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
-            snyk auth ${{ secrets.SNYK_TOKEN }} || true
-            snyk test --severity-threshold=high || true
-          else
-            echo "Snyk token not configured, skipping scan"
-          fi
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --severity-threshold=high || true
+
+      # Optional: push a snapshot to Snyk UI dashboard
+      - name: Monitor project in Snyk
+        working-directory: ./frontend
+        run: snyk monitor || true
 
   # Static Code Analysis
   code-analysis:
@@ -204,6 +221,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for SonarCloud to properly detect branch information
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -216,14 +235,42 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      #
+      #keep or no?
+      # - name: Run tests with coverage
+      #   working-directory: ./frontend
+      #   run: npm run test -- --coverage --watchAll=false
+      #   env:
+      #     CI: true
+      #     REACT_APP_BACKEND_URL: http://localhost:8000
+      #   continue-on-error: true
+      
+      #download previously uploaded artifact
+      # - name: Download coverage artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: frontend-coverage
+      #     path: frontend/coverage
+
+
       - name: Run SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          projectBaseDir: ./frontend
         env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
 
       - name: Run CodeQL Analysis
+      #keep or no?
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+        continue-on-error: true
+
+      - name: Perform CodeQL Analysis
+      ##
         uses: github/codeql-action/analyze@v2
         continue-on-error: true
 
