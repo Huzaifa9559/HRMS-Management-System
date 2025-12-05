@@ -234,14 +234,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci
-#keep or no?
-      - name: Run unit tests with coverage
-        working-directory: ./frontend
-        run: npm run test:unit -- --coverage --watchAll=false
-        env:
-          CI: true
-          REACT_APP_BACKEND_URL: http://localhost:8000
-        continue-on-error: true
       
       #download previously uploaded artifact
       - name: Download coverage artifact
