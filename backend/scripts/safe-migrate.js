@@ -33,7 +33,9 @@ function getCurrentMigrations() {
 
     lines.forEach((line) => {
       // Match both formats: "up   20241203081637-create-department-table.js" and "up 20241203081637-create-department-table.js"
-      const match = line.match(/^(up|down)\s+(.+)$/);
+      const regex = /^(up|down)\s+(.+)$/;
+      const match = regex.exec(line);
+
       if (match) {
         migrations.push({
           state: match[1],

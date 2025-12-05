@@ -6,16 +6,18 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apk add --no-cache \
-    python3 \
-    make \
     g++ \
-    mysql-client
+    make \
+    mysql-client \
+    python3
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci --only=production --ignore-scripts
+RUN npm rebuild bcrypt --build-from-source
+RUN npm rebuild oracledb --build-from-source
 
 # Copy application code
 COPY . .
