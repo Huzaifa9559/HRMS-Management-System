@@ -26,8 +26,7 @@ fs.readdirSync(__dirname)
     return (
       !file.startsWith('.') &&
       file !== basename &&
-      file.endsWith('.js')
-
+      file.endsWith('.js') &&
       file.indexOf('.test.js') === -1
     );
   })
