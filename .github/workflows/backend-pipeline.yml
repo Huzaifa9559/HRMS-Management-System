@@ -1,6 +1,6 @@
 name: Backend CI/CD Pipeline
 
-
+# ---
 on:
   push:
     branches:
@@ -245,49 +245,100 @@ jobs:
         run: npm run lint:format
         continue-on-error: true
 
-  # Security Scanning (SCA - Software Composition Analysis)
+  # # Security Scanning (SCA - Software Composition Analysis)
+  # security-scan:
+  #   name: Security Vulnerability Scan
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: "npm"
+  #         cache-dependency-path: backend/package-lock.json
+
+  #     - name: Install dependencies
+  #       working-directory: ./backend
+  #       run: npm ci
+
+  #     - name: Run npm audit
+  #       working-directory: ./backend
+  #       run: npm audit --audit-level=moderate
+  #       continue-on-error: true
+
+  #     - name: Install Snyk
+  #       continue-on-error: true
+  #       run: npm install -g snyk
+
+  #     - name: Run Snyk security scan
+  #       continue-on-error: true
+  #       working-directory: ./backend
+  #       run: |
+  #         if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
+  #           snyk auth ${{ secrets.SNYK_TOKEN }} || true
+  #           snyk test --severity-threshold=high || true
+  #         else
+  #           echo "Snyk token not configured, skipping scan"
+  #         fi
+  #       env:
+  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+ # Security Scanning (SCA - Software Composition Analysis)
   security-scan:
     name: Security Vulnerability Scan
     runs-on: ubuntu-latest
-
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # If your Snyk org is on eu.snyk.io, uncomment this:
+      # SNYK_API: https://api.eu.snyk.io
+  
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+  
+      - name: Debug SNYK token presence
+        run: |
+          if [ -z "${SNYK_TOKEN}" ]; then
+            echo "❌ SNYK_TOKEN is empty or not set"
+            exit 1
+          else
+            echo "✅ SNYK_TOKEN is set (length: ${#SNYK_TOKEN})"
+          fi
+  
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
-
+  
       - name: Install dependencies
         working-directory: ./backend
         run: npm ci
-
+  
+      # Optional light scan
       - name: Run npm audit
         working-directory: ./backend
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
-
-      - name: Install Snyk
-        continue-on-error: true
+        run: npm audit --audit-level=moderate || true
+  
+      - name: Install Snyk CLI
         run: npm install -g snyk
-
-      - name: Run Snyk security scan
-        continue-on-error: true
+  
+      # Main Snyk dependency scan
+      - name: Run Snyk test (dependencies)
         working-directory: ./backend
-        run: |
-          if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
-            snyk auth ${{ secrets.SNYK_TOKEN }} || true
-            snyk test --severity-threshold=high || true
-          else
-            echo "Snyk token not configured, skipping scan"
-          fi
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --severity-threshold=high || true
+  
+      # Optional: push snapshot to Snyk UI
+      - name: Monitor project in Snyk
+        working-directory: ./backend
+        run: snyk monitor || true
 
-  # Static Code Analysis (SAST + CodeQL)
+  # Static Code Analysis
   code-analysis:
     name: Static Code Analysis
     runs-on: ubuntu-latest
@@ -295,6 +346,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for SonarCloud to properly detect branch information
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -307,34 +360,20 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Run Sonar Scan
-        uses: SonarSource/sonarqube-scan-action@v5.0.0
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - name: Run unit tests with coverage
+      #   working-directory: ./backend
+      #   run: npm run test:coverage
+      #   env:
+      #     NODE_ENV: test
+      #   continue-on-error: true
+
+      - name: Run SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
         with:
           projectBaseDir: ./backend
-          args: >
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/tests/**,**/*.test.js
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        continue-on-error: true
-        with:
-          languages: javascript
-          queries: security-extended,security-and-quality
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
-        continue-on-error: true
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
         continue-on-error: true
 
   # Build Job

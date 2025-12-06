@@ -201,7 +201,7 @@ exports.acceptLeave = async (req, res) => {
 
   try {
     const updatedRows = await Leave.updateLeaveStatus(leaveId, 1); // Update status to "Accepted" (1)
-    if (updatedRows === 0) {
+    if (updatedRows[0] === 0) {
       return sendResponse(
         res,
         httpStatus.NOT_FOUND,
@@ -240,7 +240,7 @@ exports.rejectLeave = async (req, res) => {
 
   try {
     const updatedRows = await Leave.updateLeaveStatus(leaveId, 2); // Update status to "Rejected" (2)
-    if (updatedRows === 0) {
+    if (updatedRows[0] === 0) {
       return sendResponse(
         res,
         httpStatus.NOT_FOUND,
