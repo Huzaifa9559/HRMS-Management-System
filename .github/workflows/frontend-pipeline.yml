@@ -93,11 +93,10 @@ jobs:
       - name: Run E2E tests with Cypress
         working-directory: ./frontend
         run: npm run test:e2e
-        continue-on-error: true
         env:
           CI: true
-          CYPRESS_baseUrl: http://localhost:3000
-          REACT_APP_BACKEND_URL: http://localhost:8000
+          CYPRESS_baseUrl: https://h-rms.me/
+          REACT_APP_BACKEND_URL: https://h-rms.me/
 
       - name: Upload Cypress screenshots
         uses: actions/upload-artifact@v4
