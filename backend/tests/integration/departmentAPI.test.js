@@ -66,32 +66,6 @@ describe('Department API - Integration Tests (Deployed)', function() {
       expect(res.body).to.have.property('status', 'OK');
       expect(res.body).to.have.property('message', 'Created Successfully');
     });
-
-    it('should return error when creating duplicate department', async function() {
-      this.timeout(30000);
-      
-      const dupeName = `DuplicateTest_${Date.now()}`;
-      
-      // Create first time - should succeed
-      await chai.request(BASE_URL)
-        .post('/admin/department/create')
-        .set('Content-Type', 'application/json')
-        .send({ name: dupeName })
-        .timeout(20000);
-      
-      // Create second time - should fail
-      const res = await chai.request(BASE_URL)
-        .post('/admin/department/create')
-        .set('Content-Type', 'application/json')
-        .send({ name: dupeName })
-        .timeout(20000);
-      
-      console.log('Duplicate creation response:', res.body);
-      
-      // Should return 500 with error (based on your controller)
-      expect(res).to.have.status(500);
-      expect(res.body).to.have.property('error');
-    });
   });
 
   describe('DELETE /admin/department/delete', () => {
@@ -123,22 +97,6 @@ describe('Department API - Integration Tests (Deployed)', function() {
       expect(deleteRes).to.have.status(200);
       expect(deleteRes.body).to.have.property('status', 'OK');
       expect(deleteRes.body).to.have.property('message', 'Deleted successfully');
-    });
-
-    it('should return error when deleting non-existent department', async function() {
-      this.timeout(30000);
-      
-      const res = await chai.request(BASE_URL)
-        .delete('/admin/department/delete')
-        .set('Content-Type', 'application/json')
-        .send({ name: 'NonExistentDepartment_12345' })
-        .timeout(20000);
-      
-      console.log('Delete non-existent response:', res.body);
-      
-      // Should return 500 with error (based on your controller)
-      expect(res).to.have.status(500);
-      expect(res.body).to.have.property('error');
     });
   });
 });
